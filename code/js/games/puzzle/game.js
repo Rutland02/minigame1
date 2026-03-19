@@ -8,6 +8,15 @@ class PuzzleGame {
     this.gameStatus = 'playing'; // playing, completed
     this.startTime = Date.now();
     this.endTime = null;
+    // 触摸相关
+    this.touchStartX = 0;
+    this.touchStartY = 0;
+    this.touchEndX = 0;
+    this.touchEndY = 0;
+    // 动画相关
+    this.animations = [];
+    this.animationFrame = 0;
+    this.isAnimating = false;
     this.initPuzzle();
   }
 
@@ -135,12 +144,53 @@ class PuzzleGame {
         break;
     }
     
-    // 找到空白块并交换位置
+    // 找到空白块
     const emptyPiece = this.pieces.find(p => p.currentRow === newRow && p.currentCol === newCol);
     if (emptyPiece) {
+      // 添加滑动动画
+      this.addAnimation('slide', {
+        piece: piece,
+        emptyPiece: emptyPiece,
+        direction: direction,
+        startRow: piece.currentRow,
+        startCol: piece.currentCol,
+        endRow: newRow,
+        endCol: newCol,
+        startTime: Date.now()
+      });
+      
+      // 交换位置
       [piece.currentRow, emptyPiece.currentRow] = [emptyPiece.currentRow, piece.currentRow];
       [piece.currentCol, emptyPiece.currentCol] = [emptyPiece.currentCol, piece.currentCol];
     }
+  }
+
+  // 添加动画
+  addAnimation(type, data) {
+    this.animations.push({ type, data, progress: 0 });
+    this.isAnimating = true;
+  }
+
+  // 更新动画
+  updateAnimations() {
+    if (this.animations.length === 0) {
+      this.isAnimating = false;
+      return;
+    }
+
+    const now = Date.now();
+    const duration = 300; // 动画持续时间
+
+    this.animations = this.animations.filter(anim => {
+      const elapsed = now - anim.data.startTime;
+      anim.progress = Math.min(elapsed / duration, 1);
+
+      // 动画完成
+      if (anim.progress >= 1) {
+        return false;
+      }
+      return true;
+    });
   }
 
   handlePieceClick(x, y) {
@@ -208,7 +258,75 @@ class PuzzleGame {
   }
 
   handleTouchEnd(e) {
-    // 不需要处理
+    // 处理滑动逻辑
+    if (this.gameStatus !== 'playing') return;
+
+    // 直接使用标准的触摸事件属性
+    let endX, endY;
+    if (e.touches && e.touches[0]) {
+      endX = e.touches[0].x || e.touches[0].clientX || e.touches[0].pageX || 0;
+      endY = e.touches[0].y || e.touches[0].clientY || e.touches[0].pageY || 0;
+    } else if (e.changedTouches && e.changedTouches[0]) {
+      endX = e.changedTouches[0].x || e.changedTouches[0].clientX || e.changedTouches[0].pageX || 0;
+      endY = e.changedTouches[0].y || e.changedTouches[0].clientY || e.changedTouches[0].pageY || 0;
+    } else {
+      return;
+    }
+
+    // 计算滑动距离
+    const deltaX = endX - this.touchStartX;
+    const deltaY = endY - this.touchStartY;
+
+    // 检查是否是有效的滑动
+    if (Math.abs(deltaX) < 20 && Math.abs(deltaY) < 20) {
+      return; // 滑动距离太小，视为点击
+    }
+
+    // 确定滑动方向
+    let direction;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // 水平滑动
+      direction = deltaX > 0 ? 'right' : 'left';
+    } else {
+      // 垂直滑动
+      direction = deltaY > 0 ? 'down' : 'up';
+    }
+
+    // 检查触摸开始位置对应的拼图块
+    const size = this.getPuzzleSize();
+    const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
+    const startX = (this.width - pieceSize * size) / 2;
+    const startY = 130;
+
+    // 检查坐标是否有效
+    if (this.touchStartX < startX || this.touchStartX > startX + pieceSize * size || 
+        this.touchStartY < startY || this.touchStartY > startY + pieceSize * size) {
+      return;
+    }
+
+    const col = Math.floor((this.touchStartX - startX) / pieceSize);
+    const row = Math.floor((this.touchStartY - startY) / pieceSize);
+
+    // 检查行列是否有效
+    if (row < 0 || row >= size || col < 0 || col >= size) {
+      return;
+    }
+
+    // 找到触摸的方块
+    const piece = this.pieces.find(p => p.currentRow === row && p.currentCol === col);
+
+    if (!piece || piece.isEmpty) return;
+
+    // 尝试向滑动方向移动
+    if (this.canMove(piece, direction)) {
+      this.movePiece(piece, direction);
+      
+      // 检查是否完成
+      if (this.checkCompletion()) {
+        this.gameStatus = 'completed';
+        this.endTime = Date.now();
+      }
+    }
   }
 
   showDifficultyDialog() {
@@ -361,10 +479,29 @@ class PuzzleGame {
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      // 更新动画
+      this.updateAnimations();
+
       // 绘制拼图块
       this.pieces.forEach(piece => {
-        const x = startX + piece.currentCol * pieceSize;
-        const y = startY + piece.currentRow * pieceSize;
+        let x = startX + piece.currentCol * pieceSize;
+        let y = startY + piece.currentRow * pieceSize;
+
+        // 应用动画
+        const animation = this.animations.find(anim => 
+          anim.data.piece === piece || anim.data.emptyPiece === piece
+        );
+
+        if (animation && animation.type === 'slide') {
+          const progress = animation.progress;
+          const { startRow, startCol, endRow, endCol, direction } = animation.data;
+
+          if (animation.data.piece === piece) {
+            // 正在移动的拼图块
+            x = startX + (startCol + (endCol - startCol) * progress) * pieceSize;
+            y = startY + (startRow + (endRow - startRow) * progress) * pieceSize;
+          }
+        }
 
         if (!piece.isEmpty) {
           // 绘制拼图块 - 玻璃态效果
@@ -534,6 +671,10 @@ class PuzzleGame {
     } else {
       return;
     }
+
+    // 存储触摸开始坐标
+    this.touchStartX = x;
+    this.touchStartY = y;
 
     console.log('触摸坐标:', x, y);
     console.log('屏幕尺寸:', this.width, this.height);
