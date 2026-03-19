@@ -424,8 +424,8 @@ class QuizPage {
       
       // 提交按钮 - 成功按钮
       if (this.selectedOption !== null) {
-        this.drawRoundedRect(ctx, this.width / 2 - 75, this.height - 60, 150, 40, 20);
-        const submitGradient = ctx.createLinearGradient(this.width / 2 - 75, this.height - 60, this.width / 2 + 75, this.height - 20);
+        this.drawRoundedRect(ctx, this.width / 2 - 50, this.height - 60, 100, 40, 20);
+        const submitGradient = ctx.createLinearGradient(this.width / 2 - 50, this.height - 60, this.width / 2 + 50, this.height - 20);
         submitGradient.addColorStop(0, '#4CAF50');
         submitGradient.addColorStop(1, '#45a049');
         ctx.fillStyle = submitGradient;
@@ -522,7 +522,7 @@ class QuizPage {
       }
 
       // 检查是否点击了提交按钮
-      if (!this.isAnswered && this.selectedOption !== null && x >= this.width / 2 - 75 && x <= this.width / 2 + 75 && y >= this.height - 60 && y <= this.height - 20) {
+      if (!this.isAnswered && this.selectedOption !== null && x >= this.width / 2 - 50 && x <= this.width / 2 + 50 && y >= this.height - 60 && y <= this.height - 20) {
         this.submitAnswer();
       }
 
