@@ -892,324 +892,596 @@ class Match3Game {
   // 渲染游戏
   render(ctx) {
     try {
-      // 绘制背景
-      ctx.fillStyle = '#F5F5F5'; // 浅灰色背景
+      // 绘制渐变背景
+      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+      gradient.addColorStop(0, '#2563EB');
+      gradient.addColorStop(1, '#3B82F6');
+      ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, this.width, this.height);
 
-      // 绘制游戏信息
-      ctx.font = '16px Arial';
-      ctx.fillStyle = '#333333'; // 深灰色文字
-      ctx.fillText(`得分: ${this.score}`, 20, 40);
-      ctx.fillText(`等级: ${this.level}`, 20, 65);
-      ctx.fillText(`时间: ${Math.ceil(this.time)}s`, 20, 90);
+      // 绘制半透明遮罩
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillRect(0, 0, this.width, this.height);
+
+      // 绘制游戏信息卡片
+      this.drawGameInfo(ctx);
 
       // 绘制游戏板
-      const size = this.board.length;
-      const cellSize = this.cellSize;
-      const startX = this.startX;
-      const startY = this.startY;
+      this.drawGameBoard(ctx);
 
-      for (let i = 0; i < size; i++) {
-        for (let j = 0; j < size; j++) {
-          const x = startX + j * cellSize;
-          const y = startY + i * cellSize;
+      // 绘制底部按钮
+      this.drawBottomButtons(ctx);
 
-          // 绘制单元格背景
-          ctx.fillStyle = '#E0E0E0'; // 浅灰色背景
-          ctx.fillRect(x, y, cellSize, cellSize);
-          ctx.strokeStyle = '#CCCCCC';
-          ctx.strokeRect(x, y, cellSize, cellSize);
+      // 绘制游戏结束状态
+      if (this.gameStatus === 'gameOver') {
+        this.drawGameOver(ctx);
+      }
 
-          // 检查是否有动画涉及当前位置
-          let isInAnimation = false;
-          this.animations.forEach(anim => {
-            if (anim.type === 'swap') {
-              const { row1, col1, row2, col2 } = anim.data;
-              if ((row1 === i && col1 === j) || (row2 === i && col2 === j)) {
-                isInAnimation = true;
-              }
-            } else if (anim.type === 'drop') {
-              const { targetRow, targetCol } = anim.data;
-              if (targetRow === i && targetCol === j) {
-                isInAnimation = true;
-              }
-            } else if (anim.type === 'pop' || anim.type === 'elimination' || anim.type === 'special') {
-              const { row, col } = anim.data;
-              if (row === i && col === j) {
-                isInAnimation = true;
-              }
+      // 绘制文化元素装饰
+      this.drawCulturalElements(ctx);
+    } catch (error) {
+      console.error('Render error:', error);
+    }
+  }
+
+  // 绘制游戏信息
+  drawGameInfo(ctx) {
+    // 绘制信息卡片
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
+    
+    // 绘制圆角矩形
+    const x = 20;
+    const y = 20;
+    const width = this.width - 40;
+    const height = 80;
+    const radius = 15;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+    
+    ctx.fill();
+    ctx.stroke();
+
+    // 绘制游戏信息
+    ctx.font = '18px Inter, Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'left';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText(`得分: ${this.score}`, 40, 50);
+    ctx.fillText(`等级: ${this.level}`, 150, 50);
+    ctx.fillText(`时间: ${Math.ceil(this.time)}s`, 260, 50);
+    ctx.shadowBlur = 0;
+  }
+
+  // 绘制游戏板
+  drawGameBoard(ctx) {
+    const size = this.board.length;
+    const cellSize = this.cellSize;
+    const startX = this.startX;
+    const startY = this.startY;
+
+    // 绘制游戏板背景
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 2;
+    
+    const boardWidth = cellSize * size;
+    const boardHeight = cellSize * size;
+    const x = startX - 10;
+    const y = startY - 10;
+    const width = boardWidth + 20;
+    const height = boardHeight + 20;
+    const radius = 20;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+    
+    ctx.fill();
+    ctx.stroke();
+
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        const x = startX + j * cellSize;
+        const y = startY + i * cellSize;
+
+        // 绘制单元格背景
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.fillRect(x, y, cellSize, cellSize);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeRect(x, y, cellSize, cellSize);
+
+        // 检查是否有动画涉及当前位置
+        let isInAnimation = false;
+        this.animations.forEach(anim => {
+          if (anim.type === 'swap') {
+            const { row1, col1, row2, col2 } = anim.data;
+            if ((row1 === i && col1 === j) || (row2 === i && col2 === j)) {
+              isInAnimation = true;
             }
-          });
-
-          // 绘制方块（如果不在动画中）
-          if (this.board[i][j] && !isInAnimation) {
-            const piece = this.board[i][j];
-            ctx.fillStyle = piece.color;
-            
-            // 绘制特殊棋子
-            if (piece.special) {
-              // 绘制特殊棋子的特殊效果
-              switch (piece.specialType) {
-                case 'row_clear':
-                  // 绘制行消除棋子
-                  ctx.beginPath();
-                  ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-                  ctx.fill();
-                  // 绘制行消除图案
-                  ctx.fillStyle = '#fff';
-                  ctx.fillRect(x + cellSize / 4, y + cellSize / 2 - 5, cellSize / 2, 10);
-                  break;
-                case 'column_clear':
-                  // 绘制列消除棋子
-                  ctx.beginPath();
-                  ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-                  ctx.fill();
-                  // 绘制列消除图案
-                  ctx.fillStyle = '#fff';
-                  ctx.fillRect(x + cellSize / 2 - 5, y + cellSize / 4, 10, cellSize / 2);
-                  break;
-                case 'rainbow':
-                  // 绘制彩虹球
-                  const gradient = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
-                  gradient.addColorStop(0, '#FF0000');
-                  gradient.addColorStop(0.2, '#FF7F00');
-                  gradient.addColorStop(0.4, '#FFFF00');
-                  gradient.addColorStop(0.6, '#00FF00');
-                  gradient.addColorStop(0.8, '#0000FF');
-                  gradient.addColorStop(1, '#8B00FF');
-                  ctx.fillStyle = gradient;
-                  ctx.beginPath();
-                  ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-                  ctx.fill();
-                  break;
-                default:
-                  // 绘制普通棋子
-                  ctx.beginPath();
-                  ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-                  ctx.fill();
-              }
-            } else {
-              // 绘制普通棋子
-              ctx.beginPath();
-              ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-              ctx.fill();
+          } else if (anim.type === 'drop') {
+            const { targetRow, targetCol } = anim.data;
+            if (targetRow === i && targetCol === j) {
+              isInAnimation = true;
+            }
+          } else if (anim.type === 'pop' || anim.type === 'elimination' || anim.type === 'special') {
+            const { row, col } = anim.data;
+            if (row === i && col === j) {
+              isInAnimation = true;
             }
           }
+        });
 
-          // 绘制动画
-          this.animations.forEach(anim => {
-            if (anim.type === 'elimination' && anim.data.row === i && anim.data.col === j) {
-              const easedProgress = this.easeOutQuad(anim.progress);
-              const scale = 1 + easedProgress * 1.5;
-              const opacity = 1 - easedProgress;
-              ctx.globalAlpha = opacity;
-              ctx.fillStyle = anim.data.color || '#ffffff';
+        // 绘制方块（如果不在动画中）
+        if (this.board[i][j] && !isInAnimation) {
+          const piece = this.board[i][j];
+          ctx.fillStyle = piece.color;
+          
+          // 绘制特殊棋子
+          if (piece.special) {
+            // 绘制特殊棋子的特殊效果
+            switch (piece.specialType) {
+              case 'row_clear':
+                // 绘制行消除棋子
+                ctx.beginPath();
+                ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+                ctx.fill();
+                // 绘制行消除图案
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(x + cellSize / 4, y + cellSize / 2 - 5, cellSize / 2, 10);
+                break;
+              case 'column_clear':
+                // 绘制列消除棋子
+                ctx.beginPath();
+                ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+                ctx.fill();
+                // 绘制列消除图案
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(x + cellSize / 2 - 5, y + cellSize / 4, 10, cellSize / 2);
+                break;
+              case 'rainbow':
+                // 绘制彩虹球
+                const gradient = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
+                gradient.addColorStop(0, '#FF0000');
+                gradient.addColorStop(0.2, '#FF7F00');
+                gradient.addColorStop(0.4, '#FFFF00');
+                gradient.addColorStop(0.6, '#00FF00');
+                gradient.addColorStop(0.8, '#0000FF');
+                gradient.addColorStop(1, '#8B00FF');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+              default:
+                // 绘制普通棋子
+                ctx.beginPath();
+                ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+          } else {
+            // 绘制普通棋子
+            ctx.beginPath();
+            ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // 绘制动画
+        this.animations.forEach(anim => {
+          if (anim.type === 'elimination' && anim.data.row === i && anim.data.col === j) {
+            const easedProgress = this.easeOutQuad(anim.progress);
+            const scale = 1 + easedProgress * 1.5;
+            const opacity = 1 - easedProgress;
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = anim.data.color || '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
+            ctx.fill();
+            // 绘制粒子效果
+            for (let p = 0; p < 6; p++) {
+              const angle = (p / 6) * Math.PI * 2;
+              const distance = easedProgress * cellSize;
+              const px = x + cellSize / 2 + Math.cos(angle) * distance;
+              const py = y + cellSize / 2 + Math.sin(angle) * distance;
+              const particleSize = (1 - easedProgress) * (cellSize / 6);
               ctx.beginPath();
-              ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
+              ctx.arc(px, py, particleSize, 0, Math.PI * 2);
               ctx.fill();
-              // 绘制粒子效果
-              for (let p = 0; p < 6; p++) {
-                const angle = (p / 6) * Math.PI * 2;
-                const distance = easedProgress * cellSize;
-                const px = x + cellSize / 2 + Math.cos(angle) * distance;
-                const py = y + cellSize / 2 + Math.sin(angle) * distance;
-                const particleSize = (1 - easedProgress) * (cellSize / 6);
-                ctx.beginPath();
-                ctx.arc(px, py, particleSize, 0, Math.PI * 2);
-                ctx.fill();
-              }
-              ctx.globalAlpha = 1;
-            } else if (anim.type === 'swap') {
-              // 绘制交换动画
-              const { row1, col1, row2, col2, piece1, piece2 } = anim.data;
-              const easedProgress = this.easeOutBounce(anim.progress);
+            }
+            ctx.globalAlpha = 1;
+          } else if (anim.type === 'swap') {
+            // 绘制交换动画
+            const { row1, col1, row2, col2, piece1, piece2 } = anim.data;
+            const easedProgress = this.easeOutBounce(anim.progress);
+            
+            // 绘制第一个方块的动画
+            if (row1 === i && col1 === j && piece1) {
+              const targetX = startX + col2 * cellSize + cellSize / 2;
+              const targetY = startY + row2 * cellSize + cellSize / 2;
+              const currentX = startX + col1 * cellSize + cellSize / 2 + (targetX - (startX + col1 * cellSize + cellSize / 2)) * easedProgress;
+              const currentY = startY + row1 * cellSize + cellSize / 2 + (targetY - (startY + row1 * cellSize + cellSize / 2)) * easedProgress;
               
-              // 绘制第一个方块的动画
-              if (row1 === i && col1 === j && piece1) {
-                const targetX = startX + col2 * cellSize + cellSize / 2;
-                const targetY = startY + row2 * cellSize + cellSize / 2;
-                const currentX = startX + col1 * cellSize + cellSize / 2 + (targetX - (startX + col1 * cellSize + cellSize / 2)) * easedProgress;
-                const currentY = startY + row1 * cellSize + cellSize / 2 + (targetY - (startY + row1 * cellSize + cellSize / 2)) * easedProgress;
-                
-                ctx.fillStyle = piece1.color;
-                ctx.beginPath();
-                ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                if (piece1.special) {
-                  // 绘制特殊棋子符号
-                  ctx.fillStyle = '#fff';
-                  if (piece1.specialType === 'row_clear') {
-                    ctx.fillRect(currentX - cellSize / 4, currentY - 5, cellSize / 2, 10);
-                  } else if (piece1.specialType === 'column_clear') {
-                    ctx.fillRect(currentX - 5, currentY - cellSize / 4, 10, cellSize / 2);
-                  }
-                }
-              }
-              
-              // 绘制第二个方块的动画
-              if (row2 === i && col2 === j && piece2) {
-                const targetX = startX + col1 * cellSize + cellSize / 2;
-                const targetY = startY + row1 * cellSize + cellSize / 2;
-                const currentX = startX + col2 * cellSize + cellSize / 2 + (targetX - (startX + col2 * cellSize + cellSize / 2)) * easedProgress;
-                const currentY = startY + row2 * cellSize + cellSize / 2 + (targetY - (startY + row2 * cellSize + cellSize / 2)) * easedProgress;
-                
-                ctx.fillStyle = piece2.color;
-                ctx.beginPath();
-                ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                if (piece2.special) {
-                  // 绘制特殊棋子符号
-                  ctx.fillStyle = '#fff';
-                  if (piece2.specialType === 'row_clear') {
-                    ctx.fillRect(currentX - cellSize / 4, currentY - 5, cellSize / 2, 10);
-                  } else if (piece2.specialType === 'column_clear') {
-                    ctx.fillRect(currentX - 5, currentY - cellSize / 4, 10, cellSize / 2);
-                  }
-                }
-              }
-            } else if (anim.type === 'drop') {
-              // 绘制下落动画
-              const { row, col, targetRow, targetCol, piece } = anim.data;
-              const easedProgress = this.easeOutBounce(anim.progress);
-              
-              // 计算当前位置
-              let startYPos;
-              if (row === -1) {
-                // 新方块从顶部外落下
-                startYPos = startY - cellSize;
-              } else {
-                // 现有方块下落
-                startYPos = startY + row * cellSize + cellSize / 2;
-              }
-              const targetYPos = startY + targetRow * cellSize + cellSize / 2;
-              const currentY = startYPos + (targetYPos - startYPos) * easedProgress;
-              const currentX = startX + col * cellSize + cellSize / 2;
-              
-              // 绘制下落的方块
-              ctx.fillStyle = piece.color;
+              ctx.fillStyle = piece1.color;
               ctx.beginPath();
               ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
               ctx.fill();
               
-              if (piece.special) {
+              if (piece1.special) {
                 // 绘制特殊棋子符号
                 ctx.fillStyle = '#fff';
-                if (piece.specialType === 'row_clear') {
+                if (piece1.specialType === 'row_clear') {
                   ctx.fillRect(currentX - cellSize / 4, currentY - 5, cellSize / 2, 10);
-                } else if (piece.specialType === 'column_clear') {
+                } else if (piece1.specialType === 'column_clear') {
                   ctx.fillRect(currentX - 5, currentY - cellSize / 4, 10, cellSize / 2);
                 }
               }
-            } else if (anim.type === 'pop' && anim.data.row === i && anim.data.col === j) {
-              // 绘制选中动画
-              const easedProgress = this.easeOutElastic(anim.progress);
-              const scale = 1 + easedProgress * 0.3;
-              if (this.board[i][j]) {
-                ctx.fillStyle = this.board[i][j].color;
-                ctx.beginPath();
-                ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
-                ctx.fill();
-              }
-            } else if (anim.type === 'special' && anim.data.row === i && anim.data.col === j) {
-              // 绘制特殊动画
-              const easedProgress = this.easeOutQuad(anim.progress);
-              const scale = 1 + easedProgress * 2;
-              const opacity = 1 - easedProgress;
-              ctx.globalAlpha = opacity;
+            }
+            
+            // 绘制第二个方块的动画
+            if (row2 === i && col2 === j && piece2) {
+              const targetX = startX + col1 * cellSize + cellSize / 2;
+              const targetY = startY + row1 * cellSize + cellSize / 2;
+              const currentX = startX + col2 * cellSize + cellSize / 2 + (targetX - (startX + col2 * cellSize + cellSize / 2)) * easedProgress;
+              const currentY = startY + row2 * cellSize + cellSize / 2 + (targetY - (startY + row2 * cellSize + cellSize / 2)) * easedProgress;
               
-              if (anim.data.specialType === 'level_up') {
-                // 绘制升级动画
-                const gradient = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
-                gradient.addColorStop(0, '#FFD700');
-                gradient.addColorStop(0.5, '#FFA500');
-                gradient.addColorStop(1, '#FFD700');
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
-                ctx.fill();
-                // 绘制文字
+              ctx.fillStyle = piece2.color;
+              ctx.beginPath();
+              ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
+              ctx.fill();
+              
+              if (piece2.special) {
+                // 绘制特殊棋子符号
                 ctx.fillStyle = '#fff';
-                ctx.font = '20px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('LEVEL UP!', x + cellSize / 2, y + cellSize / 2 + 8);
-              } else {
-                // 绘制特殊棋子爆炸动画
-                ctx.fillStyle = anim.data.color || '#ffffff';
-                ctx.beginPath();
-                ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
-                ctx.fill();
-                // 绘制冲击波
-                for (let r = 0; r < 3; r++) {
-                  const radius = (cellSize / 2 + r * 10) * scale;
-                  ctx.strokeStyle = anim.data.color || '#ffffff';
-                  ctx.lineWidth = 2;
-                  ctx.globalAlpha = opacity * (1 - r * 0.3);
-                  ctx.beginPath();
-                  ctx.arc(x + cellSize / 2, y + cellSize / 2, radius, 0, Math.PI * 2);
-                  ctx.stroke();
+                if (piece2.specialType === 'row_clear') {
+                  ctx.fillRect(currentX - cellSize / 4, currentY - 5, cellSize / 2, 10);
+                } else if (piece2.specialType === 'column_clear') {
+                  ctx.fillRect(currentX - 5, currentY - cellSize / 4, 10, cellSize / 2);
                 }
               }
-              ctx.globalAlpha = 1;
             }
-          });
+          } else if (anim.type === 'drop') {
+            // 绘制下落动画
+            const { row, col, targetRow, targetCol, piece } = anim.data;
+            const easedProgress = this.easeOutBounce(anim.progress);
+            
+            // 计算当前位置
+            let startYPos;
+            if (row === -1) {
+              // 新方块从顶部外落下
+              startYPos = startY - cellSize;
+            } else {
+              // 现有方块下落
+              startYPos = startY + row * cellSize + cellSize / 2;
+            }
+            const targetYPos = startY + targetRow * cellSize + cellSize / 2;
+            const currentY = startYPos + (targetYPos - startYPos) * easedProgress;
+            const currentX = startX + col * cellSize + cellSize / 2;
+            
+            // 绘制下落的方块
+            ctx.fillStyle = piece.color;
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            if (piece.special) {
+              // 绘制特殊棋子符号
+              ctx.fillStyle = '#fff';
+              if (piece.specialType === 'row_clear') {
+                ctx.fillRect(currentX - cellSize / 4, currentY - 5, cellSize / 2, 10);
+              } else if (piece.specialType === 'column_clear') {
+                ctx.fillRect(currentX - 5, currentY - cellSize / 4, 10, cellSize / 2);
+              }
+            }
+          } else if (anim.type === 'pop' && anim.data.row === i && anim.data.col === j) {
+            // 绘制选中动画
+            const easedProgress = this.easeOutElastic(anim.progress);
+            const scale = 1 + easedProgress * 0.3;
+            if (this.board[i][j]) {
+              ctx.fillStyle = this.board[i][j].color;
+              ctx.beginPath();
+              ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (anim.type === 'special' && anim.data.row === i && anim.data.col === j) {
+            // 绘制特殊动画
+            const easedProgress = this.easeOutQuad(anim.progress);
+            const scale = 1 + easedProgress * 2;
+            const opacity = 1 - easedProgress;
+            ctx.globalAlpha = opacity;
+            
+            if (anim.data.specialType === 'level_up') {
+              // 绘制升级动画
+              const gradient = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
+              gradient.addColorStop(0, '#FFD700');
+              gradient.addColorStop(0.5, '#FFA500');
+              gradient.addColorStop(1, '#FFD700');
+              ctx.fillStyle = gradient;
+              ctx.beginPath();
+              ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
+              ctx.fill();
+              // 绘制文字
+              ctx.fillStyle = '#fff';
+              ctx.font = '20px Inter, Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText('LEVEL UP!', x + cellSize / 2, y + cellSize / 2 + 8);
+            } else {
+              // 绘制特殊棋子爆炸动画
+              ctx.fillStyle = anim.data.color || '#ffffff';
+              ctx.beginPath();
+              ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
+              ctx.fill();
+              // 绘制冲击波
+              for (let r = 0; r < 3; r++) {
+                const radius = (cellSize / 2 + r * 10) * scale;
+                ctx.strokeStyle = anim.data.color || '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = opacity * (1 - r * 0.3);
+                ctx.beginPath();
+                ctx.arc(x + cellSize / 2, y + cellSize / 2, radius, 0, Math.PI * 2);
+                ctx.stroke();
+              }
+            }
+            ctx.globalAlpha = 1;
+          }
+        });
 
-          // 绘制选中状态
-          // if (this.selectedCell && this.selectedCell.row === i && this.selectedCell.col === j) {
-          //   ctx.strokeStyle = '#2196F3';
-          //   ctx.lineWidth = 3;
-          //   ctx.strokeRect(x, y, cellSize, cellSize);
-          // }
+        // 绘制选中状态
+        if (this.selectedCell && this.selectedCell.row === i && this.selectedCell.col === j) {
+          ctx.strokeStyle = '#F97316';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x, y, cellSize, cellSize);
         }
       }
-
-      // 绘制底部按钮
-      // 返回按钮 - 次要按钮
-      ctx.fillStyle = '#9E9E9E'; // 灰色
-      ctx.fillRect(40, this.height - 60, 100, 40);
-      ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('返回', 90, this.height - 35);
-
-      // 重新开始按钮 - 成功按钮
-      ctx.fillStyle = '#4CAF50'; // 绿色
-      ctx.fillRect(this.width - 140, this.height - 60, 100, 40);
-      ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('重新开始', this.width - 90, this.height - 35);
-
-      // 绘制游戏结束状态
-      if (this.gameStatus === 'gameOver') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, this.width, this.height);
-        ctx.fillStyle = '#fff';
-        ctx.font = '24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('游戏结束', this.width / 2, this.height / 2 - 40);
-        ctx.font = '18px Arial';
-        ctx.fillText(`最终得分: ${this.score}`, this.width / 2, this.height / 2);
-        ctx.fillText(`等级: ${this.level}`, this.width / 2, this.height / 2 + 30);
-
-        // 绘制重新开始按钮 - 成功按钮
-        ctx.fillStyle = '#4CAF50'; // 绿色
-        ctx.fillRect(this.width / 2 - 100, this.height / 2 + 60, 200, 50);
-        ctx.fillStyle = '#fff';
-        ctx.font = '16px Arial';
-        ctx.fillText('重新开始', this.width / 2, this.height / 2 + 90);
-
-        // 绘制返回按钮 - 次要按钮
-        ctx.fillStyle = '#9E9E9E'; // 灰色
-        ctx.fillRect(this.width / 2 - 100, this.height / 2 + 120, 200, 50);
-        ctx.fillStyle = '#fff';
-        ctx.font = '16px Arial';
-        ctx.fillText('返回首页', this.width / 2, this.height / 2 + 150);
-      }
-    } catch (error) {
-      console.error('Render error:', error);
     }
+  }
+
+  // 绘制底部按钮
+  drawBottomButtons(ctx) {
+    // 返回按钮
+    const backGradient = ctx.createLinearGradient(40, this.height - 60, 140, this.height - 60);
+    backGradient.addColorStop(0, '#6B7280');
+    backGradient.addColorStop(1, '#4B5563');
+    ctx.fillStyle = backGradient;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
+    
+    const x = 40;
+    const y = this.height - 60;
+    const width = 100;
+    const height = 40;
+    const radius = 20;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+    
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Inter, Arial';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText('返回', 90, this.height - 35);
+    ctx.shadowBlur = 0;
+
+    // 重新开始按钮
+    const restartGradient = ctx.createLinearGradient(this.width - 140, this.height - 60, this.width - 40, this.height - 60);
+    restartGradient.addColorStop(0, '#10B981');
+    restartGradient.addColorStop(1, '#059669');
+    ctx.fillStyle = restartGradient;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    
+    const x = this.width - 140;
+    const y = this.height - 60;
+    const width = 100;
+    const height = 40;
+    const radius = 20;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+    
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Inter, Arial';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText('重新开始', this.width - 90, this.height - 35);
+    ctx.shadowBlur = 0;
+  }
+
+  // 绘制游戏结束状态
+  drawGameOver(ctx) {
+    // 半透明遮罩
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, this.width, this.height);
+    
+    // 游戏结束卡片
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
+    
+    const cardWidth = 300;
+    const cardHeight = 250;
+    const cardX = (this.width - cardWidth) / 2;
+    const cardY = (this.height - cardHeight) / 2;
+    
+    const x = cardX;
+    const y = cardY;
+    const width = cardWidth;
+    const height = cardHeight;
+    const radius = 20;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+    
+    ctx.fill();
+    ctx.stroke();
+    
+    // 游戏结束文字
+    ctx.fillStyle = '#2563EB';
+    ctx.font = '28px Inter, Arial';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText('游戏结束', this.width / 2, this.height / 2 - 40);
+    
+    // 得分和等级
+    ctx.font = '20px Inter, Arial';
+    ctx.fillStyle = '#1E293B';
+    ctx.shadowBlur = 0;
+    ctx.fillText(`最终得分: ${this.score}`, this.width / 2, this.height / 2);
+    ctx.fillText(`等级: ${this.level}`, this.width / 2, this.height / 2 + 30);
+
+    // 重新开始按钮
+    const restartGradient = ctx.createLinearGradient(this.width / 2 - 100, this.height / 2 + 60, this.width / 2 + 100, this.height / 2 + 60);
+    restartGradient.addColorStop(0, '#10B981');
+    restartGradient.addColorStop(1, '#059669');
+    ctx.fillStyle = restartGradient;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    
+    const x = this.width / 2 - 100;
+    const y = this.height / 2 + 60;
+    const width = 200;
+    const height = 50;
+    const radius = 25;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+    
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle = '#fff';
+    ctx.font = '18px Inter, Arial';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText('重新开始', this.width / 2, this.height / 2 + 90);
+    ctx.shadowBlur = 0;
+
+    // 返回首页按钮
+    const homeGradient = ctx.createLinearGradient(this.width / 2 - 100, this.height / 2 + 120, this.width / 2 + 100, this.height / 2 + 120);
+    homeGradient.addColorStop(0, '#6B7280');
+    homeGradient.addColorStop(1, '#4B5563');
+    ctx.fillStyle = homeGradient;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    
+    const x = this.width / 2 - 100;
+    const y = this.height / 2 + 120;
+    const width = 200;
+    const height = 50;
+    const radius = 25;
+    
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+    
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle = '#fff';
+    ctx.font = '18px Inter, Arial';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText('返回首页', this.width / 2, this.height / 2 + 150);
+    ctx.shadowBlur = 0;
+  }
+
+  // 绘制文化元素装饰
+  drawCulturalElements(ctx) {
+    // 绘制古树装饰元素
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.beginPath();
+    ctx.arc(50, 50, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 绘制河流装饰元素
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, this.height - 80);
+    ctx.quadraticCurveTo(this.width / 2, this.height - 120, this.width, this.height - 80);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // 处理触摸开始
