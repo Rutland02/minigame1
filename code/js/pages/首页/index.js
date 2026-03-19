@@ -30,9 +30,9 @@ class HomePage {
         { id: 'info5', text: '文化展览', x: 260, y: 440, w: 45, h: 120 }
       ],
       gameButtons: [
-        { id: 'match3', text: '三色消消乐', x: this.width * 0.25 - 42.5, y: 620, w: 85, h: 80, color: '#DC2626' },
-        { id: 'puzzle', text: '三色拼图', x: this.width * 0.5 - 42.5, y: 620, w: 85, h: 80, color: '#D97706' },
-        { id: 'quiz', text: '三色答题', x: this.width * 0.75 - 42.5, y: 620, w: 85, h: 80, color: '#1D4ED8' }
+        { id: 'match3', text: '三色消消乐', x: this.width * 0.2 - 50, y: 600, w: 100, h: 90, color: '#DC2626' },
+        { id: 'puzzle', text: '三色拼图', x: this.width * 0.5 - 50, y: 600, w: 100, h: 90, color: '#D97706' },
+        { id: 'quiz', text: '三色答题', x: this.width * 0.8 - 50, y: 600, w: 100, h: 90, color: '#1D4ED8' }
       ]
     };
 
@@ -47,20 +47,17 @@ class HomePage {
     // 2. 绘制顶部Banner (红色卷轴风格)
     this.drawTopBanner(ctx);
 
-    // 3. 绘制“红色行动”板块
+    // 3. 绘制"红色行动"板块
     this.drawSectionHeader(ctx, '红色行动', 220);
     this.drawActionButtons(ctx);
 
-    // 4. 绘制“红色清单”板块
+    // 4. 绘制"红色清单"板块
     this.drawSectionHeader(ctx, '红色清单', 400);
     this.drawVerticalList(ctx);
 
-    // 5. 绘制“三色演武场”板块 (游戏区)
+    // 5. 绘制"三色演武场"板块 (游戏区)
     this.drawSectionHeader(ctx, '三色演武场', 580);
     this.drawGameEntry(ctx);
-
-    // 6. 底部成就滚动通知
-    this.drawBottomNotice(ctx);
   }
 
   // 绘制带有传统装饰的标题
@@ -164,13 +161,13 @@ class HomePage {
       // 装饰小图标 (简单模拟)
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.beginPath();
-      ctx.arc(game.x + game.w/2, game.y + 35, 15, 0, Math.PI*2);
+      ctx.arc(game.x + game.w/2, game.y + 40, 18, 0, Math.PI*2);
       ctx.fill();
 
       // 游戏名称
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = '12px sans-serif';
-      ctx.fillText(game.text, game.x + game.w / 2, game.y + game.h - 10);
+      ctx.font = '14px sans-serif';
+      ctx.fillText(game.text, game.x + game.w / 2, game.y + game.h - 12);
     });
   }
 
