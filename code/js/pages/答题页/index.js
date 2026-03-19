@@ -342,7 +342,12 @@ class QuizPage {
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'left';
       ctx.fillText('解析：', 60, this.height / 2);
-      ctx.fillText(question.explanation, 60, this.height / 2 + 30);
+      
+      // 绘制换行解析文本
+      const maxWidth = this.width - 120; // 最大宽度
+      const lineHeight = 25; // 行高
+      const startY = this.height / 2 + 30;
+      this.drawWrappedText(ctx, question.explanation, 60, startY, maxWidth, lineHeight);
       
       // 绘制按钮
       // 下一题按钮 - 主按钮
@@ -457,6 +462,32 @@ class QuizPage {
     ctx.arcTo(x, y + height, x, y, radius);
     ctx.arcTo(x, y, x + width, y, radius);
     ctx.closePath();
+  }
+
+  // 绘制换行文本
+  drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+    let line = '';
+    let currentY = y;
+
+    // 处理中文文本，按字符分割
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const testLine = line + char;
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+
+      if (testWidth > maxWidth && i > 0) {
+        ctx.fillText(line, x, currentY);
+        line = char;
+        currentY += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    
+    // 绘制最后一行
+    ctx.fillText(line, x, currentY);
+    return currentY;
   }
 
   handleTouchStart(e) {
