@@ -452,7 +452,7 @@ class PuzzleGame {
       const infoWidth = 300;
       const infoHeight = 50;
       const infoX = (this.width - infoWidth) / 2;
-      const infoY = this.height - 110; // 放到拼图下面
+      const infoY = this.height - 130; // 放到拼图下面，上移一些避免与按钮重合
       this.drawRoundedRect(ctx, infoX, infoY, infoWidth, infoHeight, 15);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.fill();

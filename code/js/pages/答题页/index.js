@@ -409,8 +409,9 @@ class QuizPage {
       ctx.fillText('返回', 60, this.height - 35);
       
       // 提示按钮 - 提示按钮
-      this.drawRoundedRect(ctx, 120, this.height - 60, 100, 40, 20);
-      const hintGradient = ctx.createLinearGradient(120, this.height - 60, 220, this.height - 20);
+      const hintButtonX = this.width / 2 - 50;
+      this.drawRoundedRect(ctx, hintButtonX, this.height - 60, 100, 40, 20);
+      const hintGradient = ctx.createLinearGradient(hintButtonX, this.height - 60, hintButtonX + 100, this.height - 20);
       hintGradient.addColorStop(0, '#9C27B0');
       hintGradient.addColorStop(1, '#7B1FA2');
       ctx.fillStyle = hintGradient;
@@ -421,7 +422,7 @@ class QuizPage {
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`提示 (${this.hintCount})`, 170, this.height - 35);
+      ctx.fillText(`提示 (${this.hintCount})`, this.width / 2, this.height - 35);
       
       // 提交按钮 - 成功按钮
       if (this.selectedOption !== null) {
