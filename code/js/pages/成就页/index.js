@@ -73,8 +73,12 @@ class AchievementPage {
     ctx.textAlign = 'center';
     ctx.fillText('成就系统', this.width / 2, 80);
 
-    // 绘制返回按钮
-    this.drawRoundedRect(ctx, 20, 20, 80, 40, 20);
+    // 绘制返回按钮 - 底部左侧
+    const buttonHeight = 50;
+    const buttonWidth = 100;
+    const buttonY = this.height - buttonHeight - 30;
+    
+    this.drawRoundedRect(ctx, 40, buttonY, buttonWidth, buttonHeight, 25);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -83,11 +87,11 @@ class AchievementPage {
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('返回', 60, 45);
+    ctx.fillText('返回', 90, buttonY + 32);
 
-    // 绘制生成证书按钮
-    this.drawRoundedRect(ctx, this.width - 100, 20, 80, 40, 20);
-    const certificateGradient = ctx.createLinearGradient(this.width - 100, 20, this.width - 20, 60);
+    // 绘制生成证书按钮 - 底部右侧
+    this.drawRoundedRect(ctx, this.width - 140, buttonY, buttonWidth, buttonHeight, 25);
+    const certificateGradient = ctx.createLinearGradient(this.width - 140, buttonY, this.width - 40, buttonY + buttonHeight);
     certificateGradient.addColorStop(0, '#4CAF50');
     certificateGradient.addColorStop(1, '#45a049');
     ctx.fillStyle = certificateGradient;
@@ -98,7 +102,7 @@ class AchievementPage {
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('生成证书', this.width - 60, 45);
+    ctx.fillText('生成证书', this.width - 90, buttonY + 32);
 
     // 从databus获取成就列表
     const unlockedAchievements = databus.getAchievements();
@@ -269,22 +273,22 @@ class AchievementPage {
     
     if (this.showCertificate) {
       // 检查是否点击了返回按钮
-      if (x >= 20 && x <= 100 && y >= 20 && y <= 60) {
+      if (x >= 30 && x <= 110 && y >= 30 && y <= 70) {
         this.showCertificate = false;
       }
       // 检查是否点击了分享按钮
-      if (x >= this.width / 2 - 80 && x <= this.width / 2 + 80 && y >= this.height - 80 && y <= this.height - 40) {
+      if (x >= this.width / 2 - 80 && x <= this.width / 2 + 80 && y >= this.height - 90 && y <= this.height - 40) {
         this.shareCertificate();
       }
     } else {
-      // 检查是否点击了返回按钮
-      if (x >= 20 && x <= 100 && y >= 20 && y <= 60) {
+      // 检查是否点击了返回按钮 - 底部左侧
+      if (x >= 40 && x <= 140 && y >= this.height - 80 && y <= this.height - 30) {
         if (GameGlobal.app && GameGlobal.app.showPage) {
           GameGlobal.app.showPage('home');
         }
       }
-      // 检查是否点击了生成证书按钮
-      if (x >= this.width - 100 && x <= this.width - 20 && y >= 20 && y <= 60) {
+      // 检查是否点击了生成证书按钮 - 底部右侧
+      if (x >= this.width - 140 && x <= this.width - 40 && y >= this.height - 80 && y <= this.height - 30) {
         this.generateCertificate();
       }
     }
