@@ -399,11 +399,11 @@ class PuzzleGame {
       const buttonWidth = 100;
       const buttonSpacing = 20;
       const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
-      const startX = (this.width - totalButtonWidth) / 2;
+      const buttonStartX = (this.width - totalButtonWidth) / 2;
       const buttonY = this.height - buttonHeight - 30;
       
       // 返回按钮 - 次要按钮
-      this.drawRoundedRect(ctx, startX, buttonY, buttonWidth, buttonHeight, 25);
+      this.drawRoundedRect(ctx, buttonStartX, buttonY, buttonWidth, buttonHeight, 25);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -412,10 +412,10 @@ class PuzzleGame {
       ctx.fillStyle = '#fff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('返回', startX + buttonWidth / 2, buttonY + 32);
+      ctx.fillText('返回', buttonStartX + buttonWidth / 2, buttonY + 32);
 
       // 难度设置按钮 - 主按钮
-      const difficultyX = startX + buttonWidth + buttonSpacing;
+      const difficultyX = buttonStartX + buttonWidth + buttonSpacing;
       this.drawRoundedRect(ctx, difficultyX, buttonY, buttonWidth, buttonHeight, 25);
       const mainButtonGradient = ctx.createLinearGradient(difficultyX, buttonY, difficultyX + buttonWidth, buttonY + buttonHeight);
       mainButtonGradient.addColorStop(0, '#4a6fa5');
@@ -549,7 +549,7 @@ class PuzzleGame {
     const buttonWidth = 100;
     const buttonSpacing = 20;
     const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
-    const startX = (this.width - totalButtonWidth) / 2;
+    const buttonStartX = (this.width - totalButtonWidth) / 2;
     const buttonY = this.height - buttonHeight - 30;
     const buttonAreaTop = buttonY;
     const buttonAreaBottom = buttonY + buttonHeight;
@@ -561,14 +561,14 @@ class PuzzleGame {
       console.log('点击了底部按钮区域');
       
       // 返回按钮 (左侧)
-      if (x >= startX && x <= startX + buttonWidth) {
+      if (x >= buttonStartX && x <= buttonStartX + buttonWidth) {
         console.log('点击了返回按钮');
         GameGlobal.app.showPage('home');
         return;
       }
       
       // 难度设置按钮 (中间)
-      const difficultyX = startX + buttonWidth + buttonSpacing;
+      const difficultyX = buttonStartX + buttonWidth + buttonSpacing;
       if (x >= difficultyX && x <= difficultyX + buttonWidth) {
         console.log('点击了难度设置按钮');
         // 显示难度选择对话框
