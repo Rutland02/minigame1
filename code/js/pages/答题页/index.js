@@ -532,7 +532,10 @@ class QuizPage {
       }
     } else {
       // 检查是否点击了下一题/查看成绩按钮
-      if (x >= this.width / 2 - 110 && x <= this.width / 2 + 90 && y >= this.height / 2 + 60 && y <= this.height / 2 + 110) {
+      // 由于解析文本长度不同，按钮位置会变化
+      // 使用一个更宽松的点击区域检查，确保在合理范围内都能点击
+      // 按钮大致位于屏幕下方区域
+      if (x >= this.width / 2 - 110 && x <= this.width / 2 + 90 && y >= this.height / 2 + 60 && y <= this.height - 50) {
         if (this.currentQuestion < this.questions.length - 1) {
           this.nextQuestion();
         } else {
