@@ -12,7 +12,7 @@ class HomePage {
         id: 'match3',
         text: '三色消消乐',
         x: this.width / 2 - 100,
-        y: this.height / 2 - 120,
+        y: this.height / 2 - 170,
         width: 200,
         height: 60
       },
@@ -20,7 +20,7 @@ class HomePage {
         id: 'puzzle',
         text: '三色拼图',
         x: this.width / 2 - 100,
-        y: this.height / 2 - 40,
+        y: this.height / 2 - 90,
         width: 200,
         height: 60
       },
@@ -28,7 +28,7 @@ class HomePage {
         id: 'quiz',
         text: '三色答题',
         x: this.width / 2 - 100,
-        y: this.height / 2 + 40,
+        y: this.height / 2 - 10,
         width: 200,
         height: 60
       },
@@ -36,7 +36,7 @@ class HomePage {
         id: 'achievement',
         text: '成就系统',
         x: this.width / 2 - 100,
-        y: this.height / 2 + 120,
+        y: this.height / 2 + 70,
         width: 200,
         height: 60
       },
@@ -44,7 +44,7 @@ class HomePage {
         id: 'scan',
         text: '扫码打卡',
         x: this.width / 2 - 100,
-        y: this.height / 2 + 200,
+        y: this.height / 2 + 150,
         width: 200,
         height: 60
       }

@@ -156,7 +156,7 @@ class Match3Game {
     const size = this.board.length;
     this.cellSize = Math.min((this.width - 40) / size, (this.height - 200) / size);
     this.startX = (this.width - this.cellSize * size) / 2;
-    this.startY = 40;
+    this.startY = 120;
   }
 
   // 初始化游戏棋盘
@@ -1264,15 +1264,8 @@ class Match3Game {
 
   // 绘制底部按钮
   drawBottomButtons(ctx) {
-    // 计算按钮位置（在游戏信息提示框下方）
-    const size = this.board.length;
-    const boardHeight = this.cellSize * size;
-    const boardBottomY = this.startY + boardHeight + 20;
-    const infoBoxHeight = 80;
-    const buttonY = boardBottomY + infoBoxHeight + 20;
-    
     // 返回按钮
-    const backGradient = ctx.createLinearGradient(40, buttonY, 140, buttonY);
+    const backGradient = ctx.createLinearGradient(40, this.height - 60, 140, this.height - 60);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = backGradient;
@@ -1280,7 +1273,7 @@ class Match3Game {
     ctx.lineWidth = 1;
     
     const x = 40;
-    const y = buttonY;
+    const y = this.height - 60;
     const width = 100;
     const height = 40;
     const radius = 20;
@@ -1306,18 +1299,18 @@ class Match3Game {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
-    ctx.fillText('返回', 90, buttonY + 25);
+    ctx.fillText('返回', 90, this.height - 35);
     ctx.shadowBlur = 0;
 
     // 重新开始按钮
-    const restartGradient = ctx.createLinearGradient(this.width - 140, buttonY, this.width - 40, buttonY);
+    const restartGradient = ctx.createLinearGradient(this.width - 140, this.height - 60, this.width - 40, this.height - 60);
     restartGradient.addColorStop(0, '#10B981');
     restartGradient.addColorStop(1, '#059669');
     ctx.fillStyle = restartGradient;
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     
     const restartX = this.width - 140;
-    const restartY = buttonY;
+    const restartY = this.height - 60;
     const restartWidth = 100;
     const restartHeight = 40;
     const restartRadius = 20;
@@ -1343,7 +1336,7 @@ class Match3Game {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
-    ctx.fillText('重新开始', this.width - 90, buttonY + 25);
+    ctx.fillText('重新开始', this.width - 90, this.height - 35);
     ctx.shadowBlur = 0;
   }
 
@@ -1510,16 +1503,9 @@ class Match3Game {
       return;
     }
 
-    // 计算按钮位置（在游戏信息提示框下方）
-    const size = this.board.length;
-    const boardHeight = this.cellSize * size;
-    const boardBottomY = this.startY + boardHeight + 20;
-    const infoBoxHeight = 80;
-    const buttonY = boardBottomY + infoBoxHeight + 20;
-    
     // 检查是否点击了底部按钮
     // 返回按钮
-    if (x >= 40 && x <= 140 && y >= buttonY && y <= buttonY + 40) {
+    if (x >= 40 && x <= 140 && y >= this.height - 60 && y <= this.height - 20) {
       if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.showPage) {
         GameGlobal.app.showPage('home');
       }
@@ -1527,7 +1513,7 @@ class Match3Game {
     }
 
     // 重新开始按钮
-    if (x >= this.width - 140 && x <= this.width - 40 && y >= buttonY && y <= buttonY + 40) {
+    if (x >= this.width - 140 && x <= this.width - 40 && y >= this.height - 60 && y <= this.height - 20) {
       this.reset();
       return;
     }
