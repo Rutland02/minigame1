@@ -18,11 +18,13 @@ class LoginPage {
     const img = wx.createImage();
     img.onload = () => {
       this.backgroundImage = img;
+      console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
     };
     img.onerror = (err) => {
       console.error('Failed to load background image:', err);
     };
-    img.src = '/images/ui/登录页面.jpg';
+    // 使用相对于项目根目录的路径
+    img.src = 'code/images/ui/登录页面.jpg';
   }
 
   render(ctx) {
