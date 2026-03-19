@@ -394,29 +394,30 @@ class PuzzleGame {
         }
       });
 
-      // 绘制底部按钮 - 垂直排列
+      // 绘制底部按钮 - 水平排列
       const buttonHeight = 50;
-      const buttonWidth = 180;
-      const buttonSpacing = 15;
-      const totalButtonHeight = (buttonHeight + buttonSpacing) * 3 - buttonSpacing;
-      const buttonStartY = this.height - totalButtonHeight - 30;
+      const buttonWidth = 100;
+      const buttonSpacing = 20;
+      const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
+      const startX = (this.width - totalButtonWidth) / 2;
+      const buttonY = this.height - buttonHeight - 30;
       
       // 返回按钮 - 次要按钮
-      this.drawRoundedRect(ctx, (this.width - buttonWidth) / 2, buttonStartY, buttonWidth, buttonHeight, 25);
+      this.drawRoundedRect(ctx, startX, buttonY, buttonWidth, buttonHeight, 25);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '16px Arial';
+      ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('返回', this.width / 2, buttonStartY + 32);
+      ctx.fillText('返回', startX + buttonWidth / 2, buttonY + 32);
 
       // 难度设置按钮 - 主按钮
-      const difficultyY = buttonStartY + buttonHeight + buttonSpacing;
-      this.drawRoundedRect(ctx, (this.width - buttonWidth) / 2, difficultyY, buttonWidth, buttonHeight, 25);
-      const mainButtonGradient = ctx.createLinearGradient((this.width - buttonWidth) / 2, difficultyY, (this.width + buttonWidth) / 2, difficultyY + buttonHeight);
+      const difficultyX = startX + buttonWidth + buttonSpacing;
+      this.drawRoundedRect(ctx, difficultyX, buttonY, buttonWidth, buttonHeight, 25);
+      const mainButtonGradient = ctx.createLinearGradient(difficultyX, buttonY, difficultyX + buttonWidth, buttonY + buttonHeight);
       mainButtonGradient.addColorStop(0, '#4a6fa5');
       mainButtonGradient.addColorStop(1, '#6e5b7b');
       ctx.fillStyle = mainButtonGradient;
@@ -425,14 +426,14 @@ class PuzzleGame {
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '16px Arial';
+      ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('难度设置', this.width / 2, difficultyY + 32);
+      ctx.fillText('难度设置', difficultyX + buttonWidth / 2, buttonY + 32);
 
       // 重新开始按钮 - 成功按钮
-      const restartY = difficultyY + buttonHeight + buttonSpacing;
-      this.drawRoundedRect(ctx, (this.width - buttonWidth) / 2, restartY, buttonWidth, buttonHeight, 25);
-      const successButtonGradient = ctx.createLinearGradient((this.width - buttonWidth) / 2, restartY, (this.width + buttonWidth) / 2, restartY + buttonHeight);
+      const restartX = difficultyX + buttonWidth + buttonSpacing;
+      this.drawRoundedRect(ctx, restartX, buttonY, buttonWidth, buttonHeight, 25);
+      const successButtonGradient = ctx.createLinearGradient(restartX, buttonY, restartX + buttonWidth, buttonY + buttonHeight);
       successButtonGradient.addColorStop(0, '#4CAF50');
       successButtonGradient.addColorStop(1, '#45a049');
       ctx.fillStyle = successButtonGradient;
@@ -441,9 +442,9 @@ class PuzzleGame {
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '16px Arial';
+      ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('重新开始', this.width / 2, restartY + 32);
+      ctx.fillText('重新开始', restartX + buttonWidth / 2, buttonY + 32);
 
       // 绘制游戏完成状态
       if (this.gameStatus === 'completed') {
@@ -543,14 +544,15 @@ class PuzzleGame {
       return;
     }
 
-    // 底部按钮区域 - 垂直排列
+    // 底部按钮区域 - 水平排列
     const buttonHeight = 50;
-    const buttonWidth = 180;
-    const buttonSpacing = 15;
-    const totalButtonHeight = (buttonHeight + buttonSpacing) * 3 - buttonSpacing;
-    const buttonStartY = this.height - totalButtonHeight - 30;
-    const buttonAreaTop = buttonStartY;
-    const buttonAreaBottom = buttonStartY + totalButtonHeight;
+    const buttonWidth = 100;
+    const buttonSpacing = 20;
+    const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
+    const startX = (this.width - totalButtonWidth) / 2;
+    const buttonY = this.height - buttonHeight - 30;
+    const buttonAreaTop = buttonY;
+    const buttonAreaBottom = buttonY + buttonHeight;
 
     console.log('按钮区域顶部:', buttonAreaTop);
 
@@ -558,31 +560,28 @@ class PuzzleGame {
     if (y >= buttonAreaTop && y <= buttonAreaBottom) {
       console.log('点击了底部按钮区域');
       
-      // 检查x坐标是否在按钮宽度范围内
-      if (x >= (this.width - buttonWidth) / 2 && x <= (this.width + buttonWidth) / 2) {
-        // 返回按钮 (顶部)
-        if (y >= buttonStartY && y <= buttonStartY + buttonHeight) {
-          console.log('点击了返回按钮');
-          GameGlobal.app.showPage('home');
-          return;
-        }
-        
-        // 难度设置按钮 (中间)
-        const difficultyY = buttonStartY + buttonHeight + buttonSpacing;
-        if (y >= difficultyY && y <= difficultyY + buttonHeight) {
-          console.log('点击了难度设置按钮');
-          // 显示难度选择对话框
-          this.showDifficultyDialog();
-          return;
-        }
-        
-        // 重新开始按钮 (底部)
-        const restartY = difficultyY + buttonHeight + buttonSpacing;
-        if (y >= restartY && y <= restartY + buttonHeight) {
-          console.log('点击了重新开始按钮');
-          this.initPuzzle();
-          return;
-        }
+      // 返回按钮 (左侧)
+      if (x >= startX && x <= startX + buttonWidth) {
+        console.log('点击了返回按钮');
+        GameGlobal.app.showPage('home');
+        return;
+      }
+      
+      // 难度设置按钮 (中间)
+      const difficultyX = startX + buttonWidth + buttonSpacing;
+      if (x >= difficultyX && x <= difficultyX + buttonWidth) {
+        console.log('点击了难度设置按钮');
+        // 显示难度选择对话框
+        this.showDifficultyDialog();
+        return;
+      }
+      
+      // 重新开始按钮 (右侧)
+      const restartX = difficultyX + buttonWidth + buttonSpacing;
+      if (x >= restartX && x <= restartX + buttonWidth) {
+        console.log('点击了重新开始按钮');
+        this.initPuzzle();
+        return;
       }
     }
 
