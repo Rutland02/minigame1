@@ -698,7 +698,7 @@ class PuzzleGame {
     const buttonSpacing = 20;
     const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
     const buttonStartX = (this.width - totalButtonWidth) / 2;
-    const buttonY = this.height - buttonHeight - 30;
+    const buttonY = this.height - buttonHeight - 20;
     const buttonAreaTop = buttonY;
     const buttonAreaBottom = buttonY + buttonHeight;
 
