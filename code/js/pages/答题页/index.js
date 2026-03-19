@@ -426,8 +426,9 @@ class QuizPage {
       
       // 提交按钮 - 成功按钮
       if (this.selectedOption !== null) {
-        this.drawRoundedRect(ctx, 120, this.height - 60, 100, 40, 20);
-        const submitGradient = ctx.createLinearGradient(120, this.height - 60, 220, this.height - 20);
+        const submitButtonX = this.width / 2 - 50;
+        this.drawRoundedRect(ctx, submitButtonX, this.height - 60, 100, 40, 20);
+        const submitGradient = ctx.createLinearGradient(submitButtonX, this.height - 60, submitButtonX + 100, this.height - 20);
         submitGradient.addColorStop(0, '#4CAF50');
         submitGradient.addColorStop(1, '#45a049');
         ctx.fillStyle = submitGradient;
@@ -438,7 +439,7 @@ class QuizPage {
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('提交答案', 170, this.height - 35);
+        ctx.fillText('提交答案', this.width / 2, this.height - 35);
       }
       
       // 跳过按钮 - 警告按钮
@@ -519,12 +520,12 @@ class QuizPage {
       }
 
       // 检查是否点击了提交按钮
-      if (!this.isAnswered && this.selectedOption !== null && x >= 120 && x <= 220 && y >= this.height - 60 && y <= this.height - 20) {
+      if (!this.isAnswered && this.selectedOption !== null && x >= this.width / 2 - 50 && x <= this.width / 2 + 50 && y >= this.height - 60 && y <= this.height - 20) {
         this.submitAnswer();
       }
 
       // 检查是否点击了提示按钮
-      if (x >= 120 && x <= 220 && y >= this.height - 60 && y <= this.height - 20) {
+      if (x >= this.width / 2 - 50 && x <= this.width / 2 + 50 && y >= this.height - 60 && y <= this.height - 20) {
         this.useHint();
       }
 
