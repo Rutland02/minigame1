@@ -1533,7 +1533,6 @@ class Match3Game {
     }
 
     // 检查是否点击了游戏板
-    const size = this.board.length;
     const cellSize = this.cellSize;
     const startX = this.startX;
     const startY = this.startY;
