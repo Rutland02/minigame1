@@ -147,9 +147,9 @@ class PuzzleGame {
     if (this.gameStatus !== 'playing') return;
 
     const size = this.getPuzzleSize();
-    const pieceSize = Math.min((this.width - 40) / size, (this.height - 200) / size);
+    const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
     const startX = (this.width - pieceSize * size) / 2;
-    const startY = 120;
+    const startY = 130;
 
     // 检查坐标是否有效
     if (x < startX || x > startX + pieceSize * size || y < startY || y > startY + pieceSize * size) {
@@ -218,8 +218,8 @@ class PuzzleGame {
 
   renderDifficultyDialog(ctx) {
     // 绘制难度选择对话框
-    const dialogWidth = 300;
-    const dialogHeight = 200;
+    const dialogWidth = 320;
+    const dialogHeight = 280;
     const dialogX = (this.width - dialogWidth) / 2;
     const dialogY = (this.height - dialogHeight) / 2;
 
@@ -227,52 +227,86 @@ class PuzzleGame {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // 绘制对话框
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(dialogX, dialogY, dialogWidth, dialogHeight);
-    ctx.strokeStyle = '#2196F3';
+    // 绘制玻璃态对话框
+    this.drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 2;
-    ctx.strokeRect(dialogX, dialogY, dialogWidth, dialogHeight);
+    ctx.stroke();
 
     // 绘制标题
-    ctx.fillStyle = '#333333';
-    ctx.font = '18px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '24px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('选择难度', this.width / 2, dialogY + 40);
+    ctx.fillText('选择难度', this.width / 2, dialogY + 60);
 
     // 绘制简单模式按钮
-    ctx.fillStyle = '#E0E0E0';
-    ctx.fillRect(dialogX + 20, dialogY + 80, dialogWidth - 40, 40);
-    ctx.fillStyle = '#333333';
+    this.drawRoundedRect(ctx, dialogX + 30, dialogY + 100, dialogWidth - 60, 50, 25);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('简单 (3×3)', this.width / 2, dialogY + 105);
+    ctx.fillText('简单 (3×3)', this.width / 2, dialogY + 132);
 
     // 绘制中等模式按钮
-    ctx.fillStyle = '#2196F3'; // 主按钮（蓝色）
-    ctx.fillRect(dialogX + 20, dialogY + 130, dialogWidth - 40, 40);
-    ctx.fillStyle = '#fff';
+    this.drawRoundedRect(ctx, dialogX + 30, dialogY + 160, dialogWidth - 60, 50, 25);
+    const mediumGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 160, dialogX + dialogWidth - 30, dialogY + 210);
+    mediumGradient.addColorStop(0, '#4a6fa5');
+    mediumGradient.addColorStop(1, '#6e5b7b');
+    ctx.fillStyle = mediumGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('中等 (4×4)', this.width / 2, dialogY + 155);
+    ctx.fillText('中等 (4×4)', this.width / 2, dialogY + 192);
+
+    // 绘制困难模式按钮
+    this.drawRoundedRect(ctx, dialogX + 30, dialogY + 220, dialogWidth - 60, 50, 25);
+    const hardGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 220, dialogX + dialogWidth - 30, dialogY + 270);
+    hardGradient.addColorStop(0, '#F44336');
+    hardGradient.addColorStop(1, '#D32F2F');
+    ctx.fillStyle = hardGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('困难 (5×5)', this.width / 2, dialogY + 252);
   }
 
   handleDifficultyDialogClick(x, y) {
-    const dialogWidth = 300;
-    const dialogHeight = 200;
+    const dialogWidth = 320;
+    const dialogHeight = 280;
     const dialogX = (this.width - dialogWidth) / 2;
     const dialogY = (this.height - dialogHeight) / 2;
 
     // 检查是否点击了简单模式按钮
-    if (x >= dialogX + 20 && x <= dialogX + dialogWidth - 20 && y >= dialogY + 80 && y <= dialogY + 120) {
+    if (x >= dialogX + 30 && x <= dialogX + dialogWidth - 30 && y >= dialogY + 100 && y <= dialogY + 150) {
       this.changeLevel(1); // 简单模式
       this.gameStatus = 'playing';
       return;
     }
 
     // 检查是否点击了中等模式按钮
-    if (x >= dialogX + 20 && x <= dialogX + dialogWidth - 20 && y >= dialogY + 130 && y <= dialogY + 170) {
+    if (x >= dialogX + 30 && x <= dialogX + dialogWidth - 30 && y >= dialogY + 160 && y <= dialogY + 210) {
       this.changeLevel(2); // 中等模式
+      this.gameStatus = 'playing';
+      return;
+    }
+
+    // 检查是否点击了困难模式按钮
+    if (x >= dialogX + 30 && x <= dialogX + dialogWidth - 30 && y >= dialogY + 220 && y <= dialogY + 270) {
+      this.changeLevel(3); // 困难模式
       this.gameStatus = 'playing';
       return;
     }
@@ -285,40 +319,74 @@ class PuzzleGame {
 
   render(ctx) {
     try {
-      // 绘制背景
-      ctx.fillStyle = '#F5F5F5'; // 浅灰色背景
+      // 绘制渐变背景
+      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+      gradient.addColorStop(0, '#4a6fa5');
+      gradient.addColorStop(1, '#6e5b7b');
+      ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, this.width, this.height);
 
-      // 绘制游戏信息
+      // 绘制半透明遮罩
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.fillRect(0, 0, this.width, this.height);
+
+      // 绘制游戏信息 - 使用玻璃态效果
+      this.drawRoundedRect(ctx, 20, 20, 200, 80, 15);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 绘制游戏信息文字
       ctx.font = '16px Arial';
-      ctx.fillStyle = '#333333'; // 深灰色文字
-      ctx.fillText(`难度: ${this.getPuzzleSize()}×${this.getPuzzleSize()}`, 20, 40);
-      ctx.fillText(`时间: ${this.getElapsedTime()}s`, 20, 65);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.fillText(`难度: ${this.getPuzzleSize()}×${this.getPuzzleSize()}`, 40, 45);
+      ctx.fillText(`时间: ${this.getElapsedTime()}s`, 40, 75);
 
-      // 绘制拼图
+      // 绘制拼图 - 玻璃态容器
       const size = this.getPuzzleSize();
-      const pieceSize = Math.min((this.width - 40) / size, (this.height - 200) / size);
+      const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
       const startX = (this.width - pieceSize * size) / 2;
-      const startY = 120;
+      const startY = 130;
+      const puzzleWidth = pieceSize * size;
+      const puzzleHeight = pieceSize * size;
 
+      // 绘制拼图容器
+      this.drawRoundedRect(ctx, startX - 10, startY - 10, puzzleWidth + 20, puzzleHeight + 20, 20);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 绘制拼图块
       this.pieces.forEach(piece => {
         const x = startX + piece.currentCol * pieceSize;
         const y = startY + piece.currentRow * pieceSize;
 
         if (!piece.isEmpty) {
-          // 绘制拼图块
-          ctx.fillStyle = '#E0E0E0'; // 浅灰色背景
-          ctx.fillRect(x, y, pieceSize, pieceSize);
-          ctx.strokeStyle = '#CCCCCC';
-          ctx.strokeRect(x, y, pieceSize, pieceSize);
-
-          // 绘制拼图内容（这里用颜色和数字代替实际图片）
-          const colorIndex = (piece.correctRow * size + piece.correctCol) % 3;
+          // 绘制拼图块 - 玻璃态效果
+          this.drawRoundedRect(ctx, x, y, pieceSize, pieceSize, 8);
+          
           // 缓存颜色值 - 基于海澄村三色资源
+          const colorIndex = (piece.correctRow * size + piece.correctCol) % 3;
           const colors = ['#FF5722', '#4CAF50', '#F44336'];
           const color = colors[colorIndex];
-          ctx.fillStyle = color;
-          ctx.fillRect(x + 2, y + 2, pieceSize - 4, pieceSize - 4);
+          
+          // 为拼图块添加渐变效果
+          const pieceGradient = ctx.createLinearGradient(x, y, x, y + pieceSize);
+          pieceGradient.addColorStop(0, color);
+          pieceGradient.addColorStop(1, color + '80');
+          ctx.fillStyle = pieceGradient;
+          ctx.fill();
+          
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // 绘制拼图内容（这里用数字代替实际图片）
           ctx.fillStyle = '#fff';
           ctx.font = '16px Arial';
           ctx.textAlign = 'center';
@@ -327,55 +395,105 @@ class PuzzleGame {
       });
 
       // 绘制底部按钮
+      const buttonHeight = 50;
+      const buttonY = this.height - buttonHeight - 20;
+      
       // 返回按钮 - 次要按钮
-      ctx.fillStyle = '#9E9E9E'; // 灰色
-      ctx.fillRect(40, this.height - 60, 100, 40);
+      this.drawRoundedRect(ctx, 40, buttonY, 120, buttonHeight, 25);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial';
+      ctx.font = '16px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('返回', 90, this.height - 35);
+      ctx.fillText('返回', 100, buttonY + 32);
 
       // 难度设置按钮 - 主按钮
-      ctx.fillStyle = '#2196F3'; // 蓝色
-      ctx.fillRect(this.width / 2 - 75, this.height - 60, 150, 40);
+      this.drawRoundedRect(ctx, this.width / 2 - 90, buttonY, 180, buttonHeight, 25);
+      const mainButtonGradient = ctx.createLinearGradient(this.width / 2 - 90, buttonY, this.width / 2 + 90, buttonY + buttonHeight);
+      mainButtonGradient.addColorStop(0, '#4a6fa5');
+      mainButtonGradient.addColorStop(1, '#6e5b7b');
+      ctx.fillStyle = mainButtonGradient;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial';
+      ctx.font = '16px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('难度设置', this.width / 2, this.height - 35);
+      ctx.fillText('难度设置', this.width / 2, buttonY + 32);
 
       // 重新开始按钮 - 成功按钮
-      ctx.fillStyle = '#4CAF50'; // 绿色
-      ctx.fillRect(this.width - 140, this.height - 60, 100, 40);
+      this.drawRoundedRect(ctx, this.width - 160, buttonY, 120, buttonHeight, 25);
+      const successButtonGradient = ctx.createLinearGradient(this.width - 160, buttonY, this.width - 40, buttonY + buttonHeight);
+      successButtonGradient.addColorStop(0, '#4CAF50');
+      successButtonGradient.addColorStop(1, '#45a049');
+      ctx.fillStyle = successButtonGradient;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial';
+      ctx.font = '16px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('重新开始', this.width - 90, this.height - 35);
+      ctx.fillText('重新开始', this.width - 100, buttonY + 32);
 
       // 绘制游戏完成状态
       if (this.gameStatus === 'completed') {
+        // 半透明背景
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, this.width, this.height);
+        
+        // 玻璃态弹窗
+        const dialogWidth = 300;
+        const dialogHeight = 280;
+        const dialogX = (this.width - dialogWidth) / 2;
+        const dialogY = (this.height - dialogHeight) / 2;
+        
+        this.drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // 标题
         ctx.fillStyle = '#fff';
-        ctx.font = '24px Arial';
+        ctx.font = '28px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('拼图完成！', this.width / 2, this.height / 2 - 40);
-        ctx.font = '18px Arial';
-        ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, this.height / 2);
+        ctx.fillText('拼图完成！', this.width / 2, dialogY + 60);
+        
+        // 用时
+        ctx.font = '20px Arial';
+        ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, dialogY + 100);
 
-        // 绘制再玩一次按钮 - 成功按钮
-        ctx.fillStyle = '#4CAF50'; // 绿色
-        ctx.fillRect(this.width / 2 - 100, this.height / 2 + 60, 200, 50);
+        // 再玩一次按钮 - 成功按钮
+        this.drawRoundedRect(ctx, dialogX + 30, dialogY + 140, dialogWidth - 60, 50, 25);
+        const replayGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 140, dialogX + dialogWidth - 30, dialogY + 190);
+        replayGradient.addColorStop(0, '#4CAF50');
+        replayGradient.addColorStop(1, '#45a049');
+        ctx.fillStyle = replayGradient;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
         ctx.fillStyle = '#fff';
         ctx.font = '16px Arial';
-        ctx.fillText('再玩一次', this.width / 2, this.height / 2 + 90);
+        ctx.fillText('再玩一次', this.width / 2, dialogY + 172);
 
-        // 绘制返回按钮 - 次要按钮
-        ctx.fillStyle = '#9E9E9E'; // 灰色
-        ctx.fillRect(this.width / 2 - 100, this.height / 2 + 120, 200, 50);
+        // 返回首页按钮 - 次要按钮
+        this.drawRoundedRect(ctx, dialogX + 30, dialogY + 200, dialogWidth - 60, 50, 25);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
         ctx.fillStyle = '#fff';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('返回首页', this.width / 2, this.height / 2 + 150);
+        ctx.fillText('返回首页', this.width / 2, dialogY + 232);
       }
 
       // 绘制难度选择对话框
@@ -385,6 +503,17 @@ class PuzzleGame {
     } catch (error) {
       console.error('Render error:', error);
     }
+  }
+
+  // 绘制圆角矩形（兼容不同Canvas API）
+  drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+    ctx.closePath();
   }
 
   handleTouchStart(e) {
@@ -409,9 +538,11 @@ class PuzzleGame {
       return;
     }
 
-    // 底部按钮区域 (固定高度60px)
-    const buttonAreaTop = this.height - 60;
-    const buttonAreaBottom = this.height;
+    // 底部按钮区域
+    const buttonHeight = 50;
+    const buttonY = this.height - buttonHeight - 20;
+    const buttonAreaTop = buttonY;
+    const buttonAreaBottom = buttonY + buttonHeight;
 
     console.log('按钮区域顶部:', buttonAreaTop);
 
@@ -420,14 +551,14 @@ class PuzzleGame {
       console.log('点击了底部按钮区域');
       
       // 返回按钮 (左侧)
-      if (x >= 40 && x <= 140) {
+      if (x >= 40 && x <= 160) {
         console.log('点击了返回按钮');
         GameGlobal.app.showPage('home');
         return;
       }
       
       // 难度设置按钮 (中间)
-      if (x >= this.width / 2 - 75 && x <= this.width / 2 + 75) {
+      if (x >= this.width / 2 - 90 && x <= this.width / 2 + 90) {
         console.log('点击了难度设置按钮');
         // 显示难度选择对话框
         this.showDifficultyDialog();
@@ -435,7 +566,7 @@ class PuzzleGame {
       }
       
       // 重新开始按钮 (右侧)
-      if (x >= this.width - 140 && x <= this.width - 40) {
+      if (x >= this.width - 160 && x <= this.width - 40) {
         console.log('点击了重新开始按钮');
         this.initPuzzle();
         return;
@@ -444,9 +575,9 @@ class PuzzleGame {
 
     // 检查是否点击了拼图块
     const size = this.getPuzzleSize();
-    const pieceSize = Math.min((this.width - 40) / size, (this.height - 200) / size);
+    const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
     const startX = (this.width - pieceSize * size) / 2;
-    const startY = 120;
+    const startY = 130;
 
     if (x >= startX && x <= startX + pieceSize * size && y >= startY && y <= startY + pieceSize * size) {
       this.handlePieceClick(x, y);
