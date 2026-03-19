@@ -22,7 +22,7 @@ class LoginPage {
     img.onerror = (err) => {
       console.error('Failed to load background image:', err);
     };
-    img.src = '/UI/登录页面.jpg';
+    img.src = '/images/ui/登录页面.jpg';
   }
 
   render(ctx) {
