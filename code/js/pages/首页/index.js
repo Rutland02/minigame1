@@ -23,11 +23,11 @@ class HomePage {
         { id: 'scan', text: '扫码打卡', x: this.width * 0.75, y: 370, r: 45 }
       ],
       listItems: [
-        { id: 'info1', text: '老区概况', x: 40, y: 490, w: 45, h: 120 },
-        { id: 'info2', text: '革命旧址', x: 95, y: 490, w: 45, h: 120 },
-        { id: 'info3', text: '烈士纪念碑', x: 150, y: 490, w: 45, h: 120 },
-        { id: 'info4', text: '红色故事', x: 205, y: 490, w: 45, h: 120 },
-        { id: 'info5', text: '文化展览', x: 260, y: 490, w: 45, h: 120 }
+        { id: 'info1', text: '老区概况', x: this.width * 0.15 - 25, y: 470, w: 50, h: 130 },
+        { id: 'info2', text: '革命旧址', x: this.width * 0.35 - 25, y: 470, w: 50, h: 130 },
+        { id: 'info3', text: '烈士纪念碑', x: this.width * 0.5 - 25, y: 470, w: 50, h: 130 },
+        { id: 'info4', text: '红色故事', x: this.width * 0.65 - 25, y: 470, w: 50, h: 130 },
+        { id: 'info5', text: '文化展览', x: this.width * 0.85 - 25, y: 470, w: 50, h: 130 }
       ],
       gameButtons: [
         { id: 'match3', text: '三色消消乐', x: this.width * 0.2 - 50, y: 650, w: 100, h: 90, color: '#DC2626' },
@@ -136,18 +136,18 @@ class HomePage {
   }
 
   drawVerticalList(ctx) {
-    ctx.font = '14px serif';
+    ctx.font = '16px serif';
     this.regions.listItems.forEach(item => {
       // 绘制竖向矩形
       ctx.fillStyle = '#FFFFFF';
       ctx.strokeStyle = this.colors.border;
-      this.drawRoundRect(ctx, item.x, item.y, item.w, item.h, 5, true, true);
+      this.drawRoundRect(ctx, item.x, item.y, item.w, item.h, 6, true, true);
       
       // 竖排文字
       ctx.fillStyle = this.colors.text;
       const chars = item.text.split('');
       chars.forEach((c, i) => {
-        ctx.fillText(c, item.x + item.w / 2, item.y + 25 + i * 18);
+        ctx.fillText(c, item.x + item.w / 2, item.y + 30 + i * 20);
       });
     });
   }
