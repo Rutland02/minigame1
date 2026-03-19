@@ -15,18 +15,41 @@ class LoginPage {
   }
   
   loadBackgroundImage() {
-    // 尝试加载图片
-    const img = wx.createImage();
-    img.onload = () => {
-      this.backgroundImage = img;
-      console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
-    };
-    img.onerror = (err) => {
-      console.error('Failed to load background image:', err);
-      // 即使图片加载失败，也继续显示登录按钮
-    };
-    // 使用相对路径
-    img.src = 'images/ui/登录页面.jpg';
+    // 使用资源管理器加载背景图
+    const resourceManager = GameGlobal.resourceManager;
+    if (resourceManager) {
+      // 检查是否已经加载了背景图
+      this.backgroundImage = resourceManager.getImage('loginBackground');
+      if (!this.backgroundImage) {
+        // 如果没有加载，创建并加载图片
+        const img = wx.createImage();
+        img.onload = () => {
+          this.backgroundImage = img;
+          // 将图片保存到资源管理器中
+          resourceManager.images['loginBackground'] = img;
+          console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
+        };
+        img.onerror = (err) => {
+          console.error('Failed to load background image:', err);
+          // 即使图片加载失败，也继续显示登录按钮
+        };
+        // 使用相对路径
+        img.src = 'images/ui/登录页面.jpg';
+      }
+    } else {
+      // 如果没有资源管理器，直接加载图片
+      const img = wx.createImage();
+      img.onload = () => {
+        this.backgroundImage = img;
+        console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
+      };
+      img.onerror = (err) => {
+        console.error('Failed to load background image:', err);
+        // 即使图片加载失败，也继续显示登录按钮
+      };
+      // 使用相对路径
+      img.src = 'images/ui/登录页面.jpg';
+    }
   }
 
   render(ctx) {
