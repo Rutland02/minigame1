@@ -1,0 +1,12 @@
+{
+  "deviceOrientation": "portrait",
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 10000
+  },
+  "plugins": {},
+  "subpackages": [],
+  "requiredBackgroundModes": [],
+  "preloadBackgroundData": false,
+  "sitemapLocation": "sitemap.json"
+}
