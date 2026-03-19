@@ -34,7 +34,7 @@ class LoginPage {
           // 即使图片加载失败，也继续显示登录按钮
         };
         // 使用相对路径
-        img.src = 'images/ui/登录页面.jpg';
+        img.src = 'images/ui/bg1.jpg';
       }
     } else {
       // 如果没有资源管理器，直接加载图片
@@ -48,7 +48,7 @@ class LoginPage {
         // 即使图片加载失败，也继续显示登录按钮
       };
       // 使用相对路径
-      img.src = 'images/ui/登录页面.jpg';
+      img.src = 'images/ui/bg1.jpg';
     }
   }
 
