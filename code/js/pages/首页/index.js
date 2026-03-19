@@ -19,20 +19,20 @@ class HomePage {
     // 交互区域定义
     this.regions = {
       actionButtons: [
-        { id: 'tour', text: '线上游览', x: this.width * 0.25, y: 320, r: 45 },
-        { id: 'scan', text: '扫码打卡', x: this.width * 0.75, y: 320, r: 45 }
+        { id: 'tour', text: '线上游览', x: this.width * 0.25, y: 370, r: 45 },
+        { id: 'scan', text: '扫码打卡', x: this.width * 0.75, y: 370, r: 45 }
       ],
       listItems: [
-        { id: 'info1', text: '老区概况', x: 40, y: 440, w: 45, h: 120 },
-        { id: 'info2', text: '革命旧址', x: 95, y: 440, w: 45, h: 120 },
-        { id: 'info3', text: '烈士纪念碑', x: 150, y: 440, w: 45, h: 120 },
-        { id: 'info4', text: '红色故事', x: 205, y: 440, w: 45, h: 120 },
-        { id: 'info5', text: '文化展览', x: 260, y: 440, w: 45, h: 120 }
+        { id: 'info1', text: '老区概况', x: 40, y: 490, w: 45, h: 120 },
+        { id: 'info2', text: '革命旧址', x: 95, y: 490, w: 45, h: 120 },
+        { id: 'info3', text: '烈士纪念碑', x: 150, y: 490, w: 45, h: 120 },
+        { id: 'info4', text: '红色故事', x: 205, y: 490, w: 45, h: 120 },
+        { id: 'info5', text: '文化展览', x: 260, y: 490, w: 45, h: 120 }
       ],
       gameButtons: [
-        { id: 'match3', text: '三色消消乐', x: this.width * 0.2 - 50, y: 600, w: 100, h: 90, color: '#DC2626' },
-        { id: 'puzzle', text: '三色拼图', x: this.width * 0.5 - 50, y: 600, w: 100, h: 90, color: '#D97706' },
-        { id: 'quiz', text: '三色答题', x: this.width * 0.8 - 50, y: 600, w: 100, h: 90, color: '#1D4ED8' }
+        { id: 'match3', text: '三色消消乐', x: this.width * 0.2 - 50, y: 650, w: 100, h: 90, color: '#DC2626' },
+        { id: 'puzzle', text: '三色拼图', x: this.width * 0.5 - 50, y: 650, w: 100, h: 90, color: '#D97706' },
+        { id: 'quiz', text: '三色答题', x: this.width * 0.8 - 50, y: 650, w: 100, h: 90, color: '#1D4ED8' }
       ]
     };
 
@@ -48,15 +48,15 @@ class HomePage {
     this.drawTopBanner(ctx);
 
     // 3. 绘制"红色行动"板块
-    this.drawSectionHeader(ctx, '红色行动', 220);
+    this.drawSectionHeader(ctx, '红色行动', 270);
     this.drawActionButtons(ctx);
 
     // 4. 绘制"红色清单"板块
-    this.drawSectionHeader(ctx, '红色清单', 400);
+    this.drawSectionHeader(ctx, '红色清单', 450);
     this.drawVerticalList(ctx);
 
     // 5. 绘制"三色演武场"板块 (游戏区)
-    this.drawSectionHeader(ctx, '三色演武场', 580);
+    this.drawSectionHeader(ctx, '三色演武场', 630);
     this.drawGameEntry(ctx);
   }
 
@@ -93,23 +93,23 @@ class HomePage {
     
     // 红色背景底色
     ctx.fillStyle = this.colors.primary;
-    this.drawRoundRect(ctx, margin, 40, this.width - margin * 2, bannerH, 10, true);
+    this.drawRoundRect(ctx, margin, 90, this.width - margin * 2, bannerH, 10, true);
     
     // 模拟建筑插画区域 (中间白色或浅色)
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.fillRect(margin + 10, 50, this.width - margin * 2 - 20, bannerH - 40);
+    ctx.fillRect(margin + 10, 100, this.width - margin * 2 - 20, bannerH - 40);
     
     // 文字标题
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '18px serif';
     ctx.textAlign = 'center';
-    ctx.fillText('海澄村革命老区概况', this.width / 2, 75);
+    ctx.fillText('海澄村革命老区概况', this.width / 2, 125);
 
     // 绘制底部三个小标签 (设计图上卷轴下方的三个小标题)
     const labels = ['历史起源', '主要事迹', '精神传承'];
     ctx.font = '12px sans-serif';
     labels.forEach((text, i) => {
-      ctx.fillText(text, (this.width / 4) * (i + 1), 175);
+      ctx.fillText(text, (this.width / 4) * (i + 1), 225);
     });
   }
 
