@@ -26,6 +26,7 @@ class QuizPage {
     
     this.questions = this.loadQuestions();
     this.timer = null;
+    this.startTimer();
   }
   
   setupDifficulty() {
