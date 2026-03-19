@@ -1304,22 +1304,22 @@ class Match3Game {
     ctx.fillStyle = restartGradient;
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     
-    const x = this.width - 140;
-    const y = this.height - 60;
-    const width = 100;
-    const height = 40;
-    const radius = 20;
+    const restartX = this.width - 140;
+    const restartY = this.height - 60;
+    const restartWidth = 100;
+    const restartHeight = 40;
+    const restartRadius = 20;
     
     ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.arcTo(x + width, y, x + width, y + radius, radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-    ctx.lineTo(x + radius, y + height);
-    ctx.arcTo(x, y + height, x, y + height - radius, radius);
-    ctx.lineTo(x, y + radius);
-    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.moveTo(restartX + restartRadius, restartY);
+    ctx.lineTo(restartX + restartWidth - restartRadius, restartY);
+    ctx.arcTo(restartX + restartWidth, restartY, restartX + restartWidth, restartY + restartRadius, restartRadius);
+    ctx.lineTo(restartX + restartWidth, restartY + restartHeight - restartRadius);
+    ctx.arcTo(restartX + restartWidth, restartY + restartHeight, restartX + restartWidth - restartRadius, restartY + restartHeight, restartRadius);
+    ctx.lineTo(restartX + restartRadius, restartY + restartHeight);
+    ctx.arcTo(restartX, restartY + restartHeight, restartX, restartY + restartHeight - restartRadius, restartRadius);
+    ctx.lineTo(restartX, restartY + restartRadius);
+    ctx.arcTo(restartX, restartY, restartX + restartRadius, restartY, restartRadius);
     ctx.closePath();
     
     ctx.fill();
@@ -1395,22 +1395,22 @@ class Match3Game {
     ctx.fillStyle = restartGradient;
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
     
-    const x = this.width / 2 - 100;
-    const y = this.height / 2 + 60;
-    const width = 200;
-    const height = 50;
-    const radius = 25;
+    const restartX = this.width / 2 - 100;
+    const restartY = this.height / 2 + 60;
+    const restartWidth = 200;
+    const restartHeight = 50;
+    const restartRadius = 25;
     
     ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.arcTo(x + width, y, x + width, y + radius, radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-    ctx.lineTo(x + radius, y + height);
-    ctx.arcTo(x, y + height, x, y + height - radius, radius);
-    ctx.lineTo(x, y + radius);
-    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.moveTo(restartX + restartRadius, restartY);
+    ctx.lineTo(restartX + restartWidth - restartRadius, restartY);
+    ctx.arcTo(restartX + restartWidth, restartY, restartX + restartWidth, restartY + restartRadius, restartRadius);
+    ctx.lineTo(restartX + restartWidth, restartY + restartHeight - restartRadius);
+    ctx.arcTo(restartX + restartWidth, restartY + restartHeight, restartX + restartWidth - restartRadius, restartY + restartHeight, restartRadius);
+    ctx.lineTo(restartX + restartRadius, restartY + restartHeight);
+    ctx.arcTo(restartX, restartY + restartHeight, restartX, restartY + restartHeight - restartRadius, restartRadius);
+    ctx.lineTo(restartX, restartY + restartRadius);
+    ctx.arcTo(restartX, restartY, restartX + restartRadius, restartY, restartRadius);
     ctx.closePath();
     
     ctx.fill();
@@ -1432,22 +1432,22 @@ class Match3Game {
     ctx.fillStyle = homeGradient;
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
     
-    const x = this.width / 2 - 100;
-    const y = this.height / 2 + 120;
-    const width = 200;
-    const height = 50;
-    const radius = 25;
+    const homeX = this.width / 2 - 100;
+    const homeY = this.height / 2 + 120;
+    const homeWidth = 200;
+    const homeHeight = 50;
+    const homeRadius = 25;
     
     ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.arcTo(x + width, y, x + width, y + radius, radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-    ctx.lineTo(x + radius, y + height);
-    ctx.arcTo(x, y + height, x, y + height - radius, radius);
-    ctx.lineTo(x, y + radius);
-    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.moveTo(homeX + homeRadius, homeY);
+    ctx.lineTo(homeX + homeWidth - homeRadius, homeY);
+    ctx.arcTo(homeX + homeWidth, homeY, homeX + homeWidth, homeY + homeRadius, homeRadius);
+    ctx.lineTo(homeX + homeWidth, homeY + homeHeight - homeRadius);
+    ctx.arcTo(homeX + homeWidth, homeY + homeHeight, homeX + homeWidth - homeRadius, homeY + homeHeight, homeRadius);
+    ctx.lineTo(homeX + homeRadius, homeY + homeHeight);
+    ctx.arcTo(homeX, homeY + homeHeight, homeX, homeY + homeHeight - homeRadius, homeRadius);
+    ctx.lineTo(homeX, homeY + homeRadius);
+    ctx.arcTo(homeX, homeY, homeX + homeRadius, homeY, homeRadius);
     ctx.closePath();
     
     ctx.fill();
