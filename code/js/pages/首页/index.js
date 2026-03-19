@@ -39,6 +39,14 @@ class HomePage {
         y: this.height / 2 + 120,
         width: 200,
         height: 60
+      },
+      {
+        id: 'scan',
+        text: '扫码打卡',
+        x: this.width / 2 - 100,
+        y: this.height / 2 + 200,
+        width: 200,
+        height: 60
       }
     ];
     this.selectedButton = null;
@@ -234,7 +242,33 @@ class HomePage {
           GameGlobal.app.showPage('achievement');
         }
         break;
+      case 'scan':
+        this.scanQRCode();
+        break;
     }
+  }
+
+  scanQRCode() {
+    wx.scanCode({
+      onlyFromCamera: true,
+      scanType: ['qrCode'],
+      success: (res) => {
+        console.log('扫码成功:', res);
+        wx.showToast({
+          title: '打卡成功！',
+          icon: 'success',
+          duration: 2000
+        });
+      },
+      fail: (err) => {
+        console.log('扫码失败:', err);
+        wx.showToast({
+          title: '扫码失败，请重试',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    });
   }
 
   destroy() {
