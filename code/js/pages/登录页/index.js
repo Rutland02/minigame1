@@ -23,8 +23,8 @@ class LoginPage {
     img.onerror = (err) => {
       console.error('Failed to load background image:', err);
     };
-    // 使用相对于项目根目录的路径
-    img.src = 'code/images/ui/登录页面.jpg';
+    // 使用相对于code目录的路径
+    img.src = 'images/ui/登录页面.jpg';
   }
 
   render(ctx) {
