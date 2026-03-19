@@ -9,47 +9,41 @@ class LoginPage {
     this.height = wx.getSystemInfoSync().windowHeight;
     this.isLoading = false;
     this.backgroundImage = null;
+    
+    // 加载背景图
+    this.loadBackgroundImage();
+  }
+  
+  loadBackgroundImage() {
+    const img = wx.createImage();
+    img.onload = () => {
+      this.backgroundImage = img;
+    };
+    img.onerror = (err) => {
+      console.error('Failed to load background image:', err);
+    };
+    img.src = '/UI/登录页面.jpg';
   }
 
   render(ctx) {
     try {
-      // 绘制默认背景
-      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-      gradient.addColorStop(0, '#2563EB');
-      gradient.addColorStop(1, '#3B82F6');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, this.width, this.height);
-
-      // 绘制半透明遮罩
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-      ctx.fillRect(0, 0, this.width, this.height);
-
-      // 绘制玻璃态容器
-      this.drawGlassContainer(ctx);
-
-      // 绘制标题
-      ctx.font = '32px Inter, Arial';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-      ctx.shadowBlur = 5;
-      ctx.shadowOffsetY = 2;
-      ctx.fillText('三色融澄·数字赋能', this.width / 2, this.height / 2 - 120);
-
-      // 绘制副标题
-      ctx.font = '16px Inter, Arial';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.shadowBlur = 0;
-      ctx.fillText('非遗·自然·红色，在游戏中读懂海澄村', this.width / 2, this.height / 2 - 80);
-
-      // 绘制Logo
-      this.drawLogo(ctx);
+      // 绘制背景图
+      if (this.backgroundImage) {
+        // 缩放背景图以适应屏幕
+        const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
+        const scaledWidth = this.backgroundImage.width * scale;
+        const scaledHeight = this.backgroundImage.height * scale;
+        const offsetX = (this.width - scaledWidth) / 2;
+        const offsetY = (this.height - scaledHeight) / 2;
+        ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+      } else {
+        // 如果背景图未加载，使用默认背景
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, this.width, this.height);
+      }
 
       // 绘制登录按钮
       this.drawLoginButton(ctx);
-
-      // 绘制文化元素装饰
-      this.drawCulturalElements(ctx);
 
       // 绘制加载状态
       if (this.isLoading) {
@@ -60,108 +54,27 @@ class LoginPage {
       // 即使渲染失败，也绘制基本的登录界面
       ctx.fillStyle = '#f0f0f0';
       ctx.fillRect(0, 0, this.width, this.height);
-      ctx.font = '24px Arial';
-      ctx.fillStyle = '#2563EB';
-      ctx.textAlign = 'center';
-      ctx.fillText('三色融澄·数字赋能', this.width / 2, 150);
-      ctx.fillStyle = '#F97316';
-      ctx.fillRect(this.width / 2 - 100, this.height - 100, 200, 60);
+      ctx.fillStyle = '#C41E3A';
+      ctx.fillRect(this.width / 2 - 120, this.height * 0.75, 240, 50);
       ctx.fillStyle = '#fff';
-      ctx.font = '16px Arial';
-      ctx.fillText('微信登录', this.width / 2, this.height - 65);
-    }
-  }
-
-  drawGlassContainer(ctx) {
-    // 玻璃态容器背景
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    
-    // 绘制圆角矩形
-    const x = this.width / 2 - 150;
-    const y = this.height / 2 - 180;
-    const width = 300;
-    const height = 320;
-    const radius = 20;
-    
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.arcTo(x + width, y, x + width, y + radius, radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-    ctx.lineTo(x + radius, y + height);
-    ctx.arcTo(x, y + height, x, y + height - radius, radius);
-    ctx.lineTo(x, y + radius);
-    ctx.arcTo(x, y, x + radius, y, radius);
-    ctx.closePath();
-    
-    ctx.fill();
-    ctx.stroke();
-  }
-
-  drawLogo(ctx) {
-    try {
-      const resourceManager = GameGlobal.resourceManager;
-      const logo = resourceManager ? resourceManager.getImage('logo') : null;
-      if (logo) {
-        const logoSize = 100;
-        ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 5;
-        ctx.drawImage(logo, this.width / 2 - logoSize / 2, this.height / 2 - 50, logoSize, logoSize);
-        ctx.restore();
-      } else {
-        // 绘制海澄村特色Logo
-        ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 5;
-        ctx.fillStyle = '#F97316';
-        ctx.beginPath();
-        ctx.arc(this.width / 2, this.height / 2, 50, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = '36px Inter, Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('海', this.width / 2, this.height / 2 + 10);
-        ctx.restore();
-      }
-    } catch (error) {
-      // 即使Logo加载失败，也继续显示默认Logo
-      ctx.save();
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-      ctx.shadowBlur = 10;
-      ctx.shadowOffsetY = 5;
-      ctx.fillStyle = '#F97316';
-      ctx.beginPath();
-      ctx.arc(this.width / 2, this.height / 2, 50, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = '36px Inter, Arial';
+      ctx.font = '18px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('海', this.width / 2, this.height / 2 + 10);
-      ctx.restore();
+      ctx.fillText('立即登录', this.width / 2, this.height * 0.75 + 25);
     }
   }
 
   drawLoginButton(ctx) {
-    // 按钮背景
-    const gradient = ctx.createLinearGradient(this.width / 2 - 120, this.height / 2 + 160, this.width / 2 + 120, this.height / 2 + 160);
-    gradient.addColorStop(0, '#F97316');
-    gradient.addColorStop(1, '#FB923C');
-    ctx.fillStyle = gradient;
+    // 按钮背景 - 红色，与图片中的按钮颜色匹配
+    ctx.fillStyle = '#C41E3A';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 1;
     
-    // 绘制圆角矩形
+    // 绘制圆角矩形 - 调整位置和大小以匹配图片中的按钮
     const x = this.width / 2 - 120;
-    const y = this.height / 2 + 160;
+    const y = this.height * 0.75;
     const width = 240;
-    const height = 60;
-    const radius = 30;
+    const height = 50;
+    const radius = 25;
     
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -178,35 +91,15 @@ class LoginPage {
     ctx.fill();
     ctx.stroke();
 
-    // 按钮文字
+    // 按钮文字 - 与图片中的文字匹配
     ctx.fillStyle = '#ffffff';
     ctx.font = '18px Inter, Arial';
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
-    ctx.fillText('微信登录', this.width / 2, this.height / 2 + 190);
+    ctx.fillText('立即登录', this.width / 2, y + height / 2 + 5);
     ctx.shadowBlur = 0;
-  }
-
-  drawCulturalElements(ctx) {
-    // 绘制古树装饰元素
-    ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.beginPath();
-    ctx.arc(50, 50, 30, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 绘制河流装饰元素
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, this.height - 100);
-    ctx.quadraticCurveTo(this.width / 2, this.height - 150, this.width, this.height - 100);
-    ctx.stroke();
-    ctx.restore();
   }
 
   drawLoading(ctx) {
@@ -260,8 +153,9 @@ class LoginPage {
       return;
     }
     
-    // 检查是否点击了登录按钮
-    if (x >= this.width / 2 - 120 && x <= this.width / 2 + 120 && y >= this.height / 2 + 160 && y <= this.height / 2 + 220) {
+    // 检查是否点击了登录按钮 - 与新的按钮位置匹配
+    const buttonY = this.height * 0.75;
+    if (x >= this.width / 2 - 120 && x <= this.width / 2 + 120 && y >= buttonY && y <= buttonY + 50) {
       this.login();
     }
   }
