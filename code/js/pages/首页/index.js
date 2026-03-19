@@ -146,9 +146,15 @@ class HomePage {
       // 竖排文字
       ctx.fillStyle = this.colors.text;
       const chars = item.text.split('');
-      chars.forEach((c, i) => {
-        ctx.fillText(c, item.x + item.w / 2, item.y + 30 + i * 20);
-      });
+      if (item.id === 'achievement' && chars.length === 2) {
+        // 为"成就"按钮添加特殊处理，增加字间距并确保居中
+        ctx.fillText(chars[0], item.x + item.w / 2, item.y + 45);
+        ctx.fillText(chars[1], item.x + item.w / 2, item.y + 75);
+      } else {
+        chars.forEach((c, i) => {
+          ctx.fillText(c, item.x + item.w / 2, item.y + 30 + i * 20);
+        });
+      }
     });
   }
 
