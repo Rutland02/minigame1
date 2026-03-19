@@ -347,13 +347,16 @@ class QuizPage {
       const maxWidth = this.width - 120; // 最大宽度
       const lineHeight = 25; // 行高
       const startY = this.height / 2 + 30;
-      this.drawWrappedText(ctx, question.explanation, 60, startY, maxWidth, lineHeight);
+      const endY = this.drawWrappedText(ctx, question.explanation, 60, startY, maxWidth, lineHeight);
       
       // 绘制按钮
+      // 计算按钮位置，确保与解析文本有足够间距
+      const buttonY = endY + 40; // 增加40px的间距
+      
       // 下一题按钮 - 主按钮
       if (this.currentQuestion < this.questions.length - 1) {
-        this.drawRoundedRect(ctx, this.width / 2 - 110, this.height / 2 + 60, 200, 50, 25);
-        const mainButtonGradient = ctx.createLinearGradient(this.width / 2 - 110, this.height / 2 + 60, this.width / 2 + 90, this.height / 2 + 110);
+        this.drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
+        const mainButtonGradient = ctx.createLinearGradient(this.width / 2 - 110, buttonY, this.width / 2 + 90, buttonY + 50);
         mainButtonGradient.addColorStop(0, '#4a6fa5');
         mainButtonGradient.addColorStop(1, '#6e5b7b');
         ctx.fillStyle = mainButtonGradient;
@@ -364,11 +367,11 @@ class QuizPage {
         ctx.fillStyle = '#ffffff';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('下一题', this.width / 2, this.height / 2 + 90);
+        ctx.fillText('下一题', this.width / 2, buttonY + 30);
       } else {
         // 答题完成按钮 - 成功按钮
-        this.drawRoundedRect(ctx, this.width / 2 - 110, this.height / 2 + 60, 200, 50, 25);
-        const successButtonGradient = ctx.createLinearGradient(this.width / 2 - 110, this.height / 2 + 60, this.width / 2 + 90, this.height / 2 + 110);
+        this.drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
+        const successButtonGradient = ctx.createLinearGradient(this.width / 2 - 110, buttonY, this.width / 2 + 90, buttonY + 50);
         successButtonGradient.addColorStop(0, '#4CAF50');
         successButtonGradient.addColorStop(1, '#45a049');
         ctx.fillStyle = successButtonGradient;
@@ -379,7 +382,7 @@ class QuizPage {
         ctx.fillStyle = '#ffffff';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('查看成绩', this.width / 2, this.height / 2 + 90);
+        ctx.fillText('查看成绩', this.width / 2, buttonY + 30);
       }
       
       ctx.restore();
