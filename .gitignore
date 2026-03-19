@@ -62,3 +62,6 @@ coverage/
 # 性能分析
 *.cpuprofile
 *.heapdump
+
+# Trae IDE相关
+.trae/
