@@ -449,19 +449,26 @@ class PuzzleGame {
       ctx.fillRect(0, 0, this.width, this.height);
 
       // 绘制游戏信息 - 使用玻璃态效果
-      this.drawRoundedRect(ctx, 20, 20, 200, 80, 15);
+      const infoWidth = 300;
+      const infoHeight = 50;
+      const infoX = (this.width - infoWidth) / 2;
+      const infoY = this.height - 110; // 放到拼图下面
+      this.drawRoundedRect(ctx, infoX, infoY, infoWidth, infoHeight, 15);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // 绘制游戏信息文字
+      // 绘制游戏信息文字 - 水平排列
       ctx.font = '16px Arial';
       ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'left';
-      ctx.fillText(`难度: ${this.getPuzzleSize()}×${this.getPuzzleSize()}`, 40, 45);
-      ctx.fillText(`时间: ${this.getElapsedTime()}s`, 40, 75);
+      ctx.textAlign = 'center';
+      const difficultyText = `难度: ${this.getPuzzleSize()}×${this.getPuzzleSize()}`;
+      const timeText = `时间: ${this.getElapsedTime()}s`;
+      const textWidth = ctx.measureText(difficultyText).width;
+      ctx.fillText(difficultyText, infoX + infoWidth / 2 - textWidth / 2 - 10, infoY + 32);
+      ctx.fillText(timeText, infoX + infoWidth / 2 + textWidth / 2 + 10, infoY + 32);
 
       // 绘制拼图 - 玻璃态容器
       const size = this.getPuzzleSize();
@@ -537,7 +544,7 @@ class PuzzleGame {
       const buttonSpacing = 20;
       const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
       const buttonStartX = (this.width - totalButtonWidth) / 2;
-      const buttonY = this.height - buttonHeight - 30;
+      const buttonY = this.height - buttonHeight - 20;
       
       // 返回按钮 - 次要按钮
       this.drawRoundedRect(ctx, buttonStartX, buttonY, buttonWidth, buttonHeight, 25);

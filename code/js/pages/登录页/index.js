@@ -65,10 +65,10 @@ class LoginPage {
       ctx.textAlign = 'center';
       ctx.fillText('三色融澄·数字赋能', this.width / 2, 150);
       ctx.fillStyle = '#F97316';
-      ctx.fillRect(this.width / 2 - 100, this.height - 150, 200, 60);
+      ctx.fillRect(this.width / 2 - 100, this.height - 100, 200, 60);
       ctx.fillStyle = '#fff';
       ctx.font = '16px Arial';
-      ctx.fillText('微信登录', this.width / 2, this.height - 115);
+      ctx.fillText('微信登录', this.width / 2, this.height - 65);
     }
   }
 
@@ -149,7 +149,7 @@ class LoginPage {
 
   drawLoginButton(ctx) {
     // 按钮背景
-    const gradient = ctx.createLinearGradient(this.width / 2 - 120, this.height / 2 + 80, this.width / 2 + 120, this.height / 2 + 80);
+    const gradient = ctx.createLinearGradient(this.width / 2 - 120, this.height / 2 + 160, this.width / 2 + 120, this.height / 2 + 160);
     gradient.addColorStop(0, '#F97316');
     gradient.addColorStop(1, '#FB923C');
     ctx.fillStyle = gradient;
@@ -158,7 +158,7 @@ class LoginPage {
     
     // 绘制圆角矩形
     const x = this.width / 2 - 120;
-    const y = this.height / 2 + 80;
+    const y = this.height / 2 + 160;
     const width = 240;
     const height = 60;
     const radius = 30;
@@ -185,7 +185,7 @@ class LoginPage {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
-    ctx.fillText('微信登录', this.width / 2, this.height / 2 + 110);
+    ctx.fillText('微信登录', this.width / 2, this.height / 2 + 190);
     ctx.shadowBlur = 0;
   }
 
@@ -261,7 +261,7 @@ class LoginPage {
     }
     
     // 检查是否点击了登录按钮
-    if (x >= this.width / 2 - 120 && x <= this.width / 2 + 120 && y >= this.height / 2 + 80 && y <= this.height / 2 + 140) {
+    if (x >= this.width / 2 - 120 && x <= this.width / 2 + 120 && y >= this.height / 2 + 160 && y <= this.height / 2 + 220) {
       this.login();
     }
   }
