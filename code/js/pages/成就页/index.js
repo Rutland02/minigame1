@@ -56,27 +56,46 @@ class AchievementPage {
       return;
     }
 
-    // 绘制背景
-    ctx.fillStyle = '#f0f0f0';
+    // 绘制渐变背景
+    const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+    gradient.addColorStop(0, '#4a6fa5');
+    gradient.addColorStop(1, '#6e5b7b');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    // 绘制半透明遮罩
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.fillRect(0, 0, this.width, this.height);
 
     // 绘制标题
-    ctx.font = '24px Arial';
-    ctx.fillStyle = '#333';
+    ctx.font = '28px Arial';
+    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.fillText('成就系统', this.width / 2, 80);
 
     // 绘制返回按钮
-    ctx.fillStyle = '#2196F3';
-    ctx.fillRect(20, 20, 80, 40);
-    ctx.fillStyle = '#fff';
+    this.drawRoundedRect(ctx, 20, 20, 80, 40, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
     ctx.fillText('返回', 60, 45);
 
     // 绘制生成证书按钮
-    ctx.fillStyle = '#4CAF50';
-    ctx.fillRect(this.width - 100, 20, 80, 40);
-    ctx.fillStyle = '#fff';
+    this.drawRoundedRect(ctx, this.width - 100, 20, 80, 40, 20);
+    const certificateGradient = ctx.createLinearGradient(this.width - 100, 20, this.width - 20, 60);
+    certificateGradient.addColorStop(0, '#4CAF50');
+    certificateGradient.addColorStop(1, '#45a049');
+    ctx.fillStyle = certificateGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('生成证书', this.width - 60, 45);
@@ -87,107 +106,161 @@ class AchievementPage {
 
     // 绘制成就列表
     const startY = 120;
-    const itemHeight = 80;
+    const itemHeight = 90;
     
     this.allAchievements.forEach((achievement, index) => {
       const y = startY + index * itemHeight;
       const isUnlocked = unlockedIds.has(achievement.id);
       
       // 绘制成就项背景
-      ctx.fillStyle = isUnlocked ? '#e8f5e8' : '#f5f5f5';
-      ctx.fillRect(20, y, this.width - 40, itemHeight - 10);
+      this.drawRoundedRect(ctx, 20, y, this.width - 40, itemHeight - 10, 15);
+      ctx.fillStyle = isUnlocked ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.15)';
+      ctx.fill();
+      ctx.strokeStyle = isUnlocked ? '#4CAF50' : 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
       
       // 绘制成就标题
       ctx.font = '16px Arial';
-      ctx.fillStyle = '#333';
+      ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'left';
       ctx.fillText(achievement.title, 30, y + 25);
       
       // 绘制成就描述
       ctx.font = '14px Arial';
-      ctx.fillStyle = '#666';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.fillText(achievement.description, 30, y + 45);
       
       // 绘制成就类型
+      this.drawRoundedRect(ctx, 30, y + 55, 80, 25, 12);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
       ctx.font = '12px Arial';
-      ctx.fillStyle = '#999';
-      ctx.fillText(achievement.type, 30, y + 65);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(achievement.type, 70, y + 72);
       
       // 绘制解锁状态
+      this.drawRoundedRect(ctx, this.width - 100, y + 15, 80, 30, 15);
+      ctx.fillStyle = isUnlocked ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+      ctx.fill();
+      ctx.strokeStyle = isUnlocked ? '#4CAF50' : 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
       ctx.font = '14px Arial';
-      ctx.fillStyle = isUnlocked ? '#4CAF50' : '#999';
-      ctx.textAlign = 'right';
-      ctx.fillText(isUnlocked ? '已解锁' : '未解锁', this.width - 30, y + 35);
+      ctx.fillStyle = isUnlocked ? '#4CAF50' : 'rgba(255, 255, 255, 0.6)';
+      ctx.textAlign = 'center';
+      ctx.fillText(isUnlocked ? '已解锁' : '未解锁', this.width - 60, y + 35);
     });
   }
 
+  // 绘制圆角矩形（兼容不同Canvas API）
+  drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+    ctx.closePath();
+  }
+
   renderCertificate(ctx) {
-    // 绘制证书背景
-    ctx.fillStyle = '#fff';
+    // 绘制渐变背景
+    const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+    gradient.addColorStop(0, '#4a6fa5');
+    gradient.addColorStop(1, '#6e5b7b');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    // 绘制半透明遮罩
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.fillRect(0, 0, this.width, this.height);
     
-    // 绘制证书边框
-    ctx.strokeStyle = '#2196F3';
+    // 绘制证书背景
+    this.drawRoundedRect(ctx, 30, 30, this.width - 60, this.height - 60, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fill();
+    ctx.strokeStyle = '#4a6fa5';
     ctx.lineWidth = 4;
-    ctx.strokeRect(20, 20, this.width - 40, this.height - 40);
+    ctx.stroke();
     
     // 绘制证书标题
-    ctx.font = '28px Arial';
-    ctx.fillStyle = '#333';
+    ctx.font = '32px Arial';
+    ctx.fillStyle = '#4a6fa5';
     ctx.textAlign = 'center';
-    ctx.fillText('数字体验证书', this.width / 2, 100);
+    ctx.fillText('数字体验证书', this.width / 2, 120);
     
     // 绘制证书内容
     const userInfo = databus.getUserInfo();
     const totalScore = databus.getTotalScore();
     const achievements = databus.getAchievements();
     
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#333';
+    ctx.font = '18px Arial';
+    ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
-    ctx.fillText(`兹证明 ${userInfo ? userInfo.nickname : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, 180);
-    ctx.fillText('积极参与，表现优异，特此颁发此证。', this.width / 2, 220);
+    ctx.fillText(`兹证明 ${userInfo ? userInfo.nickname : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, 200);
+    ctx.fillText('积极参与，表现优异，特此颁发此证。', this.width / 2, 240);
     
     // 绘制统计信息
-    ctx.font = '14px Arial';
-    ctx.fillStyle = '#666';
+    this.drawRoundedRect(ctx, this.width / 2 - 120, 280, 240, 80, 15);
+    ctx.fillStyle = 'rgba(74, 111, 165, 0.1)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(74, 111, 165, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#4a6fa5';
     ctx.textAlign = 'center';
-    ctx.fillText(`总积分: ${totalScore}`, this.width / 2, 280);
-    ctx.fillText(`解锁成就: ${achievements.length}/${this.allAchievements.length}`, this.width / 2, 320);
+    ctx.fillText(`总积分: ${totalScore}`, this.width / 2, 310);
+    ctx.fillText(`解锁成就: ${achievements.length}/${this.allAchievements.length}`, this.width / 2, 340);
     
     // 绘制印章
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
+    ctx.fillStyle = 'rgba(244, 67, 54, 0.6)';
     ctx.beginPath();
-    ctx.arc(this.width / 2, 380, 60, 0, Math.PI * 2);
+    ctx.arc(this.width / 2, 420, 70, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = '18px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '20px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('海澄村', this.width / 2, 370);
-    ctx.fillText('数字赋能', this.width / 2, 400);
+    ctx.fillText('海澄村', this.width / 2, 410);
+    ctx.fillText('数字赋能', this.width / 2, 440);
     
     // 绘制日期
     const date = new Date().toLocaleDateString();
-    ctx.font = '14px Arial';
-    ctx.fillStyle = '#666';
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#666666';
     ctx.textAlign = 'center';
-    ctx.fillText(`颁发日期: ${date}`, this.width / 2, 480);
+    ctx.fillText(`颁发日期: ${date}`, this.width / 2, 520);
     
     // 绘制分享按钮
-    ctx.fillStyle = '#4CAF50';
-    ctx.fillRect(this.width / 2 - 80, this.height - 80, 160, 40);
-    ctx.fillStyle = '#fff';
+    this.drawRoundedRect(ctx, this.width / 2 - 80, this.height - 90, 160, 50, 25);
+    const shareGradient = ctx.createLinearGradient(this.width / 2 - 80, this.height - 90, this.width / 2 + 80, this.height - 40);
+    shareGradient.addColorStop(0, '#4CAF50');
+    shareGradient.addColorStop(1, '#45a049');
+    ctx.fillStyle = shareGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('分享证书', this.width / 2, this.height - 55);
+    ctx.fillText('分享证书', this.width / 2, this.height - 60);
     
     // 绘制返回按钮
-    ctx.fillStyle = '#2196F3';
-    ctx.fillRect(20, 20, 80, 40);
-    ctx.fillStyle = '#fff';
+    this.drawRoundedRect(ctx, 30, 30, 80, 40, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('返回', 60, 45);
+    ctx.fillText('返回', 70, 55);
   }
 
   handleTouchStart(e) {
