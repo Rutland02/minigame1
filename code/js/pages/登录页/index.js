@@ -15,24 +15,6 @@ class LoginPage {
   }
   
   loadBackgroundImage() {
-    // 检查文件是否存在
-    const fs = wx.getFileSystemManager();
-    const testPaths = [
-      'images/ui/登录页面.jpg',
-      './images/ui/登录页面.jpg',
-      '/images/ui/登录页面.jpg',
-      'code/images/ui/登录页面.jpg'
-    ];
-    
-    testPaths.forEach(path => {
-      try {
-        const stat = fs.statSync(path);
-        console.log('File exists at:', path, 'size:', stat.size);
-      } catch (err) {
-        console.log('File not found at:', path);
-      }
-    });
-    
     // 尝试加载图片
     const img = wx.createImage();
     img.onload = () => {
@@ -41,9 +23,10 @@ class LoginPage {
     };
     img.onerror = (err) => {
       console.error('Failed to load background image:', err);
+      // 即使图片加载失败，也继续显示登录按钮
     };
-    // 尝试使用不同的路径格式
-    img.src = './images/ui/登录页面.jpg';
+    // 使用相对路径
+    img.src = 'images/ui/登录页面.jpg';
   }
 
   render(ctx) {
