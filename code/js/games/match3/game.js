@@ -87,11 +87,11 @@ const PieceType = {
 
 // 颜色对应 - 基于海澄村三色资源
 const COLORS = [
-    '#FF5722', // 非遗（橙色）
+    '#FF9800', // 非遗（橙色）
     '#4CAF50', // 自然（绿色）
-    '#F44336', // 红色（红色）
+    '#E53935', // 红色（红色）
     '#2196F3', // 主按钮（蓝色）
-    '#FF9800', // 警告按钮（橙色）
+    '#FF5722', // 警告按钮（深橙色）
     '#9C27B0', // 提示按钮（紫色）
     '#FFFFFF'  // Any (白色)
 ];
@@ -1519,6 +1519,7 @@ class Match3Game {
     }
 
     // 检查是否点击了游戏板
+    const size = this.board.length;
     const cellSize = this.cellSize;
     const startX = this.startX;
     const startY = this.startY;

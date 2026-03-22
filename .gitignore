@@ -65,3 +65,6 @@ coverage/
 
 # Trae IDE相关
 .trae/
+
+# 文档目录
+docs/
