@@ -8,6 +8,10 @@ class CheckInPage {
     this.width = wx.getSystemInfoSync().windowWidth;
     this.height = wx.getSystemInfoSync().windowHeight;
     this.checkInPoints = this.getCheckInPoints();
+    this.backgroundImage = null;
+    
+    // 加载背景图
+    this.loadBackgroundImage();
   }
 
   // 定义打卡点数据
@@ -44,9 +48,20 @@ class CheckInPage {
   }
 
   render(ctx) {
-    // 绘制背景
-    ctx.fillStyle = '#f0f0f0';
-    ctx.fillRect(0, 0, this.width, this.height);
+    // 绘制背景图
+    if (this.backgroundImage) {
+      // 缩放背景图以适应屏幕
+      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
+      const scaledWidth = this.backgroundImage.width * scale;
+      const scaledHeight = this.backgroundImage.height * scale;
+      const offsetX = (this.width - scaledWidth) / 2;
+      const offsetY = (this.height - scaledHeight) / 2;
+      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    } else {
+      // 如果背景图未加载，使用默认背景
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
 
     // 绘制标题
     ctx.font = '24px Arial';
@@ -255,6 +270,17 @@ class CheckInPage {
         description: '完成所有线下打卡点'
       });
     }
+  }
+
+  loadBackgroundImage() {
+    const img = wx.createImage();
+    img.onload = () => {
+      this.backgroundImage = img;
+    };
+    img.onerror = (err) => {
+      console.error('Failed to load background image:', err);
+    };
+    img.src = 'images/ui/bg2.jpg';
   }
 
   destroy() {

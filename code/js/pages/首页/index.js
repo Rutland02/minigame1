@@ -6,6 +6,10 @@ class HomePage {
   constructor() {
     this.width = wx.getSystemInfoSync().windowWidth;
     this.height = wx.getSystemInfoSync().windowHeight;
+    this.backgroundImage = null;
+    
+    // 加载背景图
+    this.loadBackgroundImage();
     
     // 颜色配置
     this.colors = {
@@ -41,8 +45,19 @@ class HomePage {
 
   render(ctx) {
     // 1. 全局背景
-    ctx.fillStyle = this.colors.bg;
-    ctx.fillRect(0, 0, this.width, this.height);
+    if (this.backgroundImage) {
+      // 缩放背景图以适应屏幕
+      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
+      const scaledWidth = this.backgroundImage.width * scale;
+      const scaledHeight = this.backgroundImage.height * scale;
+      const offsetX = (this.width - scaledWidth) / 2;
+      const offsetY = (this.height - scaledHeight) / 2;
+      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    } else {
+      // 如果背景图未加载，使用默认背景
+      ctx.fillStyle = this.colors.bg;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
 
     // 2. 绘制顶部Banner (红色卷轴风格)
     this.drawTopBanner(ctx);
@@ -262,6 +277,17 @@ class HomePage {
       onlyFromCamera: true,
       success: () => wx.showToast({ title: '打卡成功', icon: 'success' })
     });
+  }
+
+  loadBackgroundImage() {
+    const img = wx.createImage();
+    img.onload = () => {
+      this.backgroundImage = img;
+    };
+    img.onerror = (err) => {
+      console.error('Failed to load background image:', err);
+    };
+    img.src = 'images/ui/bg2.jpg';
   }
 
   destroy() {}

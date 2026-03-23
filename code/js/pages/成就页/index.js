@@ -9,6 +9,10 @@ class AchievementPage {
     this.height = wx.getSystemInfoSync().windowHeight;
     this.showCertificate = false;
     this.certificateData = null;
+    this.backgroundImage = null;
+    
+    // 加载背景图
+    this.loadBackgroundImage();
     // 定义所有可能的成就
     this.allAchievements = [
       {
@@ -56,12 +60,23 @@ class AchievementPage {
       return;
     }
 
-    // 绘制渐变背景
-    const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-    gradient.addColorStop(0, '#4a6fa5');
-    gradient.addColorStop(1, '#6e5b7b');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, this.width, this.height);
+    // 绘制背景图
+    if (this.backgroundImage) {
+      // 缩放背景图以适应屏幕
+      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
+      const scaledWidth = this.backgroundImage.width * scale;
+      const scaledHeight = this.backgroundImage.height * scale;
+      const offsetX = (this.width - scaledWidth) / 2;
+      const offsetY = (this.height - scaledHeight) / 2;
+      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    } else {
+      // 如果背景图未加载，使用默认背景
+      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+      gradient.addColorStop(0, '#4a6fa5');
+      gradient.addColorStop(1, '#6e5b7b');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
 
     // 绘制半透明遮罩
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
@@ -172,12 +187,23 @@ class AchievementPage {
   }
 
   renderCertificate(ctx) {
-    // 绘制渐变背景
-    const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-    gradient.addColorStop(0, '#4a6fa5');
-    gradient.addColorStop(1, '#6e5b7b');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, this.width, this.height);
+    // 绘制背景图
+    if (this.backgroundImage) {
+      // 缩放背景图以适应屏幕
+      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
+      const scaledWidth = this.backgroundImage.width * scale;
+      const scaledHeight = this.backgroundImage.height * scale;
+      const offsetX = (this.width - scaledWidth) / 2;
+      const offsetY = (this.height - scaledHeight) / 2;
+      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    } else {
+      // 如果背景图未加载，使用默认背景
+      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+      gradient.addColorStop(0, '#4a6fa5');
+      gradient.addColorStop(1, '#6e5b7b');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
 
     // 绘制半透明遮罩
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
@@ -306,6 +332,17 @@ class AchievementPage {
       duration: 2000
     });
     // 实际项目中，这里可以使用wx.canvasToTempFilePath将证书转换为图片，然后分享
+  }
+
+  loadBackgroundImage() {
+    const img = wx.createImage();
+    img.onload = () => {
+      this.backgroundImage = img;
+    };
+    img.onerror = (err) => {
+      console.error('Failed to load background image:', err);
+    };
+    img.src = 'images/ui/bg2.jpg';
   }
 
   destroy() {
