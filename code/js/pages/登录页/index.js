@@ -9,47 +9,108 @@ class LoginPage {
     this.height = wx.getSystemInfoSync().windowHeight;
     this.isLoading = false;
     this.backgroundImage = null;
+    this.logoImage = null;
+    this.loginButtonImage = null;
     
-    // 加载背景图
-    this.loadBackgroundImage();
+    // 加载背景图、logo和登录按钮
+    this.loadImages();
   }
   
-  loadBackgroundImage() {
-    // 使用资源管理器加载背景图
-    const resourceManager = GameGlobal.resourceManager;
-    if (resourceManager) {
-      // 检查是否已经加载了背景图
-      this.backgroundImage = resourceManager.getImage('loginBackground');
-      if (!this.backgroundImage) {
-        // 如果没有加载，创建并加载图片
+  loadImages() {
+    // 加载背景图
+    const loadBackground = () => {
+      const resourceManager = GameGlobal.resourceManager;
+      if (resourceManager) {
+        this.backgroundImage = resourceManager.getImage('loginBackground');
+        if (!this.backgroundImage) {
+          const img = wx.createImage();
+          img.onload = () => {
+            this.backgroundImage = img;
+            resourceManager.images['loginBackground'] = img;
+            console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
+          };
+          img.onerror = (err) => {
+            console.error('Failed to load background image:', err);
+          };
+          img.src = 'images/ui/bg2.jpg';
+        }
+      } else {
         const img = wx.createImage();
         img.onload = () => {
           this.backgroundImage = img;
-          // 将图片保存到资源管理器中
-          resourceManager.images['loginBackground'] = img;
           console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
         };
         img.onerror = (err) => {
           console.error('Failed to load background image:', err);
-          // 即使图片加载失败，也继续显示登录按钮
         };
-        // 使用相对路径
-        img.src = 'images/ui/bg1.jpg';
+        img.src = 'images/ui/bg2.jpg';
       }
-    } else {
-      // 如果没有资源管理器，直接加载图片
-      const img = wx.createImage();
-      img.onload = () => {
-        this.backgroundImage = img;
-        console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
-      };
-      img.onerror = (err) => {
-        console.error('Failed to load background image:', err);
-        // 即使图片加载失败，也继续显示登录按钮
-      };
-      // 使用相对路径
-      img.src = 'images/ui/bg1.jpg';
-    }
+    };
+
+    // 加载logo
+    const loadLogo = () => {
+      const resourceManager = GameGlobal.resourceManager;
+      if (resourceManager) {
+        this.logoImage = resourceManager.getImage('logo');
+        if (!this.logoImage) {
+          const img = wx.createImage();
+          img.onload = () => {
+            this.logoImage = img;
+            resourceManager.images['logo'] = img;
+            console.log('Logo image loaded successfully:', this.logoImage.width, 'x', this.logoImage.height);
+          };
+          img.onerror = (err) => {
+            console.error('Failed to load logo image:', err);
+          };
+          img.src = 'images/logo/icon_0000_logo.png';
+        }
+      } else {
+        const img = wx.createImage();
+        img.onload = () => {
+          this.logoImage = img;
+          console.log('Logo image loaded successfully:', this.logoImage.width, 'x', this.logoImage.height);
+        };
+        img.onerror = (err) => {
+          console.error('Failed to load logo image:', err);
+        };
+        img.src = 'images/logo/icon_0000_logo.png';
+      }
+    };
+
+    // 加载登录按钮
+    const loadLoginButton = () => {
+      const resourceManager = GameGlobal.resourceManager;
+      if (resourceManager) {
+        this.loginButtonImage = resourceManager.getImage('loginButton');
+        if (!this.loginButtonImage) {
+          const img = wx.createImage();
+          img.onload = () => {
+            this.loginButtonImage = img;
+            resourceManager.images['loginButton'] = img;
+            console.log('Login button image loaded successfully:', this.loginButtonImage.width, 'x', this.loginButtonImage.height);
+          };
+          img.onerror = (err) => {
+            console.error('Failed to load login button image:', err);
+          };
+          img.src = 'images/logo/icon_0001_log_in.png';
+        }
+      } else {
+        const img = wx.createImage();
+        img.onload = () => {
+          this.loginButtonImage = img;
+          console.log('Login button image loaded successfully:', this.loginButtonImage.width, 'x', this.loginButtonImage.height);
+        };
+        img.onerror = (err) => {
+          console.error('Failed to load login button image:', err);
+        };
+        img.src = 'images/logo/icon_0001_log_in.png';
+      }
+    };
+
+    // 执行加载
+    loadBackground();
+    loadLogo();
+    loadLoginButton();
   }
 
   render(ctx) {
@@ -68,6 +129,9 @@ class LoginPage {
         ctx.fillStyle = '#f0f0f0';
         ctx.fillRect(0, 0, this.width, this.height);
       }
+
+      // 绘制logo
+      this.drawLogo(ctx);
 
       // 绘制登录按钮
       this.drawLoginButton(ctx);
@@ -90,43 +154,65 @@ class LoginPage {
     }
   }
 
-  drawLoginButton(ctx) {
-    // 按钮背景 - 红色，与图片中的按钮颜色匹配
-    ctx.fillStyle = '#C41E3A';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 1;
-    
-    // 绘制圆角矩形 - 调整位置和大小以匹配图片中的按钮
-    const x = this.width / 2 - 120;
-    const y = this.height * 0.75;
-    const width = 240;
-    const height = 50;
-    const radius = 25;
-    
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.arcTo(x + width, y, x + width, y + radius, radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-    ctx.lineTo(x + radius, y + height);
-    ctx.arcTo(x, y + height, x, y + height - radius, radius);
-    ctx.lineTo(x, y + radius);
-    ctx.arcTo(x, y, x + radius, y, radius);
-    ctx.closePath();
-    
-    ctx.fill();
-    ctx.stroke();
+  drawLogo(ctx) {
+    if (this.logoImage) {
+      // 计算logo的大小和位置（稍微放大）
+      const logoWidth = this.width * 0.5; // 稍微放大
+      const logoHeight = logoWidth * (this.logoImage.height / this.logoImage.width);
+      const logoX = (this.width - logoWidth) / 2;
+      const logoY = this.height * 0.15; // 保持上移位置
+      
+      // 绘制logo
+      ctx.drawImage(this.logoImage, logoX, logoY, logoWidth, logoHeight);
+    }
+  }
 
-    // 按钮文字 - 与图片中的文字匹配
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '18px Inter, Arial';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 1;
-    ctx.fillText('立即登录', this.width / 2, y + height / 2 + 5);
-    ctx.shadowBlur = 0;
+  drawLoginButton(ctx) {
+    if (this.loginButtonImage) {
+      // 计算按钮的大小和位置（缩小并下移）
+      const buttonWidth = this.width * 0.5; // 缩小为原来的5/7
+      const buttonHeight = buttonWidth * (this.loginButtonImage.height / this.loginButtonImage.width);
+      const buttonX = (this.width - buttonWidth) / 2;
+      const buttonY = this.height * 0.8; // 下移
+      
+      // 绘制登录按钮图片
+      ctx.drawImage(this.loginButtonImage, buttonX, buttonY, buttonWidth, buttonHeight);
+    } else {
+      // 如果按钮图片未加载，绘制默认按钮
+      ctx.fillStyle = '#C41E3A';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      
+      const x = this.width / 2 - 100;
+      const y = this.height * 0.8;
+      const width = 200;
+      const height = 45;
+      const radius = 20;
+      
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.arcTo(x + width, y, x + width, y + radius, radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+      ctx.lineTo(x + radius, y + height);
+      ctx.arcTo(x, y + height, x, y + height - radius, radius);
+      ctx.lineTo(x, y + radius);
+      ctx.arcTo(x, y, x + radius, y, radius);
+      ctx.closePath();
+      
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '16px Inter, Arial';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 3;
+      ctx.shadowOffsetY = 1;
+      ctx.fillText('立即登录', this.width / 2, y + height / 2 + 5);
+      ctx.shadowBlur = 0;
+    }
   }
 
   drawLoading(ctx) {
@@ -180,10 +266,23 @@ class LoginPage {
       return;
     }
     
-    // 检查是否点击了登录按钮 - 与新的按钮位置匹配
-    const buttonY = this.height * 0.75;
-    if (x >= this.width / 2 - 120 && x <= this.width / 2 + 120 && y >= buttonY && y <= buttonY + 50) {
-      this.login();
+    // 检查是否点击了登录按钮
+    if (this.loginButtonImage) {
+      // 使用图片按钮的位置
+      const buttonWidth = this.width * 0.5;
+      const buttonHeight = buttonWidth * (this.loginButtonImage.height / this.loginButtonImage.width);
+      const buttonX = (this.width - buttonWidth) / 2;
+      const buttonY = this.height * 0.8;
+      
+      if (x >= buttonX && x <= buttonX + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight) {
+        this.login();
+      }
+    } else {
+      // 使用默认按钮的位置
+      const buttonY = this.height * 0.8;
+      if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= buttonY && y <= buttonY + 45) {
+        this.login();
+      }
     }
   }
 

@@ -17,7 +17,11 @@ class PuzzleGame {
     this.animations = [];
     this.animationFrame = 0;
     this.isAnimating = false;
+    this.backgroundImage = null;
+    this.puzzleImage = null;
     this.initPuzzle();
+    this.loadBackgroundImage();
+    this.loadPuzzleImage();
   }
 
   initPuzzle() {
@@ -234,6 +238,17 @@ class PuzzleGame {
     if (moved && this.checkCompletion()) {
       this.gameStatus = 'completed';
       this.endTime = Date.now();
+      // 保存游戏成绩
+      this.saveGameScore();
+    }
+  }
+
+  // 保存游戏成绩
+  saveGameScore() {
+    const time = this.getElapsedTime();
+    // 使用 DataBus 记录成绩
+    if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.databus) {
+      GameGlobal.app.databus.recordPuzzleScore(this.level, time, true);
     }
   }
 
@@ -437,16 +452,20 @@ class PuzzleGame {
 
   render(ctx) {
     try {
-      // 绘制渐变背景
-      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-      gradient.addColorStop(0, '#4a6fa5');
-      gradient.addColorStop(1, '#6e5b7b');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, this.width, this.height);
+      // 绘制背景图
+      if (this.backgroundImage) {
+        // 直接拉伸背景图以适应屏幕，与首页保持一致
+        ctx.drawImage(this.backgroundImage, 0, 0, this.width, this.height);
+      } else {
+        // 如果背景图未加载，使用默认背景
+        const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+        gradient.addColorStop(0, '#4a6fa5');
+        gradient.addColorStop(1, '#6e5b7b');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.width, this.height);
+      }
 
-      // 绘制半透明遮罩
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.fillRect(0, 0, this.width, this.height);
+      // 移除半透明遮罩，与首页保持一致
 
       // 绘制游戏信息 - 使用玻璃态效果
       const infoWidth = 300;
@@ -514,29 +533,63 @@ class PuzzleGame {
           // 绘制拼图块 - 玻璃态效果
           this.drawRoundedRect(ctx, x, y, pieceSize, pieceSize, 8);
           
-          // 缓存颜色值 - 基于海澄村三色资源
-          const colorIndex = (piece.correctRow * size + piece.correctCol) % 3;
-          const colors = ['#FF5722', '#4CAF50', '#F44336'];
-          const color = colors[colorIndex];
-          
-          // 为拼图块添加渐变效果
-          const pieceGradient = ctx.createLinearGradient(x, y, x, y + pieceSize);
-          pieceGradient.addColorStop(0, color);
-          pieceGradient.addColorStop(1, color + '80');
-          ctx.fillStyle = pieceGradient;
-          ctx.fill();
+          // 绘制拼图图片
+          if (this.puzzleImage) {
+            const imgPieceWidth = this.puzzleImage.width / size;
+            const imgPieceHeight = this.puzzleImage.height / size;
+            
+            // 切割并绘制图片
+            ctx.save();
+            ctx.clip();
+            ctx.drawImage(
+              this.puzzleImage,
+              piece.correctCol * imgPieceWidth,
+              piece.correctRow * imgPieceHeight,
+              imgPieceWidth,
+              imgPieceHeight,
+              x,
+              y,
+              pieceSize,
+              pieceSize
+            );
+            ctx.restore();
+          } else {
+            // 图片未加载时使用默认颜色
+            const colorIndex = (piece.correctRow * size + piece.correctCol) % 3;
+            const colors = ['#FF5722', '#4CAF50', '#F44336'];
+            const color = colors[colorIndex];
+            
+            const pieceGradient = ctx.createLinearGradient(x, y, x, y + pieceSize);
+            pieceGradient.addColorStop(0, color);
+            pieceGradient.addColorStop(1, color + '80');
+            ctx.fillStyle = pieceGradient;
+            ctx.fill();
+          }
           
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
           ctx.lineWidth = 2;
           ctx.stroke();
-
-          // 绘制拼图内容（这里用数字代替实际图片）
-          ctx.fillStyle = '#fff';
-          ctx.font = '16px Arial';
-          ctx.textAlign = 'center';
-          ctx.fillText(`${piece.correctRow},${piece.correctCol}`, x + pieceSize / 2, y + pieceSize / 2 + 5);
         }
       });
+
+      // 绘制缩小的原图提示
+      if (this.puzzleImage) {
+        const hintWidth = 120;
+        const hintHeight = hintWidth * (this.puzzleImage.height / this.puzzleImage.width);
+        const hintX = (this.width - hintWidth) / 2;
+        const hintY = this.height - 300; // 向上移动，位于拼图下方，按钮上方
+        
+        // 绘制提示框
+        this.drawRoundedRect(ctx, hintX - 5, hintY - 5, hintWidth + 10, hintHeight + 10, 10);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // 绘制缩小的原图
+        ctx.drawImage(this.puzzleImage, hintX, hintY, hintWidth, hintHeight);
+      }
 
       // 绘制底部按钮 - 水平排列
       const buttonHeight = 50;
@@ -548,7 +601,10 @@ class PuzzleGame {
       
       // 返回按钮 - 次要按钮
       this.drawRoundedRect(ctx, buttonStartX, buttonY, buttonWidth, buttonHeight, 25);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      const backGradient = ctx.createLinearGradient(buttonStartX, buttonY, buttonStartX + buttonWidth, buttonY + buttonHeight);
+      backGradient.addColorStop(0, '#6B7280');
+      backGradient.addColorStop(1, '#4B5563');
+      ctx.fillStyle = backGradient;
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
@@ -561,10 +617,10 @@ class PuzzleGame {
       // 难度设置按钮 - 主按钮
       const difficultyX = buttonStartX + buttonWidth + buttonSpacing;
       this.drawRoundedRect(ctx, difficultyX, buttonY, buttonWidth, buttonHeight, 25);
-      const mainButtonGradient = ctx.createLinearGradient(difficultyX, buttonY, difficultyX + buttonWidth, buttonY + buttonHeight);
-      mainButtonGradient.addColorStop(0, '#4a6fa5');
-      mainButtonGradient.addColorStop(1, '#6e5b7b');
-      ctx.fillStyle = mainButtonGradient;
+      const orangeGradient = ctx.createLinearGradient(difficultyX, buttonY, difficultyX + buttonWidth, buttonY + buttonHeight);
+      orangeGradient.addColorStop(0, '#FF9800');
+      orangeGradient.addColorStop(1, '#F57C00');
+      ctx.fillStyle = orangeGradient;
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 2;
@@ -577,10 +633,10 @@ class PuzzleGame {
       // 重新开始按钮 - 成功按钮
       const restartX = difficultyX + buttonWidth + buttonSpacing;
       this.drawRoundedRect(ctx, restartX, buttonY, buttonWidth, buttonHeight, 25);
-      const successButtonGradient = ctx.createLinearGradient(restartX, buttonY, restartX + buttonWidth, buttonY + buttonHeight);
-      successButtonGradient.addColorStop(0, '#4CAF50');
-      successButtonGradient.addColorStop(1, '#45a049');
-      ctx.fillStyle = successButtonGradient;
+      const restartGradient = ctx.createLinearGradient(restartX, buttonY, restartX + buttonWidth, buttonY + buttonHeight);
+      restartGradient.addColorStop(0, '#10B981');
+      restartGradient.addColorStop(1, '#059669');
+      ctx.fillStyle = restartGradient;
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 2;
@@ -753,6 +809,52 @@ class PuzzleGame {
       if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= this.height / 2 + 120 && y <= this.height / 2 + 170) {
         GameGlobal.app.showPage('home');
       }
+    }
+  }
+
+  // 加载背景图片
+  loadBackgroundImage() {
+    if (typeof wx !== 'undefined' && wx.createImage) {
+      const img = wx.createImage();
+      img.onload = () => {
+        this.backgroundImage = img;
+      };
+      img.onerror = (err) => {
+        console.error('Failed to load background image:', err);
+      };
+      img.src = 'images/ui/bg2.jpg';
+    } else if (typeof window !== 'undefined' && window.Image) {
+      const img = new Image();
+      img.onload = () => {
+        this.backgroundImage = img;
+      };
+      img.onerror = (err) => {
+        console.error('Failed to load background image:', err);
+      };
+      img.src = 'images/ui/bg2.jpg';
+    }
+  }
+
+  // 加载拼图图片
+  loadPuzzleImage() {
+    if (typeof wx !== 'undefined' && wx.createImage) {
+      const img = wx.createImage();
+      img.onload = () => {
+        this.puzzleImage = img;
+      };
+      img.onerror = (err) => {
+        console.error('Failed to load puzzle image:', err);
+      };
+      img.src = 'images/puzzle/he.jpg';
+    } else if (typeof window !== 'undefined' && window.Image) {
+      const img = new Image();
+      img.onload = () => {
+        this.puzzleImage = img;
+      };
+      img.onerror = (err) => {
+        console.error('Failed to load puzzle image:', err);
+      };
+      img.src = 'images/puzzle/he.jpg';
     }
   }
 

@@ -6,6 +6,7 @@ const Match3Game = require('../games/match3/game');
 const PuzzleGame = require('../games/puzzle/game');
 const DataManager = require('../utils/dataManager');
 const ResourceManager = require('../utils/resourceManager');
+const DataBus = require('../databus');
 
 // 获取 canvas 元素
 let canvas;
@@ -52,17 +53,8 @@ try {
 const resourceManager = new ResourceManager();
 GameGlobal.resourceManager = resourceManager;
 
-GameGlobal.databus = {
-  currentPage: null,
-  userInfo: null,
-  score: 0,
-  achievements: [],
-  resources: {
-    非遗: 0,
-    自然: 0,
-    红色: 0
-  }
-};
+// 创建 DataBus 实例
+GameGlobal.databus = new DataBus();
 
 GameGlobal.dataManager = new DataManager();
 

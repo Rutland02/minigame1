@@ -64,12 +64,12 @@ const piecePool = new ObjectPool();
 
 // 颜色类型
 const ColorType = {
-    YELLOW: 0,
-    PURPLE: 1,
-    RED: 2,
-    BLUE: 3,
-    GREEN: 4,
-    PINK: 5,
+    RED: 0,
+    YELLOW: 1,
+    WHITE: 2,
+    PINK: 3,
+    BLUE: 4,
+    GREEN: 5,
     ANY: 6,
     COUNT: 7
 };
@@ -87,14 +87,28 @@ const PieceType = {
 
 // 颜色对应 - 基于海澄村三色资源
 const COLORS = [
-    '#FF9800', // 非遗（橙色）
-    '#4CAF50', // 自然（绿色）
-    '#E53935', // 红色（红色）
-    '#2196F3', // 主按钮（蓝色）
-    '#FF5722', // 警告按钮（深橙色）
-    '#9C27B0', // 提示按钮（紫色）
+    '#E53935', // 红色
+    '#FF9800', // 黄色
+    '#FFFFFF', // 白色
+    '#FF69B4', // 粉色
+    '#2196F3', // 蓝色
+    '#4CAF50', // 绿色
     '#FFFFFF'  // Any (白色)
 ];
+
+// 图标映射
+const ICONS = [
+    'images/match3/icon_0000_red.png',     // 红色
+    'images/match3/icon_0001_yellow.png',  // 黄色
+    'images/match3/icon_0002_white.png',   // 白色
+    'images/match3/icon_0003_pinlk.png',   // 粉色
+    'images/match3/icon_0004_blue.png',    // 蓝色
+    'images/match3/icon_0005_green.png',   // 绿色
+    null                                   // Any (无图标)
+];
+
+// 图标缓存
+const iconCache = [];
 
 // 动画类型
 const AnimationType = {
@@ -142,12 +156,43 @@ class Match3Game {
     this.cellSize = 0;
     this.startX = 0;
     this.startY = 0;
+    this.backgroundImage = null;
     
     try {
       this.initBoard();
       this.calculateLayout();
+      this.loadBackgroundImage();
+      this.loadIcons();
     } catch (error) {
       console.error('Initialize game error:', error);
+    }
+  }
+  
+  // 加载图标
+  loadIcons() {
+    for (let i = 0; i < ICONS.length - 1; i++) { // 排除ANY类型
+      const iconPath = ICONS[i];
+      if (iconPath) {
+        if (typeof wx !== 'undefined' && wx.createImage) {
+          const img = wx.createImage();
+          img.onload = () => {
+            iconCache[i] = img;
+          };
+          img.onerror = (err) => {
+            console.error(`Failed to load icon ${iconPath}:`, err);
+          };
+          img.src = iconPath;
+        } else if (typeof window !== 'undefined' && window.Image) {
+          const img = new Image();
+          img.onload = () => {
+            iconCache[i] = img;
+          };
+          img.onerror = (err) => {
+            console.error(`Failed to load icon ${iconPath}:`, err);
+          };
+          img.src = iconPath;
+        }
+      }
     }
   }
   
@@ -782,7 +827,17 @@ class Match3Game {
       if (this.time <= 0) {
         this.time = 0;
         this.gameStatus = 'gameOver';
+        // 游戏结束时保存成绩
+        this.saveGameScore();
       }
+    }
+  }
+
+  // 保存游戏成绩
+  saveGameScore() {
+    // 使用 DataBus 记录成绩
+    if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.databus) {
+      GameGlobal.app.databus.recordMatch3Score(this.score, this.level);
     }
   }
 
@@ -892,16 +947,20 @@ class Match3Game {
   // 渲染游戏
   render(ctx) {
     try {
-      // 绘制渐变背景
-      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-      gradient.addColorStop(0, '#2563EB');
-      gradient.addColorStop(1, '#3B82F6');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, this.width, this.height);
+      // 绘制背景图
+      if (this.backgroundImage) {
+        // 直接拉伸背景图以适应屏幕，与首页保持一致
+        ctx.drawImage(this.backgroundImage, 0, 0, this.width, this.height);
+      } else {
+        // 如果背景图未加载，使用默认背景
+        const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+        gradient.addColorStop(0, '#2563EB');
+        gradient.addColorStop(1, '#3B82F6');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.width, this.height);
+      }
 
-      // 绘制半透明遮罩
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-      ctx.fillRect(0, 0, this.width, this.height);
+      // 移除半透明遮罩，与首页保持一致
 
       // 绘制游戏信息卡片
       this.drawGameInfo(ctx);
@@ -1041,7 +1100,8 @@ class Match3Game {
         // 绘制方块（如果不在动画中）
         if (this.board[i][j] && !isInAnimation) {
           const piece = this.board[i][j];
-          ctx.fillStyle = piece.color;
+          const colorIndex = COLORS.indexOf(piece.color);
+          const icon = iconCache[colorIndex];
           
           // 绘制特殊棋子
           if (piece.special) {
@@ -1049,18 +1109,32 @@ class Match3Game {
             switch (piece.specialType) {
               case 'row_clear':
                 // 绘制行消除棋子
-                ctx.beginPath();
-                ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-                ctx.fill();
+                if (icon) {
+                  // 绘制图标
+                  ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, cellSize * 2/3, cellSize * 2/3);
+                } else {
+                  //  fallback到颜色填充
+                  ctx.fillStyle = piece.color;
+                  ctx.beginPath();
+                  ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+                  ctx.fill();
+                }
                 // 绘制行消除图案
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(x + cellSize / 4, y + cellSize / 2 - 5, cellSize / 2, 10);
                 break;
               case 'column_clear':
                 // 绘制列消除棋子
-                ctx.beginPath();
-                ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-                ctx.fill();
+                if (icon) {
+                  // 绘制图标
+                  ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, cellSize * 2/3, cellSize * 2/3);
+                } else {
+                  //  fallback到颜色填充
+                  ctx.fillStyle = piece.color;
+                  ctx.beginPath();
+                  ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+                  ctx.fill();
+                }
                 // 绘制列消除图案
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(x + cellSize / 2 - 5, y + cellSize / 4, 10, cellSize / 2);
@@ -1081,15 +1155,29 @@ class Match3Game {
                 break;
               default:
                 // 绘制普通棋子
-                ctx.beginPath();
-                ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-                ctx.fill();
+                if (icon) {
+                  // 绘制图标
+                  ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, cellSize * 2/3, cellSize * 2/3);
+                } else {
+                  //  fallback到颜色填充
+                  ctx.fillStyle = piece.color;
+                  ctx.beginPath();
+                  ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+                  ctx.fill();
+                }
             }
           } else {
             // 绘制普通棋子
-            ctx.beginPath();
-            ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-            ctx.fill();
+            if (icon) {
+              // 绘制图标
+              ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, cellSize * 2/3, cellSize * 2/3);
+            } else {
+              //  fallback到颜色填充
+              ctx.fillStyle = piece.color;
+              ctx.beginPath();
+              ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
           }
         }
 
@@ -1100,10 +1188,21 @@ class Match3Game {
             const scale = 1 + easedProgress * 1.5;
             const opacity = 1 - easedProgress;
             ctx.globalAlpha = opacity;
-            ctx.fillStyle = anim.data.color || '#ffffff';
-            ctx.beginPath();
-            ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
-            ctx.fill();
+            
+            const colorIndex = COLORS.indexOf(anim.data.color || '#ffffff');
+            const icon = iconCache[colorIndex];
+            
+            if (icon) {
+              // 绘制图标
+              ctx.drawImage(icon, x + cellSize / 6 - (cellSize / 6) * (scale - 1), y + cellSize / 6 - (cellSize / 6) * (scale - 1), cellSize * 2/3 * scale, cellSize * 2/3 * scale);
+            } else {
+              //  fallback到颜色填充
+              ctx.fillStyle = anim.data.color || '#ffffff';
+              ctx.beginPath();
+              ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            
             // 绘制粒子效果
             for (let p = 0; p < 6; p++) {
               const angle = (p / 6) * Math.PI * 2;
@@ -1128,10 +1227,19 @@ class Match3Game {
               const currentX = startX + col1 * cellSize + cellSize / 2 + (targetX - (startX + col1 * cellSize + cellSize / 2)) * easedProgress;
               const currentY = startY + row1 * cellSize + cellSize / 2 + (targetY - (startY + row1 * cellSize + cellSize / 2)) * easedProgress;
               
-              ctx.fillStyle = piece1.color;
-              ctx.beginPath();
-              ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
-              ctx.fill();
+              const colorIndex1 = COLORS.indexOf(piece1.color);
+              const icon1 = iconCache[colorIndex1];
+              
+              if (icon1) {
+                // 绘制图标
+                ctx.drawImage(icon1, currentX - cellSize / 3, currentY - cellSize / 3, cellSize * 2/3, cellSize * 2/3);
+              } else {
+                //  fallback到颜色填充
+                ctx.fillStyle = piece1.color;
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
+                ctx.fill();
+              }
               
               if (piece1.special) {
                 // 绘制特殊棋子符号
@@ -1151,10 +1259,19 @@ class Match3Game {
               const currentX = startX + col2 * cellSize + cellSize / 2 + (targetX - (startX + col2 * cellSize + cellSize / 2)) * easedProgress;
               const currentY = startY + row2 * cellSize + cellSize / 2 + (targetY - (startY + row2 * cellSize + cellSize / 2)) * easedProgress;
               
-              ctx.fillStyle = piece2.color;
-              ctx.beginPath();
-              ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
-              ctx.fill();
+              const colorIndex2 = COLORS.indexOf(piece2.color);
+              const icon2 = iconCache[colorIndex2];
+              
+              if (icon2) {
+                // 绘制图标
+                ctx.drawImage(icon2, currentX - cellSize / 3, currentY - cellSize / 3, cellSize * 2/3, cellSize * 2/3);
+              } else {
+                //  fallback到颜色填充
+                ctx.fillStyle = piece2.color;
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
+                ctx.fill();
+              }
               
               if (piece2.special) {
                 // 绘制特殊棋子符号
@@ -1184,11 +1301,20 @@ class Match3Game {
             const currentY = startYPos + (targetYPos - startYPos) * easedProgress;
             const currentX = startX + col * cellSize + cellSize / 2;
             
+            const colorIndex = COLORS.indexOf(piece.color);
+            const icon = iconCache[colorIndex];
+            
             // 绘制下落的方块
-            ctx.fillStyle = piece.color;
-            ctx.beginPath();
-            ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
-            ctx.fill();
+            if (icon) {
+              // 绘制图标
+              ctx.drawImage(icon, currentX - cellSize / 3, currentY - cellSize / 3, cellSize * 2/3, cellSize * 2/3);
+            } else {
+              //  fallback到颜色填充
+              ctx.fillStyle = piece.color;
+              ctx.beginPath();
+              ctx.arc(currentX, currentY, cellSize / 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
             
             if (piece.special) {
               // 绘制特殊棋子符号
@@ -1204,10 +1330,19 @@ class Match3Game {
             const easedProgress = this.easeOutElastic(anim.progress);
             const scale = 1 + easedProgress * 0.3;
             if (this.board[i][j]) {
-              ctx.fillStyle = this.board[i][j].color;
-              ctx.beginPath();
-              ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
-              ctx.fill();
+              const colorIndex = COLORS.indexOf(this.board[i][j].color);
+              const icon = iconCache[colorIndex];
+              
+              if (icon) {
+                // 绘制图标
+                ctx.drawImage(icon, x + cellSize / 6 - (cellSize / 6) * (scale - 1), y + cellSize / 6 - (cellSize / 6) * (scale - 1), cellSize * 2/3 * scale, cellSize * 2/3 * scale);
+              } else {
+                //  fallback到颜色填充
+                ctx.fillStyle = this.board[i][j].color;
+                ctx.beginPath();
+                ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
+                ctx.fill();
+              }
             }
           } else if (anim.type === 'special' && anim.data.row === i && anim.data.col === j) {
             // 绘制特殊动画
@@ -1233,10 +1368,20 @@ class Match3Game {
               ctx.fillText('LEVEL UP!', x + cellSize / 2, y + cellSize / 2 + 8);
             } else {
               // 绘制特殊棋子爆炸动画
-              ctx.fillStyle = anim.data.color || '#ffffff';
-              ctx.beginPath();
-              ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
-              ctx.fill();
+              const colorIndex = COLORS.indexOf(anim.data.color || '#ffffff');
+              const icon = iconCache[colorIndex];
+              
+              if (icon) {
+                // 绘制图标
+                ctx.drawImage(icon, x + cellSize / 6 - (cellSize / 6) * (scale - 1), y + cellSize / 6 - (cellSize / 6) * (scale - 1), cellSize * 2/3 * scale, cellSize * 2/3 * scale);
+              } else {
+                //  fallback到颜色填充
+                ctx.fillStyle = anim.data.color || '#ffffff';
+                ctx.beginPath();
+                ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
+                ctx.fill();
+              }
+              
               // 绘制冲击波
               for (let r = 0; r < 3; r++) {
                 const radius = (cellSize / 2 + r * 10) * scale;
@@ -1487,6 +1632,29 @@ class Match3Game {
     ctx.quadraticCurveTo(this.width / 2, this.height - 120, this.width, this.height - 80);
     ctx.stroke();
     ctx.restore();
+  }
+
+  // 加载背景图片
+  loadBackgroundImage() {
+    if (typeof wx !== 'undefined' && wx.createImage) {
+      const img = wx.createImage();
+      img.onload = () => {
+        this.backgroundImage = img;
+      };
+      img.onerror = (err) => {
+        console.error('Failed to load background image:', err);
+      };
+      img.src = 'images/ui/bg2.jpg';
+    } else if (typeof window !== 'undefined' && window.Image) {
+      const img = new Image();
+      img.onload = () => {
+        this.backgroundImage = img;
+      };
+      img.onerror = (err) => {
+        console.error('Failed to load background image:', err);
+      };
+      img.src = 'images/ui/bg2.jpg';
+    }
   }
 
   // 处理触摸开始

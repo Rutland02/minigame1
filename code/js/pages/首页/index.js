@@ -1,4 +1,4 @@
-// 首页 - 适配设计图风格
+// 首页 - 适配现代插画设计图风格
 const DataBus = require('../../databus');
 const databus = new DataBus();
 
@@ -6,206 +6,139 @@ class HomePage {
   constructor() {
     this.width = wx.getSystemInfoSync().windowWidth;
     this.height = wx.getSystemInfoSync().windowHeight;
-    this.backgroundImage = null;
     
-    // 加载背景图
-    this.loadBackgroundImage();
+    // 背景图与素材加载容器
+    this.assets = {};
+    this.loadAssets();
     
-    // 颜色配置
+    // 颜色配置（匹配设计图）
     this.colors = {
-      bg: '#F5F2E9',      // 宣纸背景色
-      primary: '#A3262A', // 红色主题
-      gold: '#D4AF37',    // 金色点缀
-      text: '#333333',    // 深色文字
-      border: '#E2D8C0'   // 浅淡边框
+      primaryText: '#00334E',
+      subText: '#666666',
+      white: '#FFFFFF',
+      primaryButton: '#C41E3A',
+      greenCard: '#E8F5E9',
+      yellowCard: '#FFF8E1',
+      blueCard: '#E3F2FD'
     };
 
-    // 交互区域定义
+    const baseW = 375; 
+    const scale = this.width / baseW;
+
+    // 定义区域与图标 ID 映射
     this.regions = {
-      actionButtons: [
-        { id: 'tour', text: '线上游览', x: this.width * 0.25, y: 370, r: 45 },
-        { id: 'scan', text: '扫码打卡', x: this.width * 0.75, y: 370, r: 45 }
-      ],
-      listItems: [
-        { id: 'info1', text: '老区概况', x: this.width * 0.1 - 25, y: 470, w: 50, h: 130 },
-        { id: 'info2', text: '革命旧址', x: this.width * 0.3 - 25, y: 470, w: 50, h: 130 },
-        { id: 'info3', text: '烈士纪念碑', x: this.width * 0.5 - 25, y: 470, w: 50, h: 130 },
-        { id: 'info4', text: '红色故事', x: this.width * 0.7 - 25, y: 470, w: 50, h: 130 },
-        { id: 'achievement', text: '成就', x: this.width * 0.9 - 25, y: 470, w: 50, h: 130 }
-      ],
+      userCenter: { x: 20 * scale, y: 40, w: 150 * scale, h: 60 },
+      
       gameButtons: [
-        { id: 'match3', text: '三色消消乐', x: this.width * 0.2 - 50, y: 650, w: 100, h: 90, color: '#DC2626' },
-        { id: 'puzzle', text: '三色拼图', x: this.width * 0.5 - 50, y: 650, w: 100, h: 90, color: '#D97706' },
-        { id: 'quiz', text: '三色答题', x: this.width * 0.8 - 50, y: 650, w: 100, h: 90, color: '#1D4ED8' }
-      ]
+        { id: 'match3', iconId: 'match3', text: '消消乐', sub: '精彩糖巧，清洁消乐！', x: 25 * scale, y: 180, w: 325 * scale, h: 80, color: this.colors.greenCard },
+        { id: 'puzzle', iconId: 'puzzle', text: '三色拼图', sub: '精彩缝补，三色拼图！', x: 25 * scale, y: 280, w: 325 * scale, h: 80, color: this.colors.yellowCard },
+        { id: 'quiz', iconId: 'quiz', text: '三色答题', sub: '详漫数字，问答答题！', x: 25 * scale, y: 380, w: 325 * scale, h: 80, color: this.colors.blueCard }
+      ],
+      
+      actionButtons: [
+        { id: 'scan', iconId: 'scan', text: '扫码打卡', x: 80 * scale, y: 640, r: 35 },
+        { id: 'tour', iconId: 'tour', text: '线上游览', x: 187 * scale, y: 640, r: 35 },
+        { id: 'achievement', iconId: 'achievement', text: '成就系统', x: 295 * scale, y: 640, r: 35 }
+      ],
+
+      notice: { x: 25 * scale, y: 760, w: 325 * scale, h: 45 }
     };
 
     this.selectedId = null;
   }
 
+  loadAssets() {
+    // 1. 定义背景图
+    const bg = wx.createImage();
+    bg.onload = () => { this.assets.bg = bg; };
+    bg.src = 'images/ui/bg2.jpg';
+
+    // 2. 定义图标映射表（使用你提供的最新英文路径）
+    const iconMap = {
+      match3: 'images/page/home/icon_0000_match3.png',
+      puzzle: 'images/page/home/icon_0001_puzzle.png',
+      quiz: 'images/page/home/icon_0002_quiz.png',
+      scan: 'images/page/home/icon_0003_scan.png',
+      tour: 'images/page/home/icon_0004_virtual_tour.png',
+      achievement: 'images/page/home/icon_0005_achievements.png'
+    };
+
+    // 3. 批量加载图标
+    Object.keys(iconMap).forEach(key => {
+      const img = wx.createImage();
+      img.onload = () => { 
+        this.assets[key] = img; 
+        console.log(`Resource Loaded: ${key}`); 
+      };
+      img.onerror = (e) => { console.error(`Failed to load: ${key}`, e); };
+      img.src = iconMap[key];
+    });
+  }
+
   render(ctx) {
-    // 1. 全局背景
-    if (this.backgroundImage) {
-      // 缩放背景图以适应屏幕
-      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
-      const scaledWidth = this.backgroundImage.width * scale;
-      const scaledHeight = this.backgroundImage.height * scale;
-      const offsetX = (this.width - scaledWidth) / 2;
-      const offsetY = (this.height - scaledHeight) / 2;
-      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    this.drawBackground(ctx);
+    this.drawUserInfo(ctx);
+    this.drawGameCards(ctx);
+    this.drawCircleActions(ctx);
+    this.drawBottomNotice(ctx);
+  }
+
+  drawBackground(ctx) {
+    if (this.assets.bg) {
+      ctx.drawImage(this.assets.bg, 0, 0, this.width, this.height);
     } else {
-      // 如果背景图未加载，使用默认背景
-      ctx.fillStyle = this.colors.bg;
+      ctx.fillStyle = '#E1F5FE';
       ctx.fillRect(0, 0, this.width, this.height);
     }
-
-    // 2. 绘制顶部Banner (红色卷轴风格)
-    this.drawTopBanner(ctx);
-
-    // 3. 绘制"红色行动"板块
-    this.drawSectionHeader(ctx, '红色行动', 270);
-    this.drawActionButtons(ctx);
-
-    // 4. 绘制"红色清单"板块
-    this.drawSectionHeader(ctx, '红色清单', 450);
-    this.drawVerticalList(ctx);
-
-    // 5. 绘制"三色演武场"板块 (游戏区)
-    this.drawSectionHeader(ctx, '三色演武场', 630);
-    this.drawGameEntry(ctx);
   }
 
-  // 绘制带有传统装饰的标题
-  drawSectionHeader(ctx, title, y) {
-    ctx.textAlign = 'center';
-    ctx.fillStyle = this.colors.primary;
-    ctx.font = 'bold 16px sans-serif';
-    
-    // 绘制标题旁边的装饰线
-    const textWidth = ctx.measureText(title).width;
-    ctx.strokeStyle = this.colors.primary;
-    ctx.lineWidth = 1;
-    
-    // 左装饰
-    ctx.beginPath();
-    ctx.moveTo(this.width / 2 - textWidth / 2 - 40, y);
-    ctx.lineTo(this.width / 2 - textWidth / 2 - 10, y);
-    ctx.stroke();
-    
-    // 标题文字
-    ctx.fillText(title, this.width / 2, y + 6);
-    
-    // 右装饰
-    ctx.beginPath();
-    ctx.moveTo(this.width / 2 + textWidth / 2 + 10, y);
-    ctx.lineTo(this.width / 2 + textWidth / 2 + 40, y);
-    ctx.stroke();
-  }
-
-  drawTopBanner(ctx) {
-    const margin = 15;
-    const bannerH = 160;
-    
-    // 红色背景底色
-    ctx.fillStyle = this.colors.primary;
-    this.drawRoundRect(ctx, margin, 90, this.width - margin * 2, bannerH, 10, true);
-    
-    // 模拟建筑插画区域 (中间白色或浅色)
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.fillRect(margin + 10, 100, this.width - margin * 2 - 20, bannerH - 40);
-    
-    // 文字标题
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '18px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('海澄村革命老区概况', this.width / 2, 125);
-
-    // 绘制底部三个小标签 (设计图上卷轴下方的三个小标题)
-    const labels = ['历史起源', '主要事迹', '精神传承'];
+  drawUserInfo(ctx) {
+    ctx.textAlign = 'left';
+    ctx.fillStyle = this.colors.primaryText;
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText('小雅的海游艺坊生活', 100, 70);
     ctx.font = '12px sans-serif';
-    labels.forEach((text, i) => {
-      ctx.fillText(text, (this.width / 4) * (i + 1), 225);
-    });
+    ctx.fillText('⚙ 个人中心', 100, 95);
   }
 
-  drawActionButtons(ctx) {
-    this.regions.actionButtons.forEach(btn => {
-      // 绘制圆形外框
-      ctx.strokeStyle = this.colors.primary;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(btn.x, btn.y, btn.r, 0, Math.PI * 2);
-      ctx.stroke();
-      
-      // 内部填充
-      ctx.fillStyle = btn.id === 'scan' ? this.colors.primary : '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(btn.x, btn.y, btn.r - 4, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // 文字
-      ctx.fillStyle = btn.id === 'scan' ? '#FFFFFF' : this.colors.primary;
-      ctx.font = 'bold 14px sans-serif';
-      ctx.fillText(btn.text, btn.x, btn.y + 5);
-    });
-  }
-
-  drawVerticalList(ctx) {
-    ctx.font = '16px serif';
-    this.regions.listItems.forEach(item => {
-      // 绘制竖向矩形
-      ctx.fillStyle = '#FFFFFF';
-      ctx.strokeStyle = this.colors.border;
-      this.drawRoundRect(ctx, item.x, item.y, item.w, item.h, 6, true, true);
-      
-      // 竖排文字
-      ctx.fillStyle = this.colors.text;
-      const chars = item.text.split('');
-      if (item.id === 'achievement' && chars.length === 2) {
-        // 为"成就"按钮添加特殊处理，增加字间距并确保居中
-        ctx.fillText(chars[0], item.x + item.w / 2, item.y + 45);
-        ctx.fillText(chars[1], item.x + item.w / 2, item.y + 75);
-      } else {
-        chars.forEach((c, i) => {
-          ctx.fillText(c, item.x + item.w / 2, item.y + 30 + i * 20);
-        });
+  drawGameCards(ctx) {
+    this.regions.gameButtons.forEach(game => {
+      // 直接绘制游戏图标，完全覆盖按钮区域
+      if (this.assets[game.iconId]) {
+        ctx.drawImage(this.assets[game.iconId], game.x, game.y, game.w, game.h);
       }
     });
   }
 
-  drawGameEntry(ctx) {
-    this.regions.gameButtons.forEach(game => {
-      // 游戏方块背景
-      ctx.fillStyle = game.color;
-      this.drawRoundRect(ctx, game.x, game.y, game.w, game.h, 8, true);
-      
-      // 装饰小图标 (简单模拟)
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.beginPath();
-      ctx.arc(game.x + game.w/2, game.y + 40, 18, 0, Math.PI*2);
-      ctx.fill();
+  drawCircleActions(ctx) {
+    // 绘制底部功能区白色背板
+    ctx.fillStyle = this.colors.white;
+    this.drawRoundRect(ctx, 25, 610, this.width - 50, 120, 20, true);
 
-      // 游戏名称
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '14px sans-serif';
-      ctx.fillText(game.text, game.x + game.w / 2, game.y + game.h - 12);
+    this.regions.actionButtons.forEach(btn => {
+      // 绘制圆形图标
+      if (this.assets[btn.iconId]) {
+        ctx.drawImage(this.assets[btn.iconId], btn.x - 35, btn.y - 35, 70, 70);
+      }
+
+      // 绘制标签文字
+      ctx.textAlign = 'center';
+      ctx.fillStyle = this.colors.primaryText;
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText(btn.text, btn.x, btn.y + 55);
     });
   }
 
   drawBottomNotice(ctx) {
-    const y = this.height - 40;
-    // 背景
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.fillRect(0, y, this.width, 40);
-    
-    // 文字
-    ctx.fillStyle = this.colors.primary;
+    const n = this.regions.notice;
+    ctx.fillStyle = this.colors.primaryButton;
+    this.drawRoundRect(ctx, n.x, n.y, n.w, n.h, 22, true);
+    ctx.fillStyle = this.colors.white;
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('🏆 恭喜用户 XXX 获得“红色传承人”勋章', 20, y + 25);
+    ctx.fillText('📢 最新活动：海澄村秋季丰收节，答题赢好礼！', n.x + 20, n.y + 27);
   }
 
-  // 工具方法：绘制圆角矩形
   drawRoundRect(ctx, x, y, w, h, r, fill = false, stroke = false) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -225,69 +158,50 @@ class HomePage {
   handleTouchStart(e) {
     const touch = e.touches[0];
     const { clientX: x, clientY: y } = touch;
-
-    // 检查动作按钮 (圆形)
-    this.regions.actionButtons.forEach(btn => {
-      const dist = Math.sqrt((x - btn.x) ** 2 + (y - btn.y) ** 2);
-      if (dist < btn.r) this.selectedId = btn.id;
-    });
-
-    // 检查游戏按钮 (矩形)
     this.regions.gameButtons.forEach(btn => {
       if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
         this.selectedId = btn.id;
       }
     });
-
-    // 检查清单项 (矩形)
-    this.regions.listItems.forEach(btn => {
-        if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
-          this.selectedId = btn.id;
-        }
-      });
+    this.regions.actionButtons.forEach(btn => {
+      const dist = Math.sqrt((x - btn.x) ** 2 + (y - btn.y) ** 2);
+      if (dist < 40) this.selectedId = btn.id;
+    });
   }
 
   handleTouchEnd(e) {
     if (this.selectedId) {
-      console.log('Navigate to:', this.selectedId);
       this.navigateToPage(this.selectedId);
       this.selectedId = null;
     }
   }
 
   navigateToPage(id) {
-    // 保持原有逻辑并扩展
     const app = GameGlobal.app;
     if (!app || !app.showPage) return;
-
-    if (['match3', 'puzzle', 'quiz'].includes(id)) {
+    if (['match3', 'puzzle', 'quiz', 'achievement'].includes(id)) {
       app.showPage(id);
     } else if (id === 'scan') {
-      this.scanQRCode();
-    } else if (id === 'achievement') {
-      app.showPage('achievement');
-    } else {
-      // 处理其他页面跳转，如详情页
-      wx.showToast({ title: '详情开发中', icon: 'none' });
+      wx.scanCode({ success: () => wx.showToast({ title: '打卡成功' }) });
+    } else if (id === 'tour') {
+      console.log('开始打开线上游览链接');
+      if (typeof wx.openUrl === 'function') {
+        console.log('wx.openUrl 方法存在');
+        wx.openUrl({
+          url: 'https://www.kuleiman.com/tv/183553/index.html',
+          success: function(res) {
+            console.log('打开网页成功:', res);
+          },
+          fail: function(res) {
+            console.log('打开网页失败:', res);
+            wx.showToast({ title: '跳转失败，请检查网络或稍后重试', icon: 'none' });
+          }
+        });
+      } else {
+        console.log('wx.openUrl 方法不存在');
+        wx.showToast({ title: '当前环境不支持打开链接', icon: 'none' });
+      }
     }
-  }
-
-  scanQRCode() {
-    wx.scanCode({
-      onlyFromCamera: true,
-      success: () => wx.showToast({ title: '打卡成功', icon: 'success' })
-    });
-  }
-
-  loadBackgroundImage() {
-    const img = wx.createImage();
-    img.onload = () => {
-      this.backgroundImage = img;
-    };
-    img.onerror = (err) => {
-      console.error('Failed to load background image:', err);
-    };
-    img.src = 'images/ui/bg2.jpg';
   }
 
   destroy() {}

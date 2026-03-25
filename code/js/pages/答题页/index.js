@@ -196,13 +196,8 @@ class QuizPage {
   render(ctx) {
     // 绘制背景图
     if (this.backgroundImage) {
-      // 缩放背景图以适应屏幕
-      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
-      const scaledWidth = this.backgroundImage.width * scale;
-      const scaledHeight = this.backgroundImage.height * scale;
-      const offsetX = (this.width - scaledWidth) / 2;
-      const offsetY = (this.height - scaledHeight) / 2;
-      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+      // 直接拉伸背景图以适应屏幕，与首页保持一致
+      ctx.drawImage(this.backgroundImage, 0, 0, this.width, this.height);
     } else {
       // 如果背景图未加载，使用默认背景
       const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
@@ -212,27 +207,25 @@ class QuizPage {
       ctx.fillRect(0, 0, this.width, this.height);
     }
 
-    // 绘制半透明遮罩
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.fillRect(0, 0, this.width, this.height);
+    // 移除半透明遮罩，与首页保持一致
 
-    // 绘制顶部信息栏 - 玻璃态效果
+    // 绘制顶部信息栏 - 磨砂玻璃效果
     this.drawRoundedRect(ctx, 20, 20, this.width - 40, 60, 15);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
 
     // 左侧：题目序号
     ctx.font = '18px Arial';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.fillText(`第${this.currentQuestion + 1}/${this.questions.length}题`, 40, 55);
 
     // 右侧：计时显示
     ctx.font = '16px Arial';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#000000';
     ctx.textAlign = 'right';
     ctx.fillText(`剩余时间: ${this.timeLeft}s`, this.width - 140, 55);
 
@@ -244,26 +237,26 @@ class QuizPage {
     
     // 绘制类别标签
     this.drawRoundedRect(ctx, this.width - 120, 30, 100, 30, 15);
-    ctx.fillStyle = typeColor + '40';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
-    ctx.strokeStyle = typeColor;
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.font = '14px Arial';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
     ctx.fillText(question.type, this.width - 70, 50);
 
-    // 绘制题目内容卡片 - 玻璃态效果
+    // 绘制题目内容卡片 - 磨砂玻璃效果
     this.drawRoundedRect(ctx, 20, 100, this.width - 40, 120, 20);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
     
     ctx.font = '16px Arial';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.fillText(question.question, 40, 140);
 
@@ -273,18 +266,18 @@ class QuizPage {
     question.options.forEach((option, index) => {
       // 绘制选项背景
       let fillColor = 'rgba(255, 255, 255, 0.15)';
-      let strokeColor = 'rgba(255, 255, 255, 0.3)';
+      let strokeColor = '#ffffff';
       if (this.isAnswered) {
         if (index === question.correctAnswer) {
-          fillColor = 'rgba(76, 175, 80, 0.2)'; // 正确选项绿色背景
-          strokeColor = '#4CAF50';
+          fillColor = 'rgba(76, 175, 80, 0.15)'; // 正确选项绿色背景
+          strokeColor = '#ffffff';
         } else if (index === this.selectedOption) {
-          fillColor = 'rgba(244, 67, 54, 0.2)'; // 错误选项红色背景
-          strokeColor = '#F44336';
+          fillColor = 'rgba(244, 67, 54, 0.15)'; // 错误选项红色背景
+          strokeColor = '#ffffff';
         }
       } else if (index === this.selectedOption) {
-        fillColor = 'rgba(33, 150, 243, 0.2)';
-        strokeColor = '#2196F3';
+        fillColor = 'rgba(33, 150, 243, 0.15)';
+        strokeColor = '#ffffff';
       }
       
       // 选项选中动画
@@ -306,7 +299,7 @@ class QuizPage {
       ctx.stroke();
       
       // 绘制选项文字
-      let textColor = '#ffffff';
+      let textColor = '#000000';
       if (this.isAnswered) {
         if (index === question.correctAnswer) {
           textColor = '#4CAF50';
@@ -339,11 +332,11 @@ class QuizPage {
       ctx.scale(scale, scale);
       ctx.translate(-this.width / 2, -this.height / 2);
       
-      // 绘制玻璃态结果卡片
+      // 绘制磨砂玻璃结果卡片
       this.drawRoundedRect(ctx, 40, this.height / 2 - 100, this.width - 80, 200, 20);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.stroke();
       
@@ -355,7 +348,7 @@ class QuizPage {
       
       // 显示解析
       ctx.font = '16px Arial';
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#000000';
       ctx.textAlign = 'left';
       ctx.fillText('解析：', 60, this.height / 2);
       
@@ -372,30 +365,24 @@ class QuizPage {
       // 下一题按钮 - 主按钮
       if (this.currentQuestion < this.questions.length - 1) {
         this.drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
-        const mainButtonGradient = ctx.createLinearGradient(this.width / 2 - 110, buttonY, this.width / 2 + 90, buttonY + 50);
-        mainButtonGradient.addColorStop(0, '#4a6fa5');
-        mainButtonGradient.addColorStop(1, '#6e5b7b');
-        ctx.fillStyle = mainButtonGradient;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#000000';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('下一题', this.width / 2, buttonY + 30);
       } else {
         // 答题完成按钮 - 成功按钮
         this.drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
-        const successButtonGradient = ctx.createLinearGradient(this.width / 2 - 110, buttonY, this.width / 2 + 90, buttonY + 50);
-        successButtonGradient.addColorStop(0, '#4CAF50');
-        successButtonGradient.addColorStop(1, '#45a049');
-        ctx.fillStyle = successButtonGradient;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#000000';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('查看成绩', this.width / 2, buttonY + 30);
@@ -413,7 +400,10 @@ class QuizPage {
     if (!this.showResult) {
       // 返回按钮 - 次要按钮
       this.drawRoundedRect(ctx, 20, this.height - 60, 80, 40, 20);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      const backGradient = ctx.createLinearGradient(20, this.height - 60, 100, this.height - 20);
+      backGradient.addColorStop(0, '#6B7280');
+      backGradient.addColorStop(1, '#4B5563');
+      ctx.fillStyle = backGradient;
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
@@ -426,10 +416,10 @@ class QuizPage {
       // 提示按钮 - 提示按钮
       const hintButtonX = this.width / 2 - 50;
       this.drawRoundedRect(ctx, hintButtonX, this.height - 60, 100, 40, 20);
-      const hintGradient = ctx.createLinearGradient(hintButtonX, this.height - 60, hintButtonX + 100, this.height - 20);
-      hintGradient.addColorStop(0, '#9C27B0');
-      hintGradient.addColorStop(1, '#7B1FA2');
-      ctx.fillStyle = hintGradient;
+      const orangeGradient = ctx.createLinearGradient(hintButtonX, this.height - 60, hintButtonX + 100, this.height - 20);
+      orangeGradient.addColorStop(0, '#FF9800');
+      orangeGradient.addColorStop(1, '#F57C00');
+      ctx.fillStyle = orangeGradient;
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 2;
@@ -444,8 +434,8 @@ class QuizPage {
         const submitButtonX = this.width / 2 - 50;
         this.drawRoundedRect(ctx, submitButtonX, this.height - 60, 100, 40, 20);
         const submitGradient = ctx.createLinearGradient(submitButtonX, this.height - 60, submitButtonX + 100, this.height - 20);
-        submitGradient.addColorStop(0, '#4CAF50');
-        submitGradient.addColorStop(1, '#45a049');
+        submitGradient.addColorStop(0, '#10B981');
+        submitGradient.addColorStop(1, '#059669');
         ctx.fillStyle = submitGradient;
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
@@ -460,8 +450,8 @@ class QuizPage {
       // 跳过按钮 - 警告按钮
       this.drawRoundedRect(ctx, this.width - 120, this.height - 60, 100, 40, 20);
       const skipGradient = ctx.createLinearGradient(this.width - 120, this.height - 60, this.width - 20, this.height - 20);
-      skipGradient.addColorStop(0, '#FF9800');
-      skipGradient.addColorStop(1, '#F57C00');
+      skipGradient.addColorStop(0, '#10B981');
+      skipGradient.addColorStop(1, '#059669');
       ctx.fillStyle = skipGradient;
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
@@ -625,21 +615,29 @@ class QuizPage {
   }
 
   showScore() {
-    // 显示答题完成界面
-    const correctCount = this.questions.filter((_, index) => {
-      const q = this.questions[index];
-      // 这里需要根据实际情况判断是否答对
-      return index < this.currentQuestion && this.isCorrect;
-    }).length;
+    // 计算答对题数
+    const correctCount = Math.floor(this.score / 10);
+    const totalQuestions = this.questions.length;
+
+    // 保存答题成绩
+    this.saveQuizScore(correctCount, totalQuestions, this.score);
 
     // 这里可以实现成绩显示界面
     console.log('答题完成！');
-    console.log(`答对题数：${correctCount}/${this.questions.length}`);
+    console.log(`答对题数：${correctCount}/${totalQuestions}`);
     console.log(`得分：${this.score}`);
 
     // 返回首页
     if (GameGlobal.app && GameGlobal.app.showPage) {
       GameGlobal.app.showPage('home');
+    }
+  }
+
+  // 保存答题成绩
+  saveQuizScore(correctCount, totalQuestions, score) {
+    // 使用 DataBus 记录成绩
+    if (GameGlobal.app && GameGlobal.app.databus) {
+      GameGlobal.app.databus.recordQuizScore(correctCount, totalQuestions, score);
     }
   }
 
