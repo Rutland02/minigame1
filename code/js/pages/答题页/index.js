@@ -5,8 +5,10 @@ const databus = new DataBus();
 
 class QuizPage {
   constructor(difficulty = 'easy') {
-    this.width = wx.getSystemInfoSync().windowWidth;
-    this.height = wx.getSystemInfoSync().windowHeight;
+    const systemInfo = wx.getSystemInfoSync();
+    this.width = systemInfo.windowWidth;
+    this.height = systemInfo.windowHeight;
+    this.pixelRatio = systemInfo.pixelRatio || 1;
     this.currentQuestion = 0;
     this.selectedOption = null;
     this.isAnswered = false;

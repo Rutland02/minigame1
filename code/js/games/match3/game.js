@@ -128,17 +128,21 @@ class Match3Game {
         const systemInfo = wx.getSystemInfoSync();
         this.width = systemInfo.windowWidth || 375;
         this.height = systemInfo.windowHeight || 667;
+        this.pixelRatio = systemInfo.pixelRatio || 1;
       } else if (typeof window !== 'undefined') {
         this.width = window.innerWidth || 375;
         this.height = window.innerHeight || 667;
+        this.pixelRatio = window.devicePixelRatio || 1;
       } else {
         this.width = 375;
         this.height = 667;
+        this.pixelRatio = 1;
       }
     } catch (error) {
       console.error('Get system info error:', error);
       this.width = 375;
       this.height = 667;
+      this.pixelRatio = 1;
     }
     
     this.level = 1;

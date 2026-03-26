@@ -1,8 +1,10 @@
 // 三色拼图游戏逻辑
 class PuzzleGame {
   constructor() {
-    this.width = wx.getSystemInfoSync().windowWidth;
-    this.height = wx.getSystemInfoSync().windowHeight;
+    const systemInfo = wx.getSystemInfoSync();
+    this.width = systemInfo.windowWidth;
+    this.height = systemInfo.windowHeight;
+    this.pixelRatio = systemInfo.pixelRatio || 1;
     this.level = 1; // 1: 9块, 2: 16块, 3: 25块
     this.pieces = [];
     this.gameStatus = 'playing'; // playing, completed
