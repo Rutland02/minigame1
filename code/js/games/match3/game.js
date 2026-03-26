@@ -1135,8 +1135,11 @@ class Match3Game {
               case 'row_clear':
                 // 绘制行消除棋子
                 if (icon) {
-                  // 绘制图标
-                  ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, cellSize * 2/3, cellSize * 2/3);
+                  // 绘制图标 - 考虑 DPR 以保持清晰度
+                  const iconSize = cellSize * 2/3;
+                  ctx.imageSmoothingEnabled = false; // 禁用图像平滑，保持锐利
+                  ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, iconSize, iconSize);
+                  ctx.imageSmoothingEnabled = true;
                 } else {
                   //  fallback到颜色填充
                   ctx.fillStyle = piece.color;
@@ -1181,8 +1184,11 @@ class Match3Game {
               default:
                 // 绘制普通棋子
                 if (icon) {
-                  // 绘制图标
-                  ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, cellSize * 2/3, cellSize * 2/3);
+                  // 绘制图标 - 考虑 DPR 以保持清晰度
+                  const iconSize = cellSize * 2/3;
+                  ctx.imageSmoothingEnabled = false; // 禁用图像平滑，保持锐利
+                  ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, iconSize, iconSize);
+                  ctx.imageSmoothingEnabled = true;
                 } else {
                   //  fallback到颜色填充
                   ctx.fillStyle = piece.color;
@@ -1194,8 +1200,11 @@ class Match3Game {
           } else {
             // 绘制普通棋子
             if (icon) {
-              // 绘制图标
-              ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, cellSize * 2/3, cellSize * 2/3);
+              // 绘制图标 - 考虑 DPR 以保持清晰度
+              const iconSize = cellSize * 2/3;
+              ctx.imageSmoothingEnabled = false; // 禁用图像平滑，保持锐利
+              ctx.drawImage(icon, x + cellSize / 6, y + cellSize / 6, iconSize, iconSize);
+              ctx.imageSmoothingEnabled = true;
             } else {
               //  fallback到颜色填充
               ctx.fillStyle = piece.color;

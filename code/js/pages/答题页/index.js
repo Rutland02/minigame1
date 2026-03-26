@@ -251,15 +251,17 @@ class QuizPage {
 
     // 绘制题目内容卡片 - 磨砂玻璃效果
     this.drawRoundedRect(ctx, 20, 100, this.width - 40, 120, 20);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'; // 使用更不透明的背景
     ctx.fill();
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = '#E2E8F0';
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#000000';
+    // 优化文字渲染
+    ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#0F172A'; // 更深的文字颜色
     ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
     ctx.fillText(question.question, 40, 140);
 
     // 绘制选项
@@ -301,17 +303,19 @@ class QuizPage {
       ctx.stroke();
       
       // 绘制选项文字
-      let textColor = '#000000';
+      let textColor = '#0F172A'; // 更深的文字颜色
       if (this.isAnswered) {
         if (index === question.correctAnswer) {
-          textColor = '#4CAF50';
+          textColor = '#10B981'; // 更鲜艳的绿色
         } else if (index === this.selectedOption) {
-          textColor = '#F44336';
+          textColor = '#DC2626'; // 更鲜艳的红色
         }
       }
+      // 优化文字渲染
       ctx.fillStyle = textColor;
-      ctx.font = '16px Arial';
+      ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
       ctx.fillText(`${String.fromCharCode(65 + index)}. ${option}`, 40, optionYStart + index * optionHeight + 35);
       
       ctx.restore();
