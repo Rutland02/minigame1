@@ -72,7 +72,7 @@
   {
     "id": "check_in_master",
     "title": "打卡达人",
-    "description": "完成所有线下打卡点",
+    "description": "完成线下打卡",
     "type": "线下",
     "icon": "📍"
   },

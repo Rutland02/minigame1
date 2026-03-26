@@ -1,6 +1,7 @@
 // 首页 - 适配现代插画设计图风格
 const DataBus = require('../../databus');
-const databus = new DataBus();
+// 使用全局 databus 实例
+const databus = GameGlobal.databus || new DataBus();
 
 class HomePage {
   constructor() {
@@ -217,26 +218,62 @@ class HomePage {
     if (['match3', 'puzzle', 'quiz', 'achievement'].includes(id)) {
       app.showPage(id);
     } else if (id === 'scan') {
-      wx.scanCode({ success: () => wx.showToast({ title: '打卡成功' }) });
-    } else if (id === 'tour') {
-      console.log('开始打开线上游览链接');
-      if (typeof wx.openUrl === 'function') {
-        console.log('wx.openUrl 方法存在');
-        wx.openUrl({
-          url: 'https://www.kuleiman.com/tv/183553/index.html',
-          success: function(res) {
-            console.log('打开网页成功:', res);
-          },
-          fail: function(res) {
-            console.log('打开网页失败:', res);
-            wx.showToast({ title: '跳转失败，请检查网络或稍后重试', icon: 'none' });
+      wx.scanCode({
+        onlyFromCamera: true,
+        scanType: ['qrCode'],
+        success: (res) => {
+          console.log('扫码结果:', res);
+          // 显示打卡成功提示
+          wx.showToast({
+            title: '打卡成功！',
+            icon: 'success',
+            duration: 1500
+          });
+          // 解锁打卡达人成就
+          databus.unlockAchievement('check_in_master');
+        },
+        fail: (err) => {
+          console.error('扫码失败:', err);
+          if (!err.errMsg.includes('cancel')) {
+            wx.showToast({
+              title: '扫码失败，请重试',
+              icon: 'none',
+              duration: 2000
+            });
           }
-        });
-      } else {
-        console.log('wx.openUrl 方法不存在');
-        wx.showToast({ title: '当前环境不支持打开链接', icon: 'none' });
-      }
+        }
+      });
+    } else if (id === 'tour') {
+      console.log('显示线上游览链接');
+      const url = 'https://www.kuleiman.com/tv/183553/index.html';
+      
+      // 直接显示链接，让用户手动复制
+      wx.showModal({
+        title: '线上游览',
+        content: '请复制以下链接到浏览器打开:\n' + url,
+        showCancel: false,
+        confirmText: '确定'
+      });
     }
+  }
+
+  // 清除所有已解锁的成就
+  clearAchievements() {
+    wx.showModal({
+      title: '清除成就',
+      content: '确定要清除所有已解锁的成就吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 清除成就
+          databus.clearAllAchievements();
+          wx.showToast({
+            title: '成就已清除',
+            icon: 'success',
+            duration: 2000
+          });
+        }
+      }
+    });
   }
 
   destroy() {}

@@ -426,6 +426,20 @@ class AchievementPage {
     });
   }
 
+  // 清除所有成就
+  clearAllAchievements() {
+    const databus = this.getDatabus();
+    const clearedCount = databus.clearAllAchievements();
+    
+    wx.showToast({
+      title: `已清除 ${clearedCount} 个成就`,
+      icon: 'success',
+      duration: 2000
+    });
+    
+    console.log('[成就页面] 已清除成就:', clearedCount);
+  }
+
   loadBackgroundImage() {
     const img = wx.createImage();
     img.onload = () => {
