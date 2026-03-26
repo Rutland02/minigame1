@@ -96,7 +96,7 @@ const COLORS = [
     '#F8FAFC'  // Any (白色)
 ];
 
-// 图标映射 - 恢复使用 PNG 格式
+// 图标映射
 const ICONS = [
     'images/match3/icon_0000_red.png',     // 红色
     'images/match3/icon_0001_yellow.png',  // 黄色
