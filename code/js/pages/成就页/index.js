@@ -1,8 +1,4 @@
 // 成就页
-const DataBus = require('../../databus');
-
-const databus = new DataBus();
-
 class AchievementPage {
   constructor() {
     this.width = wx.getSystemInfoSync().windowWidth;
@@ -21,6 +17,16 @@ class AchievementPage {
     
     // 获取所有成就定义
     this.allAchievements = this.getAllAchievements();
+  }
+  
+  // 获取 databus 实例
+  getDatabus() {
+    if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.databus) {
+      return GameGlobal.app.databus;
+    }
+    // 如果 GameGlobal.app.databus 不存在，创建一个新的实例
+    const DataBus = require('../../databus');
+    return new DataBus();
   }
 
 
@@ -90,6 +96,7 @@ class AchievementPage {
 
   // 绘制成就列表
   renderAchievementsList(ctx) {
+    const databus = this.getDatabus();
     const achievementsWithStatus = databus.getAllAchievementsWithStatus();
     const unlockedIds = new Set(achievementsWithStatus.filter(a => a.isUnlocked).map(a => a.id));
 
@@ -283,6 +290,7 @@ class AchievementPage {
     ctx.fillText('数字体验证书', this.width / 2, 120);
     
     // 绘制证书内容
+    const databus = this.getDatabus();
     const userInfo = databus.getUserInfo();
     const totalScore = databus.getTotalScore();
     const achievements = databus.getAchievements();
@@ -377,11 +385,6 @@ class AchievementPage {
         if (GameGlobal.app && GameGlobal.app.showPage) {
           GameGlobal.app.showPage('home');
         }
-        return;
-      }
-      // 检查是否点击了生成证书按钮 - 底部右侧
-      if (x >= this.width - 140 && x <= this.width - 40 && y >= this.height - 80 && y <= this.height - 30) {
-        this.generateCertificate();
         return;
       }
       

@@ -109,6 +109,8 @@ class ScoreManager {
     
     this.scores.overall.totalGamesPlayed++;
     
+    console.log('[成就系统] 记录消消乐成绩:', { score, level, gamesPlayed: match3.gamesPlayed });
+    
     this.checkMatch3Achievements(score, level);
     this.checkOverallAchievements();
     this.save();
@@ -130,6 +132,8 @@ class ScoreManager {
     
     this.scores.overall.totalGamesPlayed++;
     
+    console.log('[成就系统] 记录拼图成绩:', { level, time, isCompleted, gamesPlayed: puzzle.gamesPlayed });
+    
     this.checkPuzzleAchievements(level, time, isCompleted);
     this.checkOverallAchievements();
     this.save();
@@ -149,6 +153,8 @@ class ScoreManager {
     
     this.scores.overall.totalGamesPlayed++;
     
+    console.log('[成就系统] 记录答题成绩:', { correctCount, totalQuestions, score, accuracy: quiz.accuracy, gamesPlayed: quiz.gamesPlayed });
+    
     this.checkQuizAchievements(correctCount, totalQuestions, score);
     this.checkOverallAchievements();
     this.save();
@@ -158,21 +164,27 @@ class ScoreManager {
   checkMatch3Achievements(score, level) {
     const match3 = this.scores.match3;
 
+    console.log('[成就系统] 检查消消乐成就:', { score, level, highestScore: match3.highestScore, bestLevel: match3.bestLevel });
+
     // 初次尝试
+    console.log('[成就系统] 尝试解锁: first_game');
     this.unlockAchievement('first_game');
 
     // 消消乐大师 - 得分超过1000
     if (score >= 1000) {
+      console.log('[成就系统] 尝试解锁: match3_master');
       this.unlockAchievement('match3_master');
     }
 
     // 消消乐传奇 - 得分超过10000
     if (score >= 10000) {
+      console.log('[成就系统] 尝试解锁: match3_legend');
       this.unlockAchievement('match3_legend');
     }
 
     // 等级达人 - 达到10级
     if (level >= 10) {
+      console.log('[成就系统] 尝试解锁: level_master');
       this.unlockAchievement('level_master');
     }
   }
@@ -181,23 +193,32 @@ class ScoreManager {
   checkPuzzleAchievements(level, time, isCompleted) {
     const puzzle = this.scores.puzzle;
 
-    if (!isCompleted) return;
+    console.log('[成就系统] 检查拼图成就:', { level, time, isCompleted, completedCount: puzzle.completedCount });
+
+    if (!isCompleted) {
+      console.log('[成就系统] 拼图未完成，跳过成就检查');
+      return;
+    }
 
     // 初次尝试
+    console.log('[成就系统] 尝试解锁: first_game');
     this.unlockAchievement('first_game');
 
     // 拼图入门 - 完成简单难度
     if (level === 1) {
+      console.log('[成就系统] 尝试解锁: puzzle_beginner');
       this.unlockAchievement('puzzle_beginner');
     }
 
     // 拼图高手 - 完成中等难度
     if (level === 2) {
+      console.log('[成就系统] 尝试解锁: puzzle_intermediate');
       this.unlockAchievement('puzzle_intermediate');
     }
 
     // 拼图大师 - 完成困难难度
     if (level === 3) {
+      console.log('[成就系统] 尝试解锁: puzzle_master');
       this.unlockAchievement('puzzle_master');
     }
   }
@@ -206,16 +227,21 @@ class ScoreManager {
   checkQuizAchievements(correctCount, totalQuestions, score) {
     const quiz = this.scores.quiz;
 
+    console.log('[成就系统] 检查答题成就:', { correctCount, totalQuestions, score, accuracy: quiz.accuracy });
+
     // 初次尝试
+    console.log('[成就系统] 尝试解锁: first_game');
     this.unlockAchievement('first_game');
 
     // 知识达人 - 正确率达到80%
     if (quiz.accuracy >= 80) {
+      console.log('[成就系统] 尝试解锁: quiz_master');
       this.unlockAchievement('quiz_master');
     }
 
     // 学霸 - 正确率达到100%
     if (correctCount === totalQuestions) {
+      console.log('[成就系统] 尝试解锁: quiz_perfect');
       this.unlockAchievement('quiz_perfect');
     }
   }
@@ -259,6 +285,18 @@ class ScoreManager {
       this.checkCollectorAchievement();
       
       this.save();
+      
+      // 添加调试信息
+      const achievement = this.getAchievementDefinition(achievementId);
+      console.log('[成就系统] 成就解锁:', {
+        id: achievementId,
+        title: achievement ? achievement.title : '未知成就',
+        description: achievement ? achievement.description : '未知描述',
+        unlockedAt: new Date(this.achievements.unlockDates[achievementId]).toLocaleString(),
+        totalUnlocked: this.achievements.unlocked.length,
+        allAchievements: this.achievements.unlocked
+      });
+      
       return true;
     }
     return false;
@@ -324,6 +362,19 @@ class ScoreManager {
       unlockDates: {}
     };
     this.save();
+    console.log('[成就系统] 已重置所有数据');
+  }
+
+  // 清除所有已解锁的成就
+  clearAllAchievements() {
+    const clearedCount = this.achievements.unlocked.length;
+    this.achievements.unlocked = [];
+    this.achievements.unlockDates = {};
+    this.scores.achievements.unlocked = [];
+    this.scores.achievements.unlockDates = {};
+    this.save();
+    console.log('[成就系统] 已清除所有成就:', { clearedCount, currentUnlocked: this.achievements.unlocked.length });
+    return clearedCount;
   }
 
   // 获取消消乐成绩

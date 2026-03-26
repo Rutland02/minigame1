@@ -342,6 +342,8 @@ class PuzzleGame {
       if (this.checkCompletion()) {
         this.gameStatus = 'completed';
         this.endTime = Date.now();
+        // 保存游戏成绩
+        this.saveGameScore();
       }
     }
   }

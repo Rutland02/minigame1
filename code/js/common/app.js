@@ -61,6 +61,7 @@ GameGlobal.dataManager = new DataManager();
 class App {
   constructor() {
     GameGlobal.app = this;
+    this.databus = GameGlobal.databus;
     this.init();
   }
 

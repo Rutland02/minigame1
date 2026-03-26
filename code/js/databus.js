@@ -184,4 +184,9 @@ DataBus.prototype.resetAllScores = function() {
   this.scoreManager.resetAllScores();
 };
 
+// 清除所有已解锁的成就
+DataBus.prototype.clearAllAchievements = function() {
+  return this.scoreManager.clearAllAchievements();
+};
+
 module.exports = DataBus;
