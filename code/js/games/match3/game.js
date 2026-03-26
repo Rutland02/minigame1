@@ -96,14 +96,14 @@ const COLORS = [
     '#F8FAFC'  // Any (白色)
 ];
 
-// 图标映射
+// 图标映射 - 使用 SVG 格式
 const ICONS = [
-    'images/match3/icon_0000_red.png',     // 红色
-    'images/match3/icon_0001_yellow.png',  // 黄色
-    'images/match3/icon_0002_white.png',   // 白色
-    'images/match3/icon_0003_pinlk.png',   // 粉色
-    'images/match3/icon_0004_blue.png',    // 蓝色
-    'images/match3/icon_0005_green.png',   // 绿色
+    'images/match3/icon_0000_red.svg',     // 红色
+    'images/match3/icon_0001_yellow.svg',  // 黄色
+    'images/match3/icon_0002_white.svg',   // 白色
+    'images/match3/icon_0003_pinlk.svg',   // 粉色
+    'images/match3/icon_0004_blue.svg',    // 蓝色
+    'images/match3/icon_0005_green.svg',   // 绿色
     null                                   // Any (无图标)
 ];
 
