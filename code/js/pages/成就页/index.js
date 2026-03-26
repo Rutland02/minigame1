@@ -247,28 +247,153 @@ class AchievementPage {
     ctx.closePath();
   }
 
+  renderCertificate(ctx) {
+    // 绘制背景图
+    if (this.backgroundImage) {
+      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
+      const scaledWidth = this.backgroundImage.width * scale;
+      const scaledHeight = this.backgroundImage.height * scale;
+      const offsetX = (this.width - scaledWidth) / 2;
+      const offsetY = (this.height - scaledHeight) / 2;
+      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    } else {
+      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
+      gradient.addColorStop(0, '#4a6fa5');
+      gradient.addColorStop(1, '#6e5b7b');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
 
+    // 绘制半透明遮罩
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillRect(0, 0, this.width, this.height);
+    
+    // 绘制证书背景
+    this.drawRoundedRect(ctx, 30, 30, this.width - 60, this.height - 60, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fill();
+    ctx.strokeStyle = '#4a6fa5';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    
+    // 绘制证书标题
+    ctx.font = '32px Arial';
+    ctx.fillStyle = '#4a6fa5';
+    ctx.textAlign = 'center';
+    ctx.fillText('数字体验证书', this.width / 2, 120);
+    
+    // 绘制证书内容
+    const userInfo = databus.getUserInfo();
+    const totalScore = databus.getTotalScore();
+    const achievements = databus.getAchievements();
+    const scores = databus.getAllScores();
+    
+    ctx.font = '18px Arial';
+    ctx.fillStyle = '#333333';
+    ctx.textAlign = 'center';
+    ctx.fillText(`兹证明 ${userInfo ? userInfo.nickname : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, 200);
+    ctx.fillText('积极参与，表现优异，特此颁发此证。', this.width / 2, 240);
+    
+    // 绘制统计信息
+    this.drawRoundedRect(ctx, this.width / 2 - 140, 280, 280, 120, 15);
+    ctx.fillStyle = 'rgba(74, 111, 165, 0.1)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(74, 111, 165, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#4a6fa5';
+    ctx.textAlign = 'center';
+    ctx.fillText(`总积分: ${totalScore}`, this.width / 2, 310);
+    ctx.fillText(`解锁成就: ${achievements.length}/${this.allAchievements.length}`, this.width / 2, 335);
+    ctx.fillText(`游戏次数: ${scores.overall.totalGamesPlayed || 0}`, this.width / 2, 360);
+    ctx.fillText(`答题正确率: ${scores.quiz.accuracy || 0}%`, this.width / 2, 385);
+    
+    // 绘制印章
+    ctx.fillStyle = 'rgba(244, 67, 54, 0.6)';
+    ctx.beginPath();
+    ctx.arc(this.width / 2, 450, 70, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('海澄村', this.width / 2, 440);
+    ctx.fillText('数字赋能', this.width / 2, 470);
+    
+    // 绘制日期
+    const date = new Date().toLocaleDateString();
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#666666';
+    ctx.textAlign = 'center';
+    ctx.fillText(`颁发日期: ${date}`, this.width / 2, 550);
+    
+    // 绘制分享按钮
+    this.drawRoundedRect(ctx, this.width / 2 - 80, this.height - 90, 160, 50, 25);
+    const shareGradient = ctx.createLinearGradient(this.width / 2 - 80, this.height - 90, this.width / 2 + 80, this.height - 40);
+    shareGradient.addColorStop(0, '#10B981');
+    shareGradient.addColorStop(1, '#059669');
+    ctx.fillStyle = shareGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('分享证书', this.width / 2, this.height - 60);
+    
+    // 绘制返回按钮
+    this.drawRoundedRect(ctx, 30, 30, 80, 40, 20);
+    const backGradient = ctx.createLinearGradient(30, 30, 110, 70);
+    backGradient.addColorStop(0, '#6B7280');
+    backGradient.addColorStop(1, '#4B5563');
+    ctx.fillStyle = backGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('返回', 70, 55);
+  }
 
   handleTouchStart(e) {
     const x = e.touches[0].clientX;
     const y = e.touches[0].clientY;
     
-    // 检查是否点击了返回按钮 - 底部左侧
-    if (x >= 40 && x <= 140 && y >= this.height - 80 && y <= this.height - 30) {
-      if (GameGlobal.app && GameGlobal.app.showPage) {
-        GameGlobal.app.showPage('home');
+    if (this.showCertificate) {
+      // 检查是否点击了返回按钮
+      if (x >= 30 && x <= 110 && y >= 30 && y <= 70) {
+        this.showCertificate = false;
       }
-      return;
+      // 检查是否点击了分享按钮
+      if (x >= this.width / 2 - 80 && x <= this.width / 2 + 80 && y >= this.height - 90 && y <= this.height - 40) {
+        this.shareCertificate();
+      }
+    } else {
+      // 检查是否点击了返回按钮 - 底部左侧
+      if (x >= 40 && x <= 140 && y >= this.height - 80 && y <= this.height - 30) {
+        if (GameGlobal.app && GameGlobal.app.showPage) {
+          GameGlobal.app.showPage('home');
+        }
+        return;
+      }
+      // 检查是否点击了生成证书按钮 - 底部右侧
+      if (x >= this.width - 140 && x <= this.width - 40 && y >= this.height - 80 && y <= this.height - 30) {
+        this.generateCertificate();
+        return;
+      }
+      
+      // 开始拖动
+      this.isDragging = true;
+      this.startY = y;
+      this.startScrollY = this.scrollY;
     }
-    
-    // 开始拖动
-    this.isDragging = true;
-    this.startY = y;
-    this.startScrollY = this.scrollY;
   }
 
   handleTouchMove(e) {
-    if (!this.isDragging) return;
+    if (!this.isDragging || this.showCertificate) return;
     
     const y = e.touches[0].clientY;
     const deltaY = y - this.startY;
@@ -286,7 +411,17 @@ class AchievementPage {
     this.isDragging = false;
   }
 
+  generateCertificate() {
+    this.showCertificate = true;
+  }
 
+  shareCertificate() {
+    wx.showToast({
+      title: '证书分享功能已触发',
+      icon: 'success',
+      duration: 2000
+    });
+  }
 
   loadBackgroundImage() {
     const img = wx.createImage();

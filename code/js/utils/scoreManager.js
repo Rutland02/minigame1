@@ -1,3 +1,32 @@
+const DEFAULT_ACHIEVEMENT_DEFINITIONS = [
+  { id: 'first_game', title: '初次尝试', description: '完成第一局游戏', type: '基础', icon: '🎮' },
+  { id: 'match3_master', title: '消消乐大师', description: '消消乐得分超过1000', type: '游戏', icon: '🍬' },
+  { id: 'match3_legend', title: '消消乐传奇', description: '消消乐得分超过10000', type: '游戏', icon: '👑' },
+  { id: 'level_master', title: '等级达人', description: '消消乐达到10级', type: '游戏', icon: '📈' },
+  { id: 'puzzle_beginner', title: '拼图入门', description: '完成简单难度拼图', type: '游戏', icon: '🧩' },
+  { id: 'puzzle_intermediate', title: '拼图高手', description: '完成中等难度拼图', type: '游戏', icon: '🎲' },
+  { id: 'puzzle_master', title: '拼图大师', description: '完成困难难度拼图', type: '游戏', icon: '🎨' },
+  { id: 'quiz_master', title: '知识达人', description: '答题正确率达到80%', type: '知识', icon: '📚' },
+  { id: 'quiz_perfect', title: '学霸', description: '单次答题全对', type: '知识', icon: '💯' },
+  { id: 'game_enthusiast', title: '游戏爱好者', description: '累计游玩10次', type: '综合', icon: '🎮' },
+  { id: 'check_in_master', title: '打卡达人', description: '完成所有线下打卡点', type: '线下', icon: '📍' },
+  { id: 'collector', title: '收藏家', description: '解锁所有成就', type: '综合', icon: '💎' }
+];
+
+function loadAchievementDefinitions() {
+  try {
+    const definitions = require('../../content/achievements/userAchievements.json');
+    if (Array.isArray(definitions)) {
+      return definitions;
+    }
+  } catch (error) {
+    // ignore and fallback
+  }
+  return DEFAULT_ACHIEVEMENT_DEFINITIONS;
+}
+
+const ACHIEVEMENT_DEFINITIONS = loadAchievementDefinitions();
+
 // 成绩管理系统
 class ScoreManager {
   constructor() {
@@ -249,29 +278,7 @@ class ScoreManager {
 
   // 获取所有成就定义
   getAllAchievementDefinitions() {
-    return [
-      // 基础成就
-      { id: 'first_game', title: '初次尝试', description: '完成第一局游戏', type: '基础', icon: '🎮' },
-      
-      // 消消乐成就
-      { id: 'match3_master', title: '消消乐大师', description: '消消乐得分超过1000', type: '游戏', icon: '🍬' },
-      { id: 'match3_legend', title: '消消乐传奇', description: '消消乐得分超过10000', type: '游戏', icon: '👑' },
-      { id: 'level_master', title: '等级达人', description: '消消乐达到10级', type: '游戏', icon: '📈' },
-      
-      // 拼图成就
-      { id: 'puzzle_beginner', title: '拼图入门', description: '完成简单难度拼图', type: '游戏', icon: '🧩' },
-      { id: 'puzzle_intermediate', title: '拼图高手', description: '完成中等难度拼图', type: '游戏', icon: '🎲' },
-      { id: 'puzzle_master', title: '拼图大师', description: '完成困难难度拼图', type: '游戏', icon: '🎨' },
-      
-      // 答题成就
-      { id: 'quiz_master', title: '知识达人', description: '答题正确率达到80%', type: '知识', icon: '📚' },
-      { id: 'quiz_perfect', title: '学霸', description: '单次答题全对', type: '知识', icon: '💯' },
-      
-      // 综合成就
-      { id: 'game_enthusiast', title: '游戏爱好者', description: '累计游玩10次', type: '综合', icon: '🎮' },
-      { id: 'check_in_master', title: '打卡达人', description: '完成所有线下打卡点', type: '线下', icon: '📍' },
-      { id: 'collector', title: '收藏家', description: '解锁所有成就', type: '综合', icon: '💎' }
-    ];
+    return ACHIEVEMENT_DEFINITIONS;
   }
 
   // 获取成就定义
