@@ -96,25 +96,7 @@ class HomePage {
   }
 
   drawUserInfo(ctx) {
-    ctx.textAlign = 'left';
-    
-    // 绘制用户名称 - 使用更清晰的字体设置
-    ctx.fillStyle = this.colors.primaryText;
-    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 1;
-    ctx.fillText('小雅的海游艺坊生活', 100, 70);
-    
-    // 重置阴影
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    
-    // 绘制个人中心按钮
-    ctx.fillStyle = this.colors.subText;
-    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('个人中心', 100, 95);
+    // 移除顶部文字和个人中心文字
   }
 
   drawGameCards(ctx) {
