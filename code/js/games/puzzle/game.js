@@ -540,9 +540,10 @@ class PuzzleGame {
             const imgPieceWidth = this.puzzleImage.width / size;
             const imgPieceHeight = this.puzzleImage.height / size;
             
-            // 切割并绘制图片
+            // 切割并绘制图片 - 禁用图像平滑保持清晰度
             ctx.save();
             ctx.clip();
+            ctx.imageSmoothingEnabled = false; // 禁用图像平滑，保持锐利
             ctx.drawImage(
               this.puzzleImage,
               piece.correctCol * imgPieceWidth,
@@ -554,6 +555,7 @@ class PuzzleGame {
               pieceSize,
               pieceSize
             );
+            ctx.imageSmoothingEnabled = true;
             ctx.restore();
           } else {
             // 图片未加载时使用默认颜色

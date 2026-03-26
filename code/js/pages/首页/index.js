@@ -121,7 +121,9 @@ class HomePage {
     this.regions.gameButtons.forEach(game => {
       // 直接绘制游戏图标，完全覆盖按钮区域
       if (this.assets[game.iconId]) {
+        ctx.imageSmoothingEnabled = false; // 禁用图像平滑，保持锐利
         ctx.drawImage(this.assets[game.iconId], game.x, game.y, game.w, game.h);
+        ctx.imageSmoothingEnabled = true;
       }
     });
   }
@@ -155,9 +157,11 @@ class HomePage {
       ctx.stroke();
       ctx.restore();
 
-      // 绘制圆形图标
+      // 绘制圆形图标 - 禁用图像平滑保持清晰度
       if (this.assets[btn.iconId]) {
+        ctx.imageSmoothingEnabled = false; // 禁用图像平滑，保持锐利
         ctx.drawImage(this.assets[btn.iconId], btn.x - 30, btn.y - 30, 60, 60);
+        ctx.imageSmoothingEnabled = true;
       }
 
       // 绘制标签文字 - 优化字体
