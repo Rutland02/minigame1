@@ -85,15 +85,15 @@ const PieceType = {
     COUNT: 6
 };
 
-// 颜色对应 - 基于海澄村三色资源
+// 颜色对应 - 基于海澄村三色资源 - 优化饱和度和对比度
 const COLORS = [
-    '#E53935', // 红色
-    '#FF9800', // 黄色
-    '#FFFFFF', // 白色
-    '#FF69B4', // 粉色
-    '#2196F3', // 蓝色
-    '#4CAF50', // 绿色
-    '#FFFFFF'  // Any (白色)
+    '#EF4444', // 红色 - 更鲜艳
+    '#F59E0B', // 黄色 - 更饱和
+    '#F8FAFC', // 白色 - 略带灰度避免刺眼
+    '#EC4899', // 粉色 - 更鲜艳
+    '#3B82F6', // 蓝色 - 更饱和
+    '#10B981', // 绿色 - 更鲜艳
+    '#F8FAFC'  // Any (白色)
 ];
 
 // 图标映射
@@ -985,23 +985,27 @@ class Match3Game {
 
   // 绘制游戏信息
   drawGameInfo(ctx) {
-    // 绘制信息卡片
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    
     // 计算信息卡片位置（在棋盘下方）
     const size = this.board.length;
     const boardHeight = this.cellSize * size;
     const boardBottomY = this.startY + boardHeight + 20;
     
-    // 绘制圆角矩形
+    // 绘制圆角矩形 - 使用更不透明的背景增强可读性
     const x = 20;
     const y = boardBottomY;
     const width = this.width - 40;
     const height = 80;
     const radius = 15;
     
+    // 添加阴影
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 4;
+    
+    // 使用更不透明的背景色
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
@@ -1013,21 +1017,28 @@ class Match3Game {
     ctx.lineTo(x, y + radius);
     ctx.arcTo(x, y, x + radius, y, radius);
     ctx.closePath();
-    
     ctx.fill();
+    ctx.restore();
+    
+    // 绘制边框
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.lineWidth = 1;
     ctx.stroke();
 
-    // 绘制游戏信息
-    ctx.font = '18px Inter, Arial';
-    ctx.fillStyle = '#ffffff';
+    // 绘制游戏信息 - 使用深色文字确保对比度
+    ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#1E293B'; // 深色文字
     ctx.textAlign = 'left';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 1;
-    ctx.fillText(`得分: ${this.score}`, 40, boardBottomY + 30);
-    ctx.fillText(`等级: ${this.level}`, 150, boardBottomY + 30);
-    ctx.fillText(`时间: ${Math.ceil(this.time)}s`, 260, boardBottomY + 30);
-    ctx.shadowBlur = 0;
+    ctx.fillText(`得分: ${this.score}`, 40, boardBottomY + 32);
+    ctx.fillText(`等级: ${this.level}`, 150, boardBottomY + 32);
+    ctx.fillText(`时间: ${Math.ceil(this.time)}s`, 260, boardBottomY + 32);
+    
+    // 绘制标签
+    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#64748B';
+    ctx.fillText('SCORE', 40, boardBottomY + 52);
+    ctx.fillText('LEVEL', 150, boardBottomY + 52);
+    ctx.fillText('TIME', 260, boardBottomY + 52);
   }
 
   // 绘制游戏板
@@ -1037,11 +1048,7 @@ class Match3Game {
     const startX = this.startX;
     const startY = this.startY;
 
-    // 绘制游戏板背景
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 2;
-    
+    // 绘制游戏板背景 - 使用更不透明的背景增强棋子对比度
     const boardWidth = cellSize * size;
     const boardHeight = cellSize * size;
     const x = startX - 10;
@@ -1050,6 +1057,15 @@ class Match3Game {
     const height = boardHeight + 20;
     const radius = 20;
     
+    // 添加阴影效果
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 4;
+    
+    // 使用更不透明的背景
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
@@ -1061,8 +1077,12 @@ class Match3Game {
     ctx.lineTo(x, y + radius);
     ctx.arcTo(x, y, x + radius, y, radius);
     ctx.closePath();
-    
     ctx.fill();
+    ctx.restore();
+    
+    // 绘制边框
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     for (let i = 0; i < size; i++) {
@@ -1070,10 +1090,11 @@ class Match3Game {
         const x = startX + j * cellSize;
         const y = startY + i * cellSize;
 
-        // 绘制单元格背景
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        // 绘制单元格背景 - 使用更清晰的网格线
+        ctx.fillStyle = 'rgba(241, 245, 249, 0.5)'; // slate-100 with opacity
         ctx.fillRect(x, y, cellSize, cellSize);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeStyle = 'rgba(203, 213, 225, 0.5)'; // slate-300 with opacity
+        ctx.lineWidth = 1;
         ctx.strokeRect(x, y, cellSize, cellSize);
 
         // 检查是否有动画涉及当前位置
@@ -1397,11 +1418,20 @@ class Match3Game {
           }
         });
 
-        // 绘制选中状态
+        // 绘制选中状态 - 增强视觉效果
         if (this.selectedCell && this.selectedCell.row === i && this.selectedCell.col === j) {
+          // 绘制发光效果
+          ctx.save();
+          ctx.shadowColor = '#F97316';
+          ctx.shadowBlur = 15;
           ctx.strokeStyle = '#F97316';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(x, y, cellSize, cellSize);
+          ctx.lineWidth = 4;
+          ctx.strokeRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
+          ctx.restore();
+          
+          // 绘制内部高亮
+          ctx.fillStyle = 'rgba(249, 115, 22, 0.15)';
+          ctx.fillRect(x + 4, y + 4, cellSize - 8, cellSize - 8);
         }
       }
     }
@@ -1410,18 +1440,23 @@ class Match3Game {
   // 绘制底部按钮
   drawBottomButtons(ctx) {
     // 返回按钮
-    const backGradient = ctx.createLinearGradient(40, this.height - 60, 140, this.height - 60);
-    backGradient.addColorStop(0, '#6B7280');
-    backGradient.addColorStop(1, '#4B5563');
-    ctx.fillStyle = backGradient;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 1;
-    
     const x = 40;
     const y = this.height - 60;
     const width = 100;
     const height = 40;
     const radius = 20;
+    
+    // 添加阴影
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 3;
+    
+    const backGradient = ctx.createLinearGradient(x, y, x + width, y);
+    backGradient.addColorStop(0, '#6B7280');
+    backGradient.addColorStop(1, '#4B5563');
+    ctx.fillStyle = backGradient;
     
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -1434,31 +1469,37 @@ class Match3Game {
     ctx.lineTo(x, y + radius);
     ctx.arcTo(x, y, x + radius, y, radius);
     ctx.closePath();
-    
     ctx.fill();
+    ctx.restore();
+    
+    // 绘制边框
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
     ctx.stroke();
     
     ctx.fillStyle = '#fff';
-    ctx.font = '16px Inter, Arial';
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 1;
     ctx.fillText('返回', 90, this.height - 35);
-    ctx.shadowBlur = 0;
 
     // 重新开始按钮
-    const restartGradient = ctx.createLinearGradient(this.width - 140, this.height - 60, this.width - 40, this.height - 60);
-    restartGradient.addColorStop(0, '#10B981');
-    restartGradient.addColorStop(1, '#059669');
-    ctx.fillStyle = restartGradient;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    
     const restartX = this.width - 140;
     const restartY = this.height - 60;
     const restartWidth = 100;
     const restartHeight = 40;
     const restartRadius = 20;
+    
+    // 添加阴影
+    ctx.save();
+    ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 3;
+    
+    const restartGradient = ctx.createLinearGradient(restartX, restartY, restartX + restartWidth, restartY);
+    restartGradient.addColorStop(0, '#10B981');
+    restartGradient.addColorStop(1, '#059669');
+    ctx.fillStyle = restartGradient;
     
     ctx.beginPath();
     ctx.moveTo(restartX + restartRadius, restartY);
@@ -1471,18 +1512,18 @@ class Match3Game {
     ctx.lineTo(restartX, restartY + restartRadius);
     ctx.arcTo(restartX, restartY, restartX + restartRadius, restartY, restartRadius);
     ctx.closePath();
-    
     ctx.fill();
+    ctx.restore();
+    
+    // 绘制边框
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
     ctx.stroke();
     
     ctx.fillStyle = '#fff';
-    ctx.font = '16px Inter, Arial';
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 1;
     ctx.fillText('重新开始', this.width - 90, this.height - 35);
-    ctx.shadowBlur = 0;
   }
 
   // 绘制游戏结束状态

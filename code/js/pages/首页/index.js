@@ -6,20 +6,23 @@ class HomePage {
   constructor() {
     this.width = wx.getSystemInfoSync().windowWidth;
     this.height = wx.getSystemInfoSync().windowHeight;
+    this.pixelRatio = wx.getSystemInfoSync().pixelRatio || 1;
     
     // 背景图与素材加载容器
     this.assets = {};
     this.loadAssets();
     
-    // 颜色配置（匹配设计图）
+    // 颜色配置 - 优化对比度和可读性
     this.colors = {
-      primaryText: '#00334E',
-      subText: '#666666',
+      primaryText: '#0F172A',      // 深 slate-900，确保高对比度
+      subText: '#475569',          // slate-600，次要文字
       white: '#FFFFFF',
-      primaryButton: '#C41E3A',
-      greenCard: '#E8F5E9',
-      yellowCard: '#FFF8E1',
-      blueCard: '#E3F2FD'
+      primaryButton: '#DC2626',    // 更鲜艳的红色
+      greenCard: '#86EFAC',        // 更鲜艳的绿色
+      yellowCard: '#FDE047',       // 更鲜艳的黄色
+      blueCard: '#93C5FD',         // 更鲜艳的蓝色
+      cardBorder: '#E2E8F0',       // 卡片边框色
+      shadow: 'rgba(0, 0, 0, 0.15)' // 阴影色
     };
 
     const baseW = 375; 
@@ -94,11 +97,24 @@ class HomePage {
 
   drawUserInfo(ctx) {
     ctx.textAlign = 'left';
+    
+    // 绘制用户名称 - 使用更清晰的字体设置
     ctx.fillStyle = this.colors.primaryText;
-    ctx.font = 'bold 18px sans-serif';
+    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 1;
     ctx.fillText('小雅的海游艺坊生活', 100, 70);
-    ctx.font = '12px sans-serif';
-    ctx.fillText('⚙ 个人中心', 100, 95);
+    
+    // 重置阴影
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    
+    // 绘制个人中心按钮
+    ctx.fillStyle = this.colors.subText;
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('个人中心', 100, 95);
   }
 
   drawGameCards(ctx) {
@@ -111,32 +127,65 @@ class HomePage {
   }
 
   drawCircleActions(ctx) {
-    // 绘制底部功能区白色背板
+    // 绘制底部功能区白色背板 - 添加阴影增强层次感
+    ctx.save();
+    ctx.shadowColor = this.colors.shadow;
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 2;
     ctx.fillStyle = this.colors.white;
     this.drawRoundRect(ctx, 25, 610, this.width - 50, 120, 20, true);
+    ctx.restore();
 
     this.regions.actionButtons.forEach(btn => {
+      // 绘制圆形图标背景 - 增强清晰度
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
+      
+      // 绘制圆形背景
+      ctx.beginPath();
+      ctx.arc(btn.x, btn.y, 35, 0, Math.PI * 2);
+      ctx.fillStyle = this.colors.white;
+      ctx.fill();
+      ctx.strokeStyle = this.colors.cardBorder;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+
       // 绘制圆形图标
       if (this.assets[btn.iconId]) {
-        ctx.drawImage(this.assets[btn.iconId], btn.x - 35, btn.y - 35, 70, 70);
+        ctx.drawImage(this.assets[btn.iconId], btn.x - 30, btn.y - 30, 60, 60);
       }
 
-      // 绘制标签文字
+      // 绘制标签文字 - 优化字体
       ctx.textAlign = 'center';
       ctx.fillStyle = this.colors.primaryText;
-      ctx.font = 'bold 14px sans-serif';
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillText(btn.text, btn.x, btn.y + 55);
     });
   }
 
   drawBottomNotice(ctx) {
     const n = this.regions.notice;
+    
+    // 添加阴影增强按钮视觉效果
+    ctx.save();
+    ctx.shadowColor = 'rgba(220, 38, 38, 0.3)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 3;
     ctx.fillStyle = this.colors.primaryButton;
     this.drawRoundRect(ctx, n.x, n.y, n.w, n.h, 22, true);
+    ctx.restore();
+    
+    // 绘制通知文字 - 优化字体
     ctx.fillStyle = this.colors.white;
-    ctx.font = '12px sans-serif';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('📢 最新活动：海澄村秋季丰收节，答题赢好礼！', n.x + 20, n.y + 27);
+    ctx.fillText('最新活动：海澄村秋季丰收节，答题赢好礼！', n.x + 20, n.y + 28);
   }
 
   drawRoundRect(ctx, x, y, w, h, r, fill = false, stroke = false) {
