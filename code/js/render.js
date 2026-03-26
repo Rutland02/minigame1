@@ -13,4 +13,4 @@ ctx.scale(DPR, DPR);
 
 export const SCREEN_WIDTH = windowInfo.screenWidth;
 export const SCREEN_HEIGHT = windowInfo.screenHeight;
-export const DPR = DPR;
+export const DEVICE_PIXEL_RATIO = DPR;
