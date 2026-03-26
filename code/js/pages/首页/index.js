@@ -168,7 +168,7 @@ class HomePage {
       ctx.textAlign = 'center';
       ctx.fillStyle = this.colors.primaryText;
       ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(btn.text, btn.x, btn.y + 55);
+      ctx.fillText(btn.text, btn.x, btn.y + 50);
     });
   }
 
