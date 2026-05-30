@@ -1,4 +1,3 @@
-// 数据管理工具
 class DataManager {
   constructor() {
     this.data = {
@@ -24,7 +23,6 @@ class DataManager {
   }
 
   init() {
-    // 从本地存储加载数据
     const savedData = wx.getStorageSync('gameData');
     if (savedData) {
       this.data = { ...this.data, ...savedData };
@@ -32,7 +30,6 @@ class DataManager {
   }
 
   save() {
-    // 保存数据到本地存储
     wx.setStorageSync('gameData', this.data);
   }
 

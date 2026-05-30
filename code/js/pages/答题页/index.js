@@ -1,4 +1,3 @@
-// 答题页
 const DataBus = require('../../databus');
 
 const databus = new DataBus();
@@ -19,15 +18,12 @@ class QuizPage {
     this.consecutiveCorrect = 0;
     this.backgroundImage = null;
     
-    // 加载背景图
     this.loadBackgroundImage();
     
-    // 动画相关
     this.animationFrame = 0;
     this.showResult = false;
     this.resultAnimation = 0;
     
-    // 根据难度设置参数
     this.setupDifficulty();
     
     this.questions = this.loadQuestions();
@@ -60,11 +56,9 @@ class QuizPage {
     this.timeLeft = this.timePerQuestion;
   }
 
-  // 加载题库数据
   loadQuestions() {
     let allQuestions = [];
     
-    // 非遗题库
     const heritageQuestions = [
       {
         id: 1,
@@ -103,7 +97,6 @@ class QuizPage {
       }
     ];
     
-    // 自然题库
     const natureQuestions = [
       {
         id: 1,
@@ -128,7 +121,6 @@ class QuizPage {
       }
     ];
     
-    // 红色题库
     const redQuestions = [
       {
         id: 1,
@@ -146,7 +138,6 @@ class QuizPage {
       }
     ];
     
-    // 处理非遗题目
     heritageQuestions.forEach(q => {
       allQuestions.push({
         id: q.id,
@@ -158,7 +149,6 @@ class QuizPage {
       });
     });
     
-    // 处理自然题目
     natureQuestions.forEach(q => {
       allQuestions.push({
         id: q.id + 100,
@@ -170,7 +160,6 @@ class QuizPage {
       });
     });
     
-    // 处理红色题目
     redQuestions.forEach(q => {
       allQuestions.push({
         id: q.id + 200,
@@ -182,11 +171,9 @@ class QuizPage {
       });
     });
     
-    // 根据难度选择题目数量
     return this.shuffleArray(allQuestions).slice(0, this.questionCount);
   }
   
-  // 数组打乱函数
   shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -196,12 +183,9 @@ class QuizPage {
   }
 
   render(ctx) {
-    // 绘制背景图
     if (this.backgroundImage) {
-      // 直接拉伸背景图以适应屏幕，与首页保持一致
       ctx.drawImage(this.backgroundImage, 0, 0, this.width, this.height);
     } else {
-      // 如果背景图未加载，使用默认背景
       const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
       gradient.addColorStop(0, '#4a6fa5');
       gradient.addColorStop(1, '#6e5b7b');
@@ -209,9 +193,6 @@ class QuizPage {
       ctx.fillRect(0, 0, this.width, this.height);
     }
 
-    // 移除半透明遮罩，与首页保持一致
-
-    // 绘制顶部信息栏 - 磨砂玻璃效果
     this.drawRoundedRect(ctx, 20, 20, this.width - 40, 60, 15);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
@@ -219,26 +200,22 @@ class QuizPage {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 左侧：题目序号
     ctx.font = '18px Arial';
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
-    ctx.fillText(`第${this.currentQuestion + 1}/${this.questions.length}题`, 40, 55);
+    ctx.fillText(`第${this.currentQuestion + 1}/${this.questions.length}题`, 40, 50);
 
-    // 右侧：计时显示
     ctx.font = '16px Arial';
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'right';
-    ctx.fillText(`剩余时间: ${this.timeLeft}s`, this.width - 140, 55);
+    ctx.fillText(`剩余时间: ${this.timeLeft}s`, this.width - 140, 50);
 
-    // 右侧：资源类别标识
     const question = this.questions[this.currentQuestion];
-    let typeColor = '#FF5722'; // 非遗默认橙色
+    let typeColor = '#FF5722';
     if (question.type === '自然') typeColor = '#4CAF50';
     else if (question.type === '红色') typeColor = '#F44336';
     
-    // 绘制类别标签
-    this.drawRoundedRect(ctx, this.width - 120, 30, 100, 30, 15);
+    this.drawRoundedRect(ctx, this.width - 120, 25, 100, 30, 15);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
@@ -247,36 +224,32 @@ class QuizPage {
     ctx.font = '14px Arial';
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
-    ctx.fillText(question.type, this.width - 70, 50);
+    ctx.fillText(question.type, this.width - 70, 45);
 
-    // 绘制题目内容卡片 - 磨砂玻璃效果
     this.drawRoundedRect(ctx, 20, 100, this.width - 40, 120, 20);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'; // 使用更不透明的背景
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fill();
     ctx.strokeStyle = '#E2E8F0';
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    // 优化文字渲染
-    ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#0F172A'; // 更深的文字颜色
+    ctx.font = '17px Arial';
+    ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText(question.question, 40, 140);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(question.question, 40, 160);
 
-    // 绘制选项
     const optionYStart = 240;
     const optionHeight = 60;
     question.options.forEach((option, index) => {
-      // 绘制选项背景
       let fillColor = 'rgba(255, 255, 255, 0.15)';
       let strokeColor = '#ffffff';
       if (this.isAnswered) {
         if (index === question.correctAnswer) {
-          fillColor = 'rgba(76, 175, 80, 0.15)'; // 正确选项绿色背景
+          fillColor = 'rgba(76, 175, 80, 0.15)';
           strokeColor = '#ffffff';
         } else if (index === this.selectedOption) {
-          fillColor = 'rgba(244, 67, 54, 0.15)'; // 错误选项红色背景
+          fillColor = 'rgba(244, 67, 54, 0.15)';
           strokeColor = '#ffffff';
         }
       } else if (index === this.selectedOption) {
@@ -284,7 +257,6 @@ class QuizPage {
         strokeColor = '#ffffff';
       }
       
-      // 选项选中动画
       let scale = 1;
       if (index === this.selectedOption && !this.isAnswered) {
         scale = 1 + Math.sin(this.animationFrame * 0.1) * 0.05;
@@ -302,43 +274,36 @@ class QuizPage {
       ctx.lineWidth = 2;
       ctx.stroke();
       
-      // 绘制选项文字
-      let textColor = '#0F172A'; // 更深的文字颜色
+      let textColor = '#000000';
       if (this.isAnswered) {
         if (index === question.correctAnswer) {
-          textColor = '#10B981'; // 更鲜艳的绿色
+          textColor = '#059669';
         } else if (index === this.selectedOption) {
-          textColor = '#DC2626'; // 更鲜艳的红色
+          textColor = '#DC2626';
         }
       }
-      // 优化文字渲染
       ctx.fillStyle = textColor;
-      ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = '16px Arial';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${String.fromCharCode(65 + index)}. ${option}`, 40, optionYStart + index * optionHeight + 35);
+      ctx.fillText(`${String.fromCharCode(65 + index)}. ${option}`, 40, optionYStart + index * optionHeight + 25);
       
       ctx.restore();
     });
     
-    // 更新动画帧
     this.animationFrame++;
 
-    // 绘制解析
     if (this.showResult) {
-      // 背景渐入动画
       const alpha = Math.min(this.resultAnimation * 0.05, 0.7);
       ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
       ctx.fillRect(0, 0, this.width, this.height);
       
-      // 结果卡片缩放动画
       const scale = 0.5 + Math.min(this.resultAnimation * 0.1, 0.5);
       ctx.save();
       ctx.translate(this.width / 2, this.height / 2);
       ctx.scale(scale, scale);
       ctx.translate(-this.width / 2, -this.height / 2);
       
-      // 绘制磨砂玻璃结果卡片
       this.drawRoundedRect(ctx, 40, this.height / 2 - 100, this.width - 80, 200, 20);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.fill();
@@ -346,29 +311,23 @@ class QuizPage {
       ctx.lineWidth = 2;
       ctx.stroke();
       
-      // 显示答题结果
       ctx.font = '24px Arial';
       ctx.fillStyle = this.isCorrect ? '#4CAF50' : '#F44336';
       ctx.textAlign = 'center';
       ctx.fillText(this.isCorrect ? '回答正确！' : '回答错误！', this.width / 2, this.height / 2 - 50);
       
-      // 显示解析
       ctx.font = '16px Arial';
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'left';
       ctx.fillText('解析：', 60, this.height / 2);
       
-      // 绘制换行解析文本
-      const maxWidth = this.width - 120; // 最大宽度
-      const lineHeight = 25; // 行高
+      const maxWidth = this.width - 120;
+      const lineHeight = 25;
       const startY = this.height / 2 + 30;
       const endY = this.drawWrappedText(ctx, question.explanation, 60, startY, maxWidth, lineHeight);
       
-      // 绘制按钮
-      // 计算按钮位置，确保与解析文本有足够间距
-      const buttonY = endY + 40; // 增加40px的间距
+      const buttonY = endY + 40;
       
-      // 下一题按钮 - 主按钮
       if (this.currentQuestion < this.questions.length - 1) {
         this.drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
@@ -381,7 +340,6 @@ class QuizPage {
         ctx.textAlign = 'center';
         ctx.fillText('下一题', this.width / 2, buttonY + 30);
       } else {
-        // 答题完成按钮 - 成功按钮
         this.drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.fill();
@@ -396,15 +354,12 @@ class QuizPage {
       
       ctx.restore();
       
-      // 更新动画帧
       if (this.resultAnimation < 20) {
         this.resultAnimation++;
       }
     }
 
-    // 绘制底部功能区
     if (!this.showResult) {
-      // 返回按钮 - 次要按钮
       this.drawRoundedRect(ctx, 20, this.height - 60, 80, 40, 20);
       const backGradient = ctx.createLinearGradient(20, this.height - 60, 100, this.height - 20);
       backGradient.addColorStop(0, '#6B7280');
@@ -417,9 +372,8 @@ class QuizPage {
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('返回', 60, this.height - 35);
+      ctx.fillText('返回', 60, this.height - 38);
       
-      // 提示按钮 - 提示按钮
       const hintButtonX = this.width / 2 - 50;
       this.drawRoundedRect(ctx, hintButtonX, this.height - 60, 100, 40, 20);
       const orangeGradient = ctx.createLinearGradient(hintButtonX, this.height - 60, hintButtonX + 100, this.height - 20);
@@ -433,9 +387,8 @@ class QuizPage {
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`提示 (${this.hintCount})`, this.width / 2, this.height - 35);
+      ctx.fillText(`提示 (${this.hintCount})`, this.width / 2, this.height - 38);
       
-      // 提交按钮 - 成功按钮
       if (this.selectedOption !== null) {
         const submitButtonX = this.width / 2 - 50;
         this.drawRoundedRect(ctx, submitButtonX, this.height - 60, 100, 40, 20);
@@ -450,10 +403,9 @@ class QuizPage {
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('提交答案', this.width / 2, this.height - 35);
+        ctx.fillText('提交答案', this.width / 2, this.height - 38);
       }
       
-      // 跳过按钮 - 警告按钮
       this.drawRoundedRect(ctx, this.width - 120, this.height - 60, 100, 40, 20);
       const skipGradient = ctx.createLinearGradient(this.width - 120, this.height - 60, this.width - 20, this.height - 20);
       skipGradient.addColorStop(0, '#10B981');
@@ -466,11 +418,10 @@ class QuizPage {
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('跳过', this.width - 70, this.height - 35);
+      ctx.fillText('跳过', this.width - 70, this.height - 38);
     }
   }
 
-  // 绘制圆角矩形（兼容不同Canvas API）
   drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -481,12 +432,10 @@ class QuizPage {
     ctx.closePath();
   }
 
-  // 绘制换行文本
   drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
     let line = '';
     let currentY = y;
 
-    // 处理中文文本，按字符分割
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
       const testLine = line + char;
@@ -502,7 +451,6 @@ class QuizPage {
       }
     }
     
-    // 绘制最后一行
     ctx.fillText(line, x, currentY);
     return currentY;
   }
@@ -511,7 +459,6 @@ class QuizPage {
     const x = e.touches[0].clientX;
     const y = e.touches[0].clientY;
     
-    // 检查是否点击了选项
     if (!this.showResult) {
       const optionYStart = 240;
       const optionHeight = 60;
@@ -525,30 +472,22 @@ class QuizPage {
         }
       });
 
-      // 检查是否点击了返回按钮
       if (x >= 20 && x <= 100 && y >= this.height - 60 && y <= this.height - 20) {
         this.returnToHome();
       }
 
-      // 检查是否点击了提交按钮
       if (!this.isAnswered && this.selectedOption !== null && x >= this.width / 2 - 50 && x <= this.width / 2 + 50 && y >= this.height - 60 && y <= this.height - 20) {
         this.submitAnswer();
       }
 
-      // 检查是否点击了提示按钮
       if (x >= this.width / 2 - 50 && x <= this.width / 2 + 50 && y >= this.height - 60 && y <= this.height - 20) {
         this.useHint();
       }
 
-      // 检查是否点击了跳过按钮
       if (x >= this.width - 120 && x <= this.width - 20 && y >= this.height - 60 && y <= this.height - 20) {
         this.skipQuestion();
       }
     } else {
-      // 检查是否点击了下一题/查看成绩按钮
-      // 由于解析文本长度不同，按钮位置会变化
-      // 使用一个更宽松的点击区域检查，确保在合理范围内都能点击
-      // 按钮大致位于屏幕下方区域
       if (x >= this.width / 2 - 110 && x <= this.width / 2 + 90 && y >= this.height / 2 + 60 && y <= this.height - 50) {
         if (this.currentQuestion < this.questions.length - 1) {
           this.nextQuestion();
@@ -567,7 +506,6 @@ class QuizPage {
     if (this.isCorrect) {
       this.score += 10;
       this.consecutiveCorrect++;
-      // 连续答对3题获得知识达人buff
       if (this.consecutiveCorrect >= 3) {
         databus.setKnowledgeBuff(true);
       }
@@ -576,10 +514,8 @@ class QuizPage {
       databus.setKnowledgeBuff(false);
     }
     
-    // 更新答题数据
     databus.updateQuizData(this.isCorrect);
     
-    // 显示结果和解析
     this.showResult = true;
     this.stopTimer();
   }
@@ -587,10 +523,8 @@ class QuizPage {
   nextQuestion() {
     this.currentQuestion++;
     if (this.currentQuestion >= this.questions.length) {
-      // 答题结束，显示成绩
       this.showScore();
     } else {
-      // 重置状态
       this.selectedOption = null;
       this.isAnswered = false;
       this.isCorrect = false;
@@ -605,7 +539,6 @@ class QuizPage {
   useHint() {
     if (this.hintCount > 0 && !this.isAnswered) {
       this.hintCount--;
-      // 这里可以实现具体的提示逻辑，比如高亮正确选项
       const question = this.questions[this.currentQuestion];
       this.selectedOption = question.correctAnswer;
     }
@@ -621,27 +554,21 @@ class QuizPage {
   }
 
   showScore() {
-    // 计算答对题数
     const correctCount = Math.floor(this.score / 10);
     const totalQuestions = this.questions.length;
 
-    // 保存答题成绩
     this.saveQuizScore(correctCount, totalQuestions, this.score);
 
-    // 这里可以实现成绩显示界面
     console.log('答题完成！');
     console.log(`答对题数：${correctCount}/${totalQuestions}`);
     console.log(`得分：${this.score}`);
 
-    // 返回首页
     if (GameGlobal.app && GameGlobal.app.showPage) {
       GameGlobal.app.showPage('home');
     }
   }
 
-  // 保存答题成绩
   saveQuizScore(correctCount, totalQuestions, score) {
-    // 使用 DataBus 记录成绩
     if (GameGlobal.app && GameGlobal.app.databus) {
       GameGlobal.app.databus.recordQuizScore(correctCount, totalQuestions, score);
     }
@@ -684,7 +611,6 @@ class QuizPage {
   }
 
   destroy() {
-    // 清理资源
   }
 }
 

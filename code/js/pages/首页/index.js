@@ -1,6 +1,4 @@
-// 首页 - 适配现代插画设计图风格
 const DataBus = require('../../databus');
-// 使用全局 databus 实例
 const databus = GameGlobal.databus || new DataBus();
 
 class HomePage {
@@ -9,27 +7,24 @@ class HomePage {
     this.height = wx.getSystemInfoSync().windowHeight;
     this.pixelRatio = wx.getSystemInfoSync().pixelRatio || 1;
     
-    // 背景图与素材加载容器
     this.assets = {};
     this.loadAssets();
     
-    // 颜色配置 - 优化对比度和可读性
     this.colors = {
-      primaryText: '#0F172A',      // 深 slate-900，确保高对比度
-      subText: '#475569',          // slate-600，次要文字
+      primaryText: '#0F172A',
+      subText: '#475569',
       white: '#FFFFFF',
-      primaryButton: '#DC2626',    // 更鲜艳的红色
-      greenCard: '#86EFAC',        // 更鲜艳的绿色
-      yellowCard: '#FDE047',       // 更鲜艳的黄色
-      blueCard: '#93C5FD',         // 更鲜艳的蓝色
-      cardBorder: '#E2E8F0',       // 卡片边框色
-      shadow: 'rgba(0, 0, 0, 0.15)' // 阴影色
+      primaryButton: '#DC2626',
+      greenCard: '#86EFAC',
+      yellowCard: '#FDE047',
+      blueCard: '#93C5FD',
+      cardBorder: '#E2E8F0',
+      shadow: 'rgba(0, 0, 0, 0.15)'
     };
 
     const baseW = 375; 
     const scale = this.width / baseW;
 
-    // 定义区域与图标 ID 映射
     this.regions = {
       userCenter: { x: 20 * scale, y: 40, w: 150 * scale, h: 60 },
       
@@ -43,21 +38,17 @@ class HomePage {
         { id: 'scan', iconId: 'scan', text: '扫码打卡', x: 80 * scale, y: 640, r: 35 },
         { id: 'tour', iconId: 'tour', text: '线上游览', x: 187 * scale, y: 640, r: 35 },
         { id: 'achievement', iconId: 'achievement', text: '成就系统', x: 295 * scale, y: 640, r: 35 }
-      ],
-
-      notice: { x: 25 * scale, y: 760, w: 325 * scale, h: 45 }
+      ]
     };
 
     this.selectedId = null;
   }
 
   loadAssets() {
-    // 1. 定义背景图
     const bg = wx.createImage();
     bg.onload = () => { this.assets.bg = bg; };
     bg.src = 'images/ui/bg2.jpg';
 
-    // 2. 定义图标映射表（使用你提供的最新英文路径）
     const iconMap = {
       match3: 'images/page/home/icon_0000_match3.png',
       puzzle: 'images/page/home/icon_0001_puzzle.png',
@@ -67,7 +58,6 @@ class HomePage {
       achievement: 'images/page/home/icon_0005_achievements.png'
     };
 
-    // 3. 批量加载图标
     Object.keys(iconMap).forEach(key => {
       const img = wx.createImage();
       img.onload = () => { 
@@ -84,7 +74,6 @@ class HomePage {
     this.drawUserInfo(ctx);
     this.drawGameCards(ctx);
     this.drawCircleActions(ctx);
-    this.drawBottomNotice(ctx);
   }
 
   drawBackground(ctx) {
@@ -97,14 +86,12 @@ class HomePage {
   }
 
   drawUserInfo(ctx) {
-    // 移除顶部文字和个人中心文字
   }
 
   drawGameCards(ctx) {
     this.regions.gameButtons.forEach(game => {
-      // 直接绘制游戏图标，完全覆盖按钮区域
       if (this.assets[game.iconId]) {
-        ctx.imageSmoothingEnabled = false; // 禁用图像平滑，保持锐利
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(this.assets[game.iconId], game.x, game.y, game.w, game.h);
         ctx.imageSmoothingEnabled = true;
       }
@@ -112,7 +99,6 @@ class HomePage {
   }
 
   drawCircleActions(ctx) {
-    // 绘制底部功能区白色背板 - 添加阴影增强层次感
     ctx.save();
     ctx.shadowColor = this.colors.shadow;
     ctx.shadowBlur = 8;
@@ -123,14 +109,12 @@ class HomePage {
     ctx.restore();
 
     this.regions.actionButtons.forEach(btn => {
-      // 绘制圆形图标背景 - 增强清晰度
       ctx.save();
       ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
       ctx.shadowBlur = 4;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 2;
       
-      // 绘制圆形背景
       ctx.beginPath();
       ctx.arc(btn.x, btn.y, 35, 0, Math.PI * 2);
       ctx.fillStyle = this.colors.white;
@@ -140,39 +124,17 @@ class HomePage {
       ctx.stroke();
       ctx.restore();
 
-      // 绘制圆形图标 - 禁用图像平滑保持清晰度
       if (this.assets[btn.iconId]) {
-        ctx.imageSmoothingEnabled = false; // 禁用图像平滑，保持锐利
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(this.assets[btn.iconId], btn.x - 30, btn.y - 30, 60, 60);
         ctx.imageSmoothingEnabled = true;
       }
 
-      // 绘制标签文字 - 优化字体
       ctx.textAlign = 'center';
       ctx.fillStyle = this.colors.primaryText;
       ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillText(btn.text, btn.x, btn.y + 50);
     });
-  }
-
-  drawBottomNotice(ctx) {
-    const n = this.regions.notice;
-    
-    // 添加阴影增强按钮视觉效果
-    ctx.save();
-    ctx.shadowColor = 'rgba(220, 38, 38, 0.3)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 3;
-    ctx.fillStyle = this.colors.primaryButton;
-    this.drawRoundRect(ctx, n.x, n.y, n.w, n.h, 22, true);
-    ctx.restore();
-    
-    // 绘制通知文字 - 优化字体
-    ctx.fillStyle = this.colors.white;
-    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('最新活动：海澄村秋季丰收节，答题赢好礼！', n.x + 20, n.y + 28);
   }
 
   drawRoundRect(ctx, x, y, w, h, r, fill = false, stroke = false) {
@@ -223,13 +185,11 @@ class HomePage {
         scanType: ['qrCode'],
         success: (res) => {
           console.log('扫码结果:', res);
-          // 显示打卡成功提示
           wx.showToast({
             title: '打卡成功！',
             icon: 'success',
             duration: 1500
           });
-          // 解锁打卡达人成就
           databus.unlockAchievement('check_in_master');
         },
         fail: (err) => {
@@ -247,7 +207,6 @@ class HomePage {
       console.log('显示线上游览链接');
       const url = 'https://www.kuleiman.com/tv/183553/index.html';
       
-      // 直接显示链接，让用户手动复制
       wx.showModal({
         title: '线上游览',
         content: '请复制以下链接到浏览器打开:\n' + url,
@@ -257,14 +216,12 @@ class HomePage {
     }
   }
 
-  // 清除所有已解锁的成就
   clearAchievements() {
     wx.showModal({
       title: '清除成就',
       content: '确定要清除所有已解锁的成就吗？',
       success: (res) => {
         if (res.confirm) {
-          // 清除成就
           databus.clearAllAchievements();
           wx.showToast({
             title: '成就已清除',

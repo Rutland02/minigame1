@@ -1,0 +1,89 @@
+graph TD
+    subgraph 核心控制器
+        App["App核心控制器
+app.js"]
+    end
+
+    subgraph 数据管理
+        DataBus["数据总线
+DataBus"]
+        DataManager["数据管理器
+DataManager"]
+        ScoreManager["成绩管理器
+ScoreManager"]
+        ResourceManager["资源管理器
+ResourceManager"]
+    end
+
+    subgraph 页面模块
+        LoginPage["登录页
+pages/登录页/index.js"]
+        HomePage["首页
+pages/首页/index.js"]
+        AchievementPage["成就页
+pages/成就页/index.js"]
+        QuizPage["答题页
+pages/答题页/index.js"]
+    end
+
+    subgraph 游戏模块
+        Match3Game["消消乐游戏
+games/match3/game.js"]
+        PuzzleGame["拼图游戏
+games/puzzle/game.js"]
+    end
+
+    subgraph 数据文件
+        UserAchievements["成就定义
+content/achievements/userAchievements.json"]
+        QuizData["题库数据
+content/*/题库.json"]
+    end
+
+    %% 核心控制器依赖关系
+    App --> DataBus
+    App --> DataManager
+    App --> ResourceManager
+    App --> LoginPage
+    App --> HomePage
+    App --> AchievementPage
+    App --> QuizPage
+    App --> Match3Game
+    App --> PuzzleGame
+
+    %% 数据总线依赖关系
+    DataBus --> ScoreManager
+
+    %% 成绩管理器依赖关系
+    ScoreManager --> UserAchievements
+
+    %% 页面和游戏依赖关系
+    LoginPage --> DataBus
+    HomePage --> DataBus
+    AchievementPage --> DataBus
+    QuizPage --> DataBus
+    QuizPage --> QuizData
+    Match3Game --> DataBus
+    PuzzleGame --> DataBus
+
+    %% 全局引用
+    DataBus -.-> LoginPage
+    DataBus -.-> HomePage
+    DataBus -.-> AchievementPage
+    DataBus -.-> QuizPage
+    DataBus -.-> Match3Game
+    DataBus -.-> PuzzleGame
+    DataManager -.-> App
+    ResourceManager -.-> App
+
+    classDef core fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef data fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef page fill:#bfb,stroke:#333,stroke-width:2px;
+    classDef game fill:#fbf,stroke:#333,stroke-width:2px;
+    classDef file fill:#ffb,stroke:#333,stroke-width:2px;
+
+    class App core;
+    class DataBus,DataManager,ScoreManager,ResourceManager data;
+    class LoginPage,HomePage,AchievementPage,QuizPage page;
+    class Match3Game,PuzzleGame game;
+    class UserAchievements,QuizData file;

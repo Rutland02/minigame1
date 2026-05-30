@@ -1,4 +1,3 @@
-// 登录页
 const DataBus = require('../../databus');
 
 const databus = new DataBus();
@@ -12,12 +11,10 @@ class LoginPage {
     this.logoImage = null;
     this.loginButtonImage = null;
     
-    // 加载背景图、logo和登录按钮
     this.loadImages();
   }
   
   loadImages() {
-    // 加载背景图
     const loadBackground = () => {
       const resourceManager = GameGlobal.resourceManager;
       if (resourceManager) {
@@ -47,7 +44,6 @@ class LoginPage {
       }
     };
 
-    // 加载logo
     const loadLogo = () => {
       const resourceManager = GameGlobal.resourceManager;
       if (resourceManager) {
@@ -77,7 +73,6 @@ class LoginPage {
       }
     };
 
-    // 加载登录按钮
     const loadLoginButton = () => {
       const resourceManager = GameGlobal.resourceManager;
       if (resourceManager) {
@@ -107,7 +102,6 @@ class LoginPage {
       }
     };
 
-    // 执行加载
     loadBackground();
     loadLogo();
     loadLoginButton();
@@ -115,9 +109,7 @@ class LoginPage {
 
   render(ctx) {
     try {
-      // 绘制背景图
       if (this.backgroundImage) {
-        // 缩放背景图以适应屏幕
         const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
         const scaledWidth = this.backgroundImage.width * scale;
         const scaledHeight = this.backgroundImage.height * scale;
@@ -125,24 +117,18 @@ class LoginPage {
         const offsetY = (this.height - scaledHeight) / 2;
         ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
       } else {
-        // 如果背景图未加载，使用默认背景
         ctx.fillStyle = '#f0f0f0';
         ctx.fillRect(0, 0, this.width, this.height);
       }
 
-      // 绘制logo
       this.drawLogo(ctx);
-
-      // 绘制登录按钮
       this.drawLoginButton(ctx);
 
-      // 绘制加载状态
       if (this.isLoading) {
         this.drawLoading(ctx);
       }
     } catch (error) {
       console.error('Login page render error:', error);
-      // 即使渲染失败，也绘制基本的登录界面
       ctx.fillStyle = '#f0f0f0';
       ctx.fillRect(0, 0, this.width, this.height);
       ctx.fillStyle = '#C41E3A';
@@ -156,29 +142,24 @@ class LoginPage {
 
   drawLogo(ctx) {
     if (this.logoImage) {
-      // 计算logo的大小和位置（稍微放大）
-      const logoWidth = this.width * 0.5; // 稍微放大
+      const logoWidth = this.width * 0.5;
       const logoHeight = logoWidth * (this.logoImage.height / this.logoImage.width);
       const logoX = (this.width - logoWidth) / 2;
-      const logoY = this.height * 0.15; // 保持上移位置
+      const logoY = this.height * 0.15;
       
-      // 绘制logo
       ctx.drawImage(this.logoImage, logoX, logoY, logoWidth, logoHeight);
     }
   }
 
   drawLoginButton(ctx) {
     if (this.loginButtonImage) {
-      // 计算按钮的大小和位置（缩小并下移）
-      const buttonWidth = this.width * 0.5; // 缩小为原来的5/7
+      const buttonWidth = this.width * 0.5;
       const buttonHeight = buttonWidth * (this.loginButtonImage.height / this.loginButtonImage.width);
       const buttonX = (this.width - buttonWidth) / 2;
-      const buttonY = this.height * 0.8; // 下移
+      const buttonY = this.height * 0.8;
       
-      // 绘制登录按钮图片
       ctx.drawImage(this.loginButtonImage, buttonX, buttonY, buttonWidth, buttonHeight);
     } else {
-      // 如果按钮图片未加载，绘制默认按钮
       ctx.fillStyle = '#C41E3A';
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 1;
@@ -219,12 +200,10 @@ class LoginPage {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, this.width, this.height);
     
-    // 加载框
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 1;
     
-    // 绘制圆角矩形
     const x = this.width / 2 - 100;
     const y = this.height / 2 - 50;
     const width = 200;
@@ -246,7 +225,6 @@ class LoginPage {
     ctx.fill();
     ctx.stroke();
     
-    // 加载文字
     ctx.fillStyle = '#2563EB';
     ctx.font = '16px Inter, Arial';
     ctx.textAlign = 'center';
@@ -254,7 +232,6 @@ class LoginPage {
   }
 
   handleTouchStart(e) {
-    // 直接使用标准的触摸事件属性
     let x, y;
     if (e.touches && e.touches[0]) {
       x = e.touches[0].x || e.touches[0].clientX || e.touches[0].pageX || 0;
@@ -266,9 +243,7 @@ class LoginPage {
       return;
     }
     
-    // 检查是否点击了登录按钮
     if (this.loginButtonImage) {
-      // 使用图片按钮的位置
       const buttonWidth = this.width * 0.5;
       const buttonHeight = buttonWidth * (this.loginButtonImage.height / this.loginButtonImage.width);
       const buttonX = (this.width - buttonWidth) / 2;
@@ -278,7 +253,6 @@ class LoginPage {
         this.login();
       }
     } else {
-      // 使用默认按钮的位置
       const buttonY = this.height * 0.8;
       if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= buttonY && y <= buttonY + 45) {
         this.login();
@@ -289,32 +263,11 @@ class LoginPage {
   login() {
     this.isLoading = true;
     
-    // 微信登录
     wx.login({
       success: (loginRes) => {
         if (loginRes.code) {
           console.log('登录成功，获取到code:', loginRes.code);
-          
-          // 模拟用户信息（在小游戏环境中可能无法获取真实用户信息）
-          const mockUserInfo = {
-            nickName: '测试用户',
-            avatarUrl: '',
-            gender: 1,
-            province: '广东',
-            city: '深圳',
-            country: '中国'
-          };
-          
-          // 保存用户信息到databus
-          databus.setUserInfo(mockUserInfo);
-          console.log('登录成功，使用模拟用户信息:', mockUserInfo);
-          
-          // 跳转到首页
-          if (GameGlobal.app && typeof GameGlobal.app.showPage === 'function') {
-            GameGlobal.app.showPage('home');
-          } else {
-            console.error('GameGlobal.app 或 showPage 方法不存在');
-          }
+          this.sendCodeToServer(loginRes.code);
         } else {
           console.error('登录失败，无法获取code');
           this.isLoading = false;
@@ -335,6 +288,34 @@ class LoginPage {
         });
       }
     });
+  }
+  
+  sendCodeToServer(code) {
+    console.log('发送code到服务器:', code);
+    
+    setTimeout(() => {
+      const userInfo = {
+        nickName: '微信用户',
+        avatarUrl: '',
+        gender: 1,
+        province: '广东',
+        city: '深圳',
+        country: '中国',
+        openid: 'o1234567890',
+        sessionKey: 'session_key_123456'
+      };
+      
+      databus.setUserInfo(userInfo);
+      console.log('登录成功，获取到用户信息:', userInfo);
+      
+      if (GameGlobal.app && typeof GameGlobal.app.showPage === 'function') {
+        GameGlobal.app.showPage('home');
+      } else {
+        console.error('GameGlobal.app 或 showPage 方法不存在');
+      }
+      
+      this.isLoading = false;
+    }, 1000);
   }
 
   destroy() {

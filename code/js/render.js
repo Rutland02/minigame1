@@ -7,7 +7,6 @@ const DPR = windowInfo.pixelRatio || 1;
 canvas.width = windowInfo.screenWidth * DPR;
 canvas.height = windowInfo.screenHeight * DPR;
 
-// 获取 canvas 上下文并进行缩放
 const ctx = canvas.getContext('2d');
 ctx.scale(DPR, DPR);
 

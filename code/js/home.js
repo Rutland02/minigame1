@@ -1,4 +1,3 @@
-// 首页逻辑
 class HomeScene {
   constructor(ctx) {
     this.ctx = ctx;
@@ -34,17 +33,14 @@ class HomeScene {
   }
 
   render() {
-    // 绘制背景
     this.ctx.fillStyle = '#f0f0f0';
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // 绘制标题
     this.ctx.font = '24px Arial';
     this.ctx.fillStyle = '#333';
     this.ctx.textAlign = 'center';
     this.ctx.fillText('三色融澄·数字赋能', this.width / 2, 100);
 
-    // 绘制按钮
     this.buttons.forEach(button => {
       this.ctx.fillStyle = button.id === this.selectedButton ? '#4CAF50' : '#2196F3';
       this.ctx.fillRect(button.x, button.y, button.width, button.height);
@@ -75,13 +71,10 @@ class HomeScene {
   navigateToGame(gameId) {
     switch (gameId) {
       case 'match3':
-        // 跳转到消消乐游戏
         break;
       case 'puzzle':
-        // 跳转到拼图游戏
         break;
       case 'achievement':
-        // 跳转到成就系统
         break;
     }
   }

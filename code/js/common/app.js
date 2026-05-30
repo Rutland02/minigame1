@@ -8,11 +8,9 @@ const DataManager = require('../utils/dataManager');
 const ResourceManager = require('../utils/resourceManager');
 const DataBus = require('../databus');
 
-// 获取 canvas 元素
 let canvas;
 let ctx;
 
-// 在微信小游戏中使用 wx.createCanvas() 获取 canvas
 try {
   canvas = wx.createCanvas();
   ctx = canvas.getContext('2d');
@@ -21,7 +19,6 @@ try {
   console.log('Canvas height:', canvas.height);
 } catch (error) {
   console.error('Failed to create canvas:', error);
-  // 在开发环境中模拟 canvas
   canvas = {
     getContext: function() {
       return {
@@ -49,13 +46,10 @@ try {
   ctx = canvas.getContext('2d');
 }
 
-// 创建资源管理器
 const resourceManager = new ResourceManager();
 GameGlobal.resourceManager = resourceManager;
 
-// 创建 DataBus 实例
 GameGlobal.databus = new DataBus();
-
 GameGlobal.dataManager = new DataManager();
 
 class App {
@@ -66,7 +60,6 @@ class App {
   }
 
   async init() {
-    // 跳过图片加载
     console.log('跳过图片加载');
     try {
       await resourceManager.loadImages([]);
@@ -75,18 +68,15 @@ class App {
       console.error('加载图片资源失败:', error);
     }
 
-    // 初始化数据
+  
     GameGlobal.dataManager.init();
     
-    // 添加触摸事件监听
     try {
-      // 尝试使用微信小游戏的事件监听
       if (typeof wx !== 'undefined' && wx.onTouchStart) {
         wx.onTouchStart(this.onTouchStart.bind(this));
         wx.onTouchMove(this.onTouchMove.bind(this));
         wx.onTouchEnd(this.onTouchEnd.bind(this));
       } else if (canvas.addEventListener) {
-        //  fallback to standard DOM events
         canvas.addEventListener("touchstart", this.onTouchStart.bind(this));
         canvas.addEventListener("touchmove", this.onTouchMove.bind(this));
         canvas.addEventListener("touchend", this.onTouchEnd.bind(this));
@@ -95,39 +85,31 @@ class App {
       console.error('添加触摸事件监听失败:', error);
     }
     
-    // 显示登录页
     this.showPage('login');
     
-    // 启动游戏循环
     this.loop();
   }
 
   // 游戏主循环
   loop() {
-    // 清除画布
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // 更新当前页面
     if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.update) {
       GameGlobal.databus.currentPage.update();
     }
     
-    // 渲染当前页面
     if (GameGlobal.databus.currentPage) {
       GameGlobal.databus.currentPage.render(ctx);
     }
     
-    // 继续下一帧
     requestAnimationFrame(this.loop.bind(this));
   }
 
   showPage(pageName) {
-    // 清除当前页面
     if (GameGlobal.databus.currentPage) {
       GameGlobal.databus.currentPage.destroy();
     }
 
-    // 创建新页面
     switch (pageName) {
       case 'login':
         GameGlobal.databus.currentPage = new LoginPage();
@@ -149,7 +131,6 @@ class App {
         break;
     }
 
-    // 渲染页面
     if (GameGlobal.databus.currentPage) {
       GameGlobal.databus.currentPage.render(ctx);
     }
@@ -161,11 +142,9 @@ class App {
         e.preventDefault();
       }
     } catch (error) {
-      // 忽略 preventDefault 错误
     }
     if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchStart) {
       GameGlobal.databus.currentPage.handleTouchStart(e);
-      // 重新渲染页面
       if (GameGlobal.databus.currentPage) {
         GameGlobal.databus.currentPage.render(ctx);
       }
@@ -178,11 +157,9 @@ class App {
         e.preventDefault();
       }
     } catch (error) {
-      // 忽略 preventDefault 错误
     }
     if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchMove) {
       GameGlobal.databus.currentPage.handleTouchMove(e);
-      // 重新渲染页面
       if (GameGlobal.databus.currentPage) {
         GameGlobal.databus.currentPage.render(ctx);
       }
@@ -195,11 +172,9 @@ class App {
         e.preventDefault();
       }
     } catch (error) {
-      // 忽略 preventDefault 错误
     }
     if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchEnd) {
       GameGlobal.databus.currentPage.handleTouchEnd(e);
-      // 重新渲染页面
       if (GameGlobal.databus.currentPage) {
         GameGlobal.databus.currentPage.render(ctx);
       }

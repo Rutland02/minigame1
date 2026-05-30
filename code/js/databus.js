@@ -86,7 +86,6 @@ DataBus.prototype.unlockExclusiveSkin = function(skinId) {
 };
 
 DataBus.prototype.getTotalScore = function() {
-  // 从成绩管理器获取总积分
   return this.scoreManager.getTotalScore();
 };
 
@@ -122,69 +121,55 @@ DataBus.prototype.getKnowledgeBuff = function() {
   return this.knowledgeBuff || false;
 };
 
-// ========== 成绩管理相关方法 ==========
-
-// 记录消消乐成绩
+// 成绩管理相关方法
 DataBus.prototype.recordMatch3Score = function(score, level) {
   this.scoreManager.recordMatch3Score(score, level);
 };
 
-// 记录拼图成绩
 DataBus.prototype.recordPuzzleScore = function(level, time, isCompleted) {
   this.scoreManager.recordPuzzleScore(level, time, isCompleted);
 };
 
-// 记录答题成绩
 DataBus.prototype.recordQuizScore = function(correctCount, totalQuestions, score) {
   this.scoreManager.recordQuizScore(correctCount, totalQuestions, score);
 };
 
-// 获取消消乐成绩
 DataBus.prototype.getMatch3Scores = function() {
   return this.scoreManager.getMatch3Scores();
 };
 
-// 获取拼图成绩
 DataBus.prototype.getPuzzleScores = function() {
   return this.scoreManager.getPuzzleScores();
 };
 
-// 获取答题成绩
 DataBus.prototype.getQuizScores = function() {
   return this.scoreManager.getQuizScores();
 };
 
-// 获取所有成绩
 DataBus.prototype.getAllScores = function() {
   return this.scoreManager.getAllScores();
 };
 
-// 获取总体统计
 DataBus.prototype.getOverallStats = function() {
   return this.scoreManager.getOverallStats();
 };
 
-// 获取所有成就（带解锁状态）
 DataBus.prototype.getAllAchievementsWithStatus = function() {
   return this.scoreManager.getAllAchievementsWithStatus();
 };
 
-// 解锁成就
 DataBus.prototype.unlockAchievement = function(achievementId) {
   return this.scoreManager.unlockAchievement(achievementId);
 };
 
-// 更新游戏时长
 DataBus.prototype.updatePlayTime = function(minutes) {
   this.scoreManager.updatePlayTime(minutes);
 };
 
-// 重置所有成绩
 DataBus.prototype.resetAllScores = function() {
   this.scoreManager.resetAllScores();
 };
 
-// 清除所有已解锁的成就
 DataBus.prototype.clearAllAchievements = function() {
   return this.scoreManager.clearAllAchievements();
 };
