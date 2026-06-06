@@ -1,7 +1,10 @@
+const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
+
 class AchievementPage {
   constructor() {
-    this.width = wx.getSystemInfoSync().windowWidth;
-    this.height = wx.getSystemInfoSync().windowHeight;
+    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
+    this.width = sys.windowWidth;
+    this.height = sys.windowHeight;
     this.backgroundImage = null;
     
     this.scrollY = 0;
@@ -16,32 +19,12 @@ class AchievementPage {
   }
   
   getDatabus() {
-    if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.databus) {
-      return GameGlobal.app.databus;
-    }
-    const DataBus = require('../../databus');
-    return new DataBus();
+    return GameGlobal.databus;
   }
 
   getAllAchievements() {
-    return [
-      { id: 'first_game', title: '初次尝试', description: '完成第一局游戏', type: '基础', icon: '🎮' },
-      
-      { id: 'match3_master', title: '消消乐大师', description: '消消乐得分超过1000', type: '游戏', icon: '🍬' },
-      { id: 'match3_legend', title: '消消乐传奇', description: '消消乐得分超过10000', type: '游戏', icon: '👑' },
-      { id: 'level_master', title: '等级达人', description: '消消乐达到10级', type: '游戏', icon: '📈' },
-      
-      { id: 'puzzle_beginner', title: '拼图入门', description: '完成简单难度拼图', type: '游戏', icon: '🧩' },
-      { id: 'puzzle_intermediate', title: '拼图高手', description: '完成中等难度拼图', type: '游戏', icon: '🎲' },
-      { id: 'puzzle_master', title: '拼图大师', description: '完成困难难度拼图', type: '游戏', icon: '🎨' },
-      
-      { id: 'quiz_master', title: '知识达人', description: '答题正确率达到80%', type: '知识', icon: '📚' },
-      { id: 'quiz_perfect', title: '学霸', description: '单次答题全对', type: '知识', icon: '💯' },
-      
-      { id: 'game_enthusiast', title: '游戏爱好者', description: '累计游玩10次', type: '综合', icon: '🎮' },
-      { id: 'check_in_master', title: '打卡达人', description: '完成所有线下打卡点', type: '线下', icon: '📍' },
-      { id: 'collector', title: '收藏家', description: '解锁所有成就', type: '综合', icon: '💎' }
-    ];
+    const databus = this.getDatabus();
+    return databus.scoreManager.getAllAchievementDefinitions();
   }
 
   render(ctx) {
@@ -104,7 +87,7 @@ class AchievementPage {
       
       ctx.globalAlpha = opacity;
       
-      this.drawRoundedRect(ctx, 20, y, this.width - 40, itemHeight - 10, 15);
+      drawRoundedRect(ctx, 20, y, this.width - 40, itemHeight - 10, 15);
       ctx.fillStyle = isUnlocked ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.15)';
       ctx.fill();
       ctx.strokeStyle = isUnlocked ? '#4CAF50' : 'rgba(255, 255, 255, 0.3)';
@@ -125,7 +108,7 @@ class AchievementPage {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
       ctx.fillText(achievement.description, 90, y + 48);
       
-      this.drawRoundedRect(ctx, 90, y + 55, 60, 20, 10);
+      drawRoundedRect(ctx, 90, y + 55, 60, 20, 10);
       ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
       ctx.fill();
       ctx.font = '10px Arial';
@@ -133,7 +116,7 @@ class AchievementPage {
       ctx.textAlign = 'center';
       ctx.fillText(achievement.type, 120, y + 68);
       
-      this.drawRoundedRect(ctx, this.width - 90, y + 20, 70, 30, 15);
+      drawRoundedRect(ctx, this.width - 90, y + 20, 70, 30, 15);
       ctx.fillStyle = isUnlocked ? 'rgba(76, 175, 80, 0.3)' : 'rgba(0, 0, 0, 0.1)';
       ctx.fill();
       ctx.strokeStyle = isUnlocked ? '#4CAF50' : 'rgba(0, 0, 0, 0.3)';
@@ -165,11 +148,11 @@ class AchievementPage {
     const scrollBarHeight = (viewportHeight / (viewportHeight + this.maxScrollY)) * viewportHeight;
     const scrollBarY = startY + (this.scrollY / this.maxScrollY) * (viewportHeight - scrollBarHeight);
     
-    this.drawRoundedRect(ctx, this.width - 15, startY, scrollBarWidth, viewportHeight, 3);
+    drawRoundedRect(ctx, this.width - 15, startY, scrollBarWidth, viewportHeight, 3);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.fill();
     
-    this.drawRoundedRect(ctx, this.width - 15, scrollBarY, scrollBarWidth, scrollBarHeight, 3);
+    drawRoundedRect(ctx, this.width - 15, scrollBarY, scrollBarWidth, scrollBarHeight, 3);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fill();
   }
@@ -179,7 +162,7 @@ class AchievementPage {
     const buttonWidth = 100;
     const buttonY = this.height - buttonHeight - 30;
     
-    this.drawRoundedRect(ctx, 40, buttonY, buttonWidth, buttonHeight, 25);
+    drawRoundedRect(ctx, 40, buttonY, buttonWidth, buttonHeight, 25);
     const backGradient = ctx.createLinearGradient(40, buttonY, 140, buttonY + buttonHeight);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
@@ -192,16 +175,6 @@ class AchievementPage {
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('返回', 90, buttonY + 28);
-  }
-
-  drawRoundedRect(ctx, x, y, width, height, radius) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + width, y, x + width, y + height, radius);
-    ctx.arcTo(x + width, y + height, x, y + height, radius);
-    ctx.arcTo(x, y + height, x, y, radius);
-    ctx.arcTo(x, y, x + width, y, radius);
-    ctx.closePath();
   }
 
   renderCertificate(ctx) {
@@ -223,7 +196,7 @@ class AchievementPage {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.fillRect(0, 0, this.width, this.height);
     
-    this.drawRoundedRect(ctx, 30, 30, this.width - 60, this.height - 60, 20);
+    drawRoundedRect(ctx, 30, 30, this.width - 60, this.height - 60, 20);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fill();
     ctx.strokeStyle = '#4a6fa5';
@@ -247,7 +220,7 @@ class AchievementPage {
     ctx.fillText(`兹证明 ${userInfo ? userInfo.nickname : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, 200);
     ctx.fillText('积极参与，表现优异，特此颁发此证。', this.width / 2, 240);
     
-    this.drawRoundedRect(ctx, this.width / 2 - 140, 280, 280, 120, 15);
+    drawRoundedRect(ctx, this.width / 2 - 140, 280, 280, 120, 15);
     ctx.fillStyle = 'rgba(74, 111, 165, 0.1)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(74, 111, 165, 0.3)';
@@ -277,7 +250,7 @@ class AchievementPage {
     ctx.textAlign = 'center';
     ctx.fillText(`颁发日期: ${date}`, this.width / 2, 550);
     
-    this.drawRoundedRect(ctx, this.width / 2 - 80, this.height - 90, 160, 50, 25);
+    drawRoundedRect(ctx, this.width / 2 - 80, this.height - 90, 160, 50, 25);
     const shareGradient = ctx.createLinearGradient(this.width / 2 - 80, this.height - 90, this.width / 2 + 80, this.height - 40);
     shareGradient.addColorStop(0, '#10B981');
     shareGradient.addColorStop(1, '#059669');
@@ -291,7 +264,7 @@ class AchievementPage {
     ctx.textAlign = 'center';
     ctx.fillText('分享证书', this.width / 2, this.height - 63);
     
-    this.drawRoundedRect(ctx, 30, 30, 80, 40, 20);
+    drawRoundedRect(ctx, 30, 30, 80, 40, 20);
     const backGradient = ctx.createLinearGradient(30, 30, 110, 70);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
@@ -307,8 +280,9 @@ class AchievementPage {
   }
 
   handleTouchStart(e) {
-    const x = e.touches[0].clientX;
-    const y = e.touches[0].clientY;
+    const coords = getTouchCoords(e.touches, e.changedTouches);
+    if (!coords) return;
+    const { x, y } = coords;
     
     if (this.showCertificate) {
       if (x >= 30 && x <= 110 && y >= 30 && y <= 70) {
@@ -333,8 +307,10 @@ class AchievementPage {
 
   handleTouchMove(e) {
     if (!this.isDragging || this.showCertificate) return;
-    
-    const y = e.touches[0].clientY;
+
+    const coords = getTouchCoords(e.touches, e.changedTouches);
+    if (!coords) return;
+    const { y } = coords;
     const deltaY = y - this.startY;
     
     let newScrollY = this.startScrollY - deltaY;
@@ -374,14 +350,16 @@ class AchievementPage {
   }
 
   loadBackgroundImage() {
-    const img = wx.createImage();
-    img.onload = () => {
-      this.backgroundImage = img;
-    };
-    img.onerror = (err) => {
-      console.error('Failed to load background image:', err);
-    };
-    img.src = 'images/ui/bg2.jpg';
+    const resourceManager = GameGlobal.resourceManager;
+    if (resourceManager) {
+      this.backgroundImage = resourceManager.getImage('bg');
+    }
+    if (!this.backgroundImage) {
+      const img = wx.createImage();
+      img.onload = () => { this.backgroundImage = img; };
+      img.onerror = (err) => { console.error('Failed to load background image:', err); };
+      img.src = 'images/ui/bg2.jpg';
+    }
   }
 
   update() {

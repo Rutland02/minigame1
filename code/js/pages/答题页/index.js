@@ -1,13 +1,11 @@
-const DataBus = require('../../databus');
-
-const databus = new DataBus();
+const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
 
 class QuizPage {
   constructor(difficulty = 'easy') {
-    const systemInfo = wx.getSystemInfoSync();
-    this.width = systemInfo.windowWidth;
-    this.height = systemInfo.windowHeight;
-    this.pixelRatio = systemInfo.pixelRatio || 1;
+    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
+    this.width = sys.windowWidth;
+    this.height = sys.windowHeight;
+    this.pixelRatio = sys.pixelRatio || 1;
     this.currentQuestion = 0;
     this.selectedOption = null;
     this.isAnswered = false;
@@ -193,7 +191,7 @@ class QuizPage {
       ctx.fillRect(0, 0, this.width, this.height);
     }
 
-    this.drawRoundedRect(ctx, 20, 20, this.width - 40, 60, 15);
+    drawRoundedRect(ctx, 20, 20, this.width - 40, 60, 15);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
@@ -215,7 +213,7 @@ class QuizPage {
     if (question.type === '自然') typeColor = '#4CAF50';
     else if (question.type === '红色') typeColor = '#F44336';
     
-    this.drawRoundedRect(ctx, this.width - 120, 25, 100, 30, 15);
+    drawRoundedRect(ctx, this.width - 120, 25, 100, 30, 15);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
@@ -226,7 +224,7 @@ class QuizPage {
     ctx.textAlign = 'center';
     ctx.fillText(question.type, this.width - 70, 45);
 
-    this.drawRoundedRect(ctx, 20, 100, this.width - 40, 120, 20);
+    drawRoundedRect(ctx, 20, 100, this.width - 40, 120, 20);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fill();
     ctx.strokeStyle = '#E2E8F0';
@@ -267,7 +265,7 @@ class QuizPage {
       ctx.scale(scale, scale);
       ctx.translate(-(20 + (this.width - 40) / 2), -(optionYStart + index * optionHeight + 25));
       
-      this.drawRoundedRect(ctx, 20, optionYStart + index * optionHeight, this.width - 40, 50, 15);
+      drawRoundedRect(ctx, 20, optionYStart + index * optionHeight, this.width - 40, 50, 15);
       ctx.fillStyle = fillColor;
       ctx.fill();
       ctx.strokeStyle = strokeColor;
@@ -304,7 +302,7 @@ class QuizPage {
       ctx.scale(scale, scale);
       ctx.translate(-this.width / 2, -this.height / 2);
       
-      this.drawRoundedRect(ctx, 40, this.height / 2 - 100, this.width - 80, 200, 20);
+      drawRoundedRect(ctx, 40, this.height / 2 - 100, this.width - 80, 200, 20);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
@@ -329,7 +327,7 @@ class QuizPage {
       const buttonY = endY + 40;
       
       if (this.currentQuestion < this.questions.length - 1) {
-        this.drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
+        drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
@@ -340,7 +338,7 @@ class QuizPage {
         ctx.textAlign = 'center';
         ctx.fillText('下一题', this.width / 2, buttonY + 30);
       } else {
-        this.drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
+        drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
@@ -360,7 +358,7 @@ class QuizPage {
     }
 
     if (!this.showResult) {
-      this.drawRoundedRect(ctx, 20, this.height - 60, 80, 40, 20);
+      drawRoundedRect(ctx, 20, this.height - 60, 80, 40, 20);
       const backGradient = ctx.createLinearGradient(20, this.height - 60, 100, this.height - 20);
       backGradient.addColorStop(0, '#6B7280');
       backGradient.addColorStop(1, '#4B5563');
@@ -375,7 +373,7 @@ class QuizPage {
       ctx.fillText('返回', 60, this.height - 38);
       
       const hintButtonX = this.width / 2 - 50;
-      this.drawRoundedRect(ctx, hintButtonX, this.height - 60, 100, 40, 20);
+      drawRoundedRect(ctx, hintButtonX, this.height - 60, 100, 40, 20);
       const orangeGradient = ctx.createLinearGradient(hintButtonX, this.height - 60, hintButtonX + 100, this.height - 20);
       orangeGradient.addColorStop(0, '#FF9800');
       orangeGradient.addColorStop(1, '#F57C00');
@@ -391,7 +389,7 @@ class QuizPage {
       
       if (this.selectedOption !== null) {
         const submitButtonX = this.width / 2 - 50;
-        this.drawRoundedRect(ctx, submitButtonX, this.height - 60, 100, 40, 20);
+        drawRoundedRect(ctx, submitButtonX, this.height - 60, 100, 40, 20);
         const submitGradient = ctx.createLinearGradient(submitButtonX, this.height - 60, submitButtonX + 100, this.height - 20);
         submitGradient.addColorStop(0, '#10B981');
         submitGradient.addColorStop(1, '#059669');
@@ -406,7 +404,7 @@ class QuizPage {
         ctx.fillText('提交答案', this.width / 2, this.height - 38);
       }
       
-      this.drawRoundedRect(ctx, this.width - 120, this.height - 60, 100, 40, 20);
+      drawRoundedRect(ctx, this.width - 120, this.height - 60, 100, 40, 20);
       const skipGradient = ctx.createLinearGradient(this.width - 120, this.height - 60, this.width - 20, this.height - 20);
       skipGradient.addColorStop(0, '#10B981');
       skipGradient.addColorStop(1, '#059669');
@@ -420,16 +418,6 @@ class QuizPage {
       ctx.textAlign = 'center';
       ctx.fillText('跳过', this.width - 70, this.height - 38);
     }
-  }
-
-  drawRoundedRect(ctx, x, y, width, height, radius) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + width, y, x + width, y + height, radius);
-    ctx.arcTo(x + width, y + height, x, y + height, radius);
-    ctx.arcTo(x, y + height, x, y, radius);
-    ctx.arcTo(x, y, x + width, y, radius);
-    ctx.closePath();
   }
 
   drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -456,8 +444,9 @@ class QuizPage {
   }
 
   handleTouchStart(e) {
-    const x = e.touches[0].clientX;
-    const y = e.touches[0].clientY;
+    const coords = getTouchCoords(e.touches, e.changedTouches);
+    if (!coords) return;
+    const { x, y } = coords;
     
     if (!this.showResult) {
       const optionYStart = 240;
@@ -507,14 +496,14 @@ class QuizPage {
       this.score += 10;
       this.consecutiveCorrect++;
       if (this.consecutiveCorrect >= 3) {
-        databus.setKnowledgeBuff(true);
+        GameGlobal.databus.setKnowledgeBuff(true);
       }
     } else {
       this.consecutiveCorrect = 0;
-      databus.setKnowledgeBuff(false);
+      GameGlobal.databus.setKnowledgeBuff(false);
     }
-    
-    databus.updateQuizData(this.isCorrect);
+
+    GameGlobal.databus.updateQuizData(this.isCorrect);
     
     this.showResult = true;
     this.stopTimer();
@@ -600,17 +589,20 @@ class QuizPage {
   }
 
   loadBackgroundImage() {
-    const img = wx.createImage();
-    img.onload = () => {
-      this.backgroundImage = img;
-    };
-    img.onerror = (err) => {
-      console.error('Failed to load background image:', err);
-    };
-    img.src = 'images/ui/bg2.jpg';
+    const resourceManager = GameGlobal.resourceManager;
+    if (resourceManager) {
+      this.backgroundImage = resourceManager.getImage('bg');
+    }
+    if (!this.backgroundImage) {
+      const img = wx.createImage();
+      img.onload = () => { this.backgroundImage = img; };
+      img.onerror = (err) => { console.error('Failed to load background image:', err); };
+      img.src = 'images/ui/bg2.jpg';
+    }
   }
 
   destroy() {
+    this.stopTimer();
   }
 }
 

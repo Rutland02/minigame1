@@ -1,6 +1,6 @@
 {
-  "libVersion": "3.14.2",
-  "projectname": "%E4%B8%89%E8%89%B2%E8%9E%8D%E6%BE%84%C2%B7%E6%95%B0%E5%AD%97%E8%B5%8B%E8%83%BD",
+  "libVersion": "3.16.1",
+  "projectname": "code",
   "setting": {
     "urlCheck": false,
     "coverView": false,

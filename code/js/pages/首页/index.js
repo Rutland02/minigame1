@@ -1,11 +1,13 @@
-const DataBus = require('../../databus');
-const databus = GameGlobal.databus || new DataBus();
+const { drawRoundedRect } = require('../../utils/canvasUtils');
+
+const databus = GameGlobal.databus;
 
 class HomePage {
   constructor() {
-    this.width = wx.getSystemInfoSync().windowWidth;
-    this.height = wx.getSystemInfoSync().windowHeight;
-    this.pixelRatio = wx.getSystemInfoSync().pixelRatio || 1;
+    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
+    this.width = sys.windowWidth;
+    this.height = sys.windowHeight;
+    this.pixelRatio = sys.pixelRatio || 1;
     
     this.assets = {};
     this.loadAssets();
@@ -45,9 +47,16 @@ class HomePage {
   }
 
   loadAssets() {
-    const bg = wx.createImage();
-    bg.onload = () => { this.assets.bg = bg; };
-    bg.src = 'images/ui/bg2.jpg';
+    const resourceManager = GameGlobal.resourceManager;
+    if (resourceManager) {
+      const cachedBg = resourceManager.getImage('bg');
+      if (cachedBg) this.assets.bg = cachedBg;
+    }
+    if (!this.assets.bg) {
+      const bg = wx.createImage();
+      bg.onload = () => { this.assets.bg = bg; };
+      bg.src = 'images/ui/bg2.jpg';
+    }
 
     const iconMap = {
       match3: 'images/page/home/icon_0000_match3.png',
@@ -105,7 +114,8 @@ class HomePage {
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 2;
     ctx.fillStyle = this.colors.white;
-    this.drawRoundRect(ctx, 25, 610, this.width - 50, 120, 20, true);
+    drawRoundedRect(ctx, 25, 610, this.width - 50, 120, 20);
+    ctx.fill();
     ctx.restore();
 
     this.regions.actionButtons.forEach(btn => {
@@ -135,22 +145,6 @@ class HomePage {
       ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillText(btn.text, btn.x, btn.y + 50);
     });
-  }
-
-  drawRoundRect(ctx, x, y, w, h, r, fill = false, stroke = false) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.arcTo(x + w, y, x + w, y + r, r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-    ctx.lineTo(x + r, y + h);
-    ctx.arcTo(x, y + h, x, y + h - r, r);
-    ctx.lineTo(x, y + r);
-    ctx.arcTo(x, y, x + r, y, r);
-    ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
   }
 
   handleTouchStart(e) {

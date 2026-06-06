@@ -1,9 +1,11 @@
+const { drawRoundedRect } = require('../../utils/canvasUtils');
+
 class PuzzleGame {
   constructor() {
-    const systemInfo = wx.getSystemInfoSync();
-    this.width = systemInfo.windowWidth;
-    this.height = systemInfo.windowHeight;
-    this.pixelRatio = systemInfo.pixelRatio || 1;
+    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
+    this.width = sys.windowWidth;
+    this.height = sys.windowHeight;
+    this.pixelRatio = sys.pixelRatio || 1;
     this.level = 1;
     this.pieces = [];
     this.gameStatus = 'playing';
@@ -322,7 +324,7 @@ class PuzzleGame {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, this.width, this.height);
 
-    this.drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
+    drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -334,7 +336,7 @@ class PuzzleGame {
     ctx.textAlign = 'center';
     ctx.fillText('选择难度', this.width / 2, dialogY + 60);
 
-    this.drawRoundedRect(ctx, dialogX + 30, dialogY + 100, dialogWidth - 60, 50, 25);
+    drawRoundedRect(ctx, dialogX + 30, dialogY + 100, dialogWidth - 60, 50, 25);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -345,7 +347,7 @@ class PuzzleGame {
     ctx.textAlign = 'center';
     ctx.fillText('简单 (3×3)', this.width / 2, dialogY + 132);
 
-    this.drawRoundedRect(ctx, dialogX + 30, dialogY + 160, dialogWidth - 60, 50, 25);
+    drawRoundedRect(ctx, dialogX + 30, dialogY + 160, dialogWidth - 60, 50, 25);
     const mediumGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 160, dialogX + dialogWidth - 30, dialogY + 210);
     mediumGradient.addColorStop(0, '#4a6fa5');
     mediumGradient.addColorStop(1, '#6e5b7b');
@@ -359,7 +361,7 @@ class PuzzleGame {
     ctx.textAlign = 'center';
     ctx.fillText('中等 (4×4)', this.width / 2, dialogY + 192);
 
-    this.drawRoundedRect(ctx, dialogX + 30, dialogY + 220, dialogWidth - 60, 50, 25);
+    drawRoundedRect(ctx, dialogX + 30, dialogY + 220, dialogWidth - 60, 50, 25);
     const hardGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 220, dialogX + dialogWidth - 30, dialogY + 270);
     hardGradient.addColorStop(0, '#F44336');
     hardGradient.addColorStop(1, '#D32F2F');
@@ -419,7 +421,7 @@ class PuzzleGame {
       const infoHeight = 50;
       const infoX = (this.width - infoWidth) / 2;
       const infoY = this.height - 140;
-      this.drawRoundedRect(ctx, infoX, infoY, infoWidth, infoHeight, 15);
+      drawRoundedRect(ctx, infoX, infoY, infoWidth, infoHeight, 15);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -443,7 +445,7 @@ class PuzzleGame {
       const puzzleHeight = pieceSize * size;
 
       // 绘制拼图容器
-      this.drawRoundedRect(ctx, startX - 10, startY - 10, puzzleWidth + 20, puzzleHeight + 20, 20);
+      drawRoundedRect(ctx, startX - 10, startY - 10, puzzleWidth + 20, puzzleHeight + 20, 20);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -476,7 +478,7 @@ class PuzzleGame {
 
         if (!piece.isEmpty) {
           // 绘制拼图块 - 玻璃态效果
-          this.drawRoundedRect(ctx, x, y, pieceSize, pieceSize, 8);
+          drawRoundedRect(ctx, x, y, pieceSize, pieceSize, 8);
           
           // 绘制拼图图片
           if (this.puzzleImage) {
@@ -524,7 +526,7 @@ class PuzzleGame {
         const hintX = (this.width - hintWidth) / 2;
         const hintY = this.height - 300;
         
-        this.drawRoundedRect(ctx, hintX - 5, hintY - 5, hintWidth + 10, hintHeight + 10, 10);
+        drawRoundedRect(ctx, hintX - 5, hintY - 5, hintWidth + 10, hintHeight + 10, 10);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -541,7 +543,7 @@ class PuzzleGame {
       const buttonStartX = (this.width - totalButtonWidth) / 2;
       const buttonY = this.height - buttonHeight - 20;
       
-      this.drawRoundedRect(ctx, buttonStartX, buttonY, buttonWidth, buttonHeight, 25);
+      drawRoundedRect(ctx, buttonStartX, buttonY, buttonWidth, buttonHeight, 25);
       const backGradient = ctx.createLinearGradient(buttonStartX, buttonY, buttonStartX + buttonWidth, buttonY + buttonHeight);
       backGradient.addColorStop(0, '#6B7280');
       backGradient.addColorStop(1, '#4B5563');
@@ -556,7 +558,7 @@ class PuzzleGame {
       ctx.fillText('返回', buttonStartX + buttonWidth / 2, buttonY + 32);
 
       const difficultyX = buttonStartX + buttonWidth + buttonSpacing;
-      this.drawRoundedRect(ctx, difficultyX, buttonY, buttonWidth, buttonHeight, 25);
+      drawRoundedRect(ctx, difficultyX, buttonY, buttonWidth, buttonHeight, 25);
       const orangeGradient = ctx.createLinearGradient(difficultyX, buttonY, difficultyX + buttonWidth, buttonY + buttonHeight);
       orangeGradient.addColorStop(0, '#FF9800');
       orangeGradient.addColorStop(1, '#F57C00');
@@ -571,7 +573,7 @@ class PuzzleGame {
       ctx.fillText('难度设置', difficultyX + buttonWidth / 2, buttonY + 32);
 
       const restartX = difficultyX + buttonWidth + buttonSpacing;
-      this.drawRoundedRect(ctx, restartX, buttonY, buttonWidth, buttonHeight, 25);
+      drawRoundedRect(ctx, restartX, buttonY, buttonWidth, buttonHeight, 25);
       const restartGradient = ctx.createLinearGradient(restartX, buttonY, restartX + buttonWidth, buttonY + buttonHeight);
       restartGradient.addColorStop(0, '#10B981');
       restartGradient.addColorStop(1, '#059669');
@@ -594,7 +596,7 @@ class PuzzleGame {
         const dialogX = (this.width - dialogWidth) / 2;
         const dialogY = (this.height - dialogHeight) / 2;
         
-        this.drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
+        drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -609,7 +611,7 @@ class PuzzleGame {
         ctx.font = '20px Arial';
         ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, dialogY + 100);
 
-        this.drawRoundedRect(ctx, dialogX + 30, dialogY + 140, dialogWidth - 60, 50, 25);
+        drawRoundedRect(ctx, dialogX + 30, dialogY + 140, dialogWidth - 60, 50, 25);
         const replayGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 140, dialogX + dialogWidth - 30, dialogY + 190);
         replayGradient.addColorStop(0, '#4CAF50');
         replayGradient.addColorStop(1, '#45a049');
@@ -622,7 +624,7 @@ class PuzzleGame {
         ctx.font = '16px Arial';
         ctx.fillText('再玩一次', this.width / 2, dialogY + 172);
 
-        this.drawRoundedRect(ctx, dialogX + 30, dialogY + 200, dialogWidth - 60, 50, 25);
+        drawRoundedRect(ctx, dialogX + 30, dialogY + 200, dialogWidth - 60, 50, 25);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -640,16 +642,6 @@ class PuzzleGame {
     } catch (error) {
       console.error('Render error:', error);
     }
-  }
-
-  drawRoundedRect(ctx, x, y, width, height, radius) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + width, y, x + width, y + height, radius);
-    ctx.arcTo(x + width, y + height, x, y + height, radius);
-    ctx.arcTo(x, y + height, x, y, radius);
-    ctx.arcTo(x, y, x + width, y, radius);
-    ctx.closePath();
   }
 
   handleTouchStart(e) {

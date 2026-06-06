@@ -1,4 +1,4 @@
-import App from './js/common/app';
+const App = require('./js/common/app');
 
 wx.onShow(function() {
   if (!GameGlobal.app) {

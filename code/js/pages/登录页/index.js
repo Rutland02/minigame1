@@ -1,12 +1,12 @@
-const DataBus = require('../../databus');
-
-const databus = new DataBus();
+const { getTouchCoords } = require('../../utils/canvasUtils');
 
 class LoginPage {
   constructor() {
-    this.width = wx.getSystemInfoSync().windowWidth;
-    this.height = wx.getSystemInfoSync().windowHeight;
+    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
+    this.width = sys.windowWidth;
+    this.height = sys.windowHeight;
     this.isLoading = false;
+    this._loginTimer = null;
     this.backgroundImage = null;
     this.logoImage = null;
     this.loginButtonImage = null;
@@ -18,24 +18,12 @@ class LoginPage {
     const loadBackground = () => {
       const resourceManager = GameGlobal.resourceManager;
       if (resourceManager) {
-        this.backgroundImage = resourceManager.getImage('loginBackground');
-        if (!this.backgroundImage) {
-          const img = wx.createImage();
-          img.onload = () => {
-            this.backgroundImage = img;
-            resourceManager.images['loginBackground'] = img;
-            console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
-          };
-          img.onerror = (err) => {
-            console.error('Failed to load background image:', err);
-          };
-          img.src = 'images/ui/bg2.jpg';
-        }
-      } else {
+        this.backgroundImage = resourceManager.getImage('bg');
+      }
+      if (!this.backgroundImage) {
         const img = wx.createImage();
         img.onload = () => {
           this.backgroundImage = img;
-          console.log('Background image loaded successfully:', this.backgroundImage.width, 'x', this.backgroundImage.height);
         };
         img.onerror = (err) => {
           console.error('Failed to load background image:', err);
@@ -48,27 +36,11 @@ class LoginPage {
       const resourceManager = GameGlobal.resourceManager;
       if (resourceManager) {
         this.logoImage = resourceManager.getImage('logo');
-        if (!this.logoImage) {
-          const img = wx.createImage();
-          img.onload = () => {
-            this.logoImage = img;
-            resourceManager.images['logo'] = img;
-            console.log('Logo image loaded successfully:', this.logoImage.width, 'x', this.logoImage.height);
-          };
-          img.onerror = (err) => {
-            console.error('Failed to load logo image:', err);
-          };
-          img.src = 'images/logo/icon_0000_logo.png';
-        }
-      } else {
+      }
+      if (!this.logoImage) {
         const img = wx.createImage();
-        img.onload = () => {
-          this.logoImage = img;
-          console.log('Logo image loaded successfully:', this.logoImage.width, 'x', this.logoImage.height);
-        };
-        img.onerror = (err) => {
-          console.error('Failed to load logo image:', err);
-        };
+        img.onload = () => { this.logoImage = img; };
+        img.onerror = (err) => { console.error('Failed to load logo image:', err); };
         img.src = 'images/logo/icon_0000_logo.png';
       }
     };
@@ -77,27 +49,11 @@ class LoginPage {
       const resourceManager = GameGlobal.resourceManager;
       if (resourceManager) {
         this.loginButtonImage = resourceManager.getImage('loginButton');
-        if (!this.loginButtonImage) {
-          const img = wx.createImage();
-          img.onload = () => {
-            this.loginButtonImage = img;
-            resourceManager.images['loginButton'] = img;
-            console.log('Login button image loaded successfully:', this.loginButtonImage.width, 'x', this.loginButtonImage.height);
-          };
-          img.onerror = (err) => {
-            console.error('Failed to load login button image:', err);
-          };
-          img.src = 'images/logo/icon_0001_log_in.png';
-        }
-      } else {
+      }
+      if (!this.loginButtonImage) {
         const img = wx.createImage();
-        img.onload = () => {
-          this.loginButtonImage = img;
-          console.log('Login button image loaded successfully:', this.loginButtonImage.width, 'x', this.loginButtonImage.height);
-        };
-        img.onerror = (err) => {
-          console.error('Failed to load login button image:', err);
-        };
+        img.onload = () => { this.loginButtonImage = img; };
+        img.onerror = (err) => { console.error('Failed to load login button image:', err); };
         img.src = 'images/logo/icon_0001_log_in.png';
       }
     };
@@ -232,16 +188,9 @@ class LoginPage {
   }
 
   handleTouchStart(e) {
-    let x, y;
-    if (e.touches && e.touches[0]) {
-      x = e.touches[0].x || e.touches[0].clientX || e.touches[0].pageX || 0;
-      y = e.touches[0].y || e.touches[0].clientY || e.touches[0].pageY || 0;
-    } else if (e.changedTouches && e.changedTouches[0]) {
-      x = e.changedTouches[0].x || e.changedTouches[0].clientX || e.changedTouches[0].pageX || 0;
-      y = e.changedTouches[0].y || e.changedTouches[0].clientY || e.changedTouches[0].pageY || 0;
-    } else {
-      return;
-    }
+    const coords = getTouchCoords(e.touches, e.changedTouches);
+    if (!coords) return;
+    const { x, y } = coords;
     
     if (this.loginButtonImage) {
       const buttonWidth = this.width * 0.5;
@@ -292,8 +241,9 @@ class LoginPage {
   
   sendCodeToServer(code) {
     console.log('发送code到服务器:', code);
-    
-    setTimeout(() => {
+
+    this._loginTimer = setTimeout(() => {
+      this._loginTimer = null;
       const userInfo = {
         nickName: '微信用户',
         avatarUrl: '',
@@ -304,22 +254,25 @@ class LoginPage {
         openid: 'o1234567890',
         sessionKey: 'session_key_123456'
       };
-      
-      databus.setUserInfo(userInfo);
+
+      GameGlobal.databus.setUserInfo(userInfo);
       console.log('登录成功，获取到用户信息:', userInfo);
-      
+
       if (GameGlobal.app && typeof GameGlobal.app.showPage === 'function') {
         GameGlobal.app.showPage('home');
       } else {
         console.error('GameGlobal.app 或 showPage 方法不存在');
       }
-      
+
       this.isLoading = false;
     }, 1000);
   }
 
   destroy() {
-    // 清理资源
+    if (this._loginTimer) {
+      clearTimeout(this._loginTimer);
+      this._loginTimer = null;
+    }
   }
 }
 

@@ -49,6 +49,9 @@ try {
 const resourceManager = new ResourceManager();
 GameGlobal.resourceManager = resourceManager;
 
+// 缓存系统信息，避免各页面重复调用 wx.getSystemInfoSync()
+GameGlobal.systemInfo = wx.getSystemInfoSync();
+
 GameGlobal.databus = new DataBus();
 GameGlobal.dataManager = new DataManager();
 
@@ -56,13 +59,17 @@ class App {
   constructor() {
     GameGlobal.app = this;
     this.databus = GameGlobal.databus;
+    this._boundLoop = this.loop.bind(this);
     this.init();
   }
 
   async init() {
-    console.log('跳过图片加载');
     try {
-      await resourceManager.loadImages([]);
+      await resourceManager.loadImages([
+        { key: 'bg', src: 'images/ui/bg2.jpg' },
+        { key: 'logo', src: 'images/logo/icon_0000_logo.png' },
+        { key: 'loginButton', src: 'images/logo/icon_0001_log_in.png' }
+      ]);
       console.log('图片资源加载完成');
     } catch (error) {
       console.error('加载图片资源失败:', error);
@@ -102,7 +109,7 @@ class App {
       GameGlobal.databus.currentPage.render(ctx);
     }
     
-    requestAnimationFrame(this.loop.bind(this));
+    requestAnimationFrame(this._boundLoop);
   }
 
   showPage(pageName) {
@@ -142,12 +149,10 @@ class App {
         e.preventDefault();
       }
     } catch (error) {
+      // preventDefault not available on all event types
     }
     if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchStart) {
       GameGlobal.databus.currentPage.handleTouchStart(e);
-      if (GameGlobal.databus.currentPage) {
-        GameGlobal.databus.currentPage.render(ctx);
-      }
     }
   }
 
@@ -157,12 +162,10 @@ class App {
         e.preventDefault();
       }
     } catch (error) {
+      // preventDefault not available on all event types
     }
     if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchMove) {
       GameGlobal.databus.currentPage.handleTouchMove(e);
-      if (GameGlobal.databus.currentPage) {
-        GameGlobal.databus.currentPage.render(ctx);
-      }
     }
   }
 
@@ -172,12 +175,10 @@ class App {
         e.preventDefault();
       }
     } catch (error) {
+      // preventDefault not available on all event types
     }
     if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchEnd) {
       GameGlobal.databus.currentPage.handleTouchEnd(e);
-      if (GameGlobal.databus.currentPage) {
-        GameGlobal.databus.currentPage.render(ctx);
-      }
     }
   }
 }

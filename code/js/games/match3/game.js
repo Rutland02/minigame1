@@ -107,7 +107,11 @@ const AnimationType = {
 class Match3Game {
   constructor() {
     try {
-      if (typeof wx !== 'undefined' && wx.getSystemInfoSync) {
+      if (typeof GameGlobal !== 'undefined' && GameGlobal.systemInfo) {
+        this.width = GameGlobal.systemInfo.windowWidth || 375;
+        this.height = GameGlobal.systemInfo.windowHeight || 667;
+        this.pixelRatio = GameGlobal.systemInfo.pixelRatio || 1;
+      } else if (typeof wx !== 'undefined' && wx.getSystemInfoSync) {
         const systemInfo = wx.getSystemInfoSync();
         this.width = systemInfo.windowWidth || 375;
         this.height = systemInfo.windowHeight || 667;
