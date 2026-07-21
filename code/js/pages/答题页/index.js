@@ -1,11 +1,10 @@
-const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
+const { drawRoundedRect, drawButton, getTouchCoords } = require('../../utils/canvasUtils');
+const BasePage = require('../../common/basePage');
 
-class QuizPage {
+class QuizPage extends BasePage {
   constructor(difficulty = 'easy') {
-    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
-    this.width = sys.windowWidth;
-    this.height = sys.windowHeight;
-    this.pixelRatio = sys.pixelRatio || 1;
+    super();
+
     this.currentQuestion = 0;
     this.selectedOption = null;
     this.isAnswered = false;
@@ -14,10 +13,7 @@ class QuizPage {
     this.score = 0;
     this.difficulty = difficulty;
     this.consecutiveCorrect = 0;
-    this.backgroundImage = null;
-    
-    this.loadBackgroundImage();
-    
+
     this.animationFrame = 0;
     this.showResult = false;
     this.resultAnimation = 0;
@@ -56,119 +52,34 @@ class QuizPage {
 
   loadQuestions() {
     let allQuestions = [];
-    
-    const heritageQuestions = [
-      {
-        id: 1,
-        question: "三灶鹤舞起源于哪个朝代？",
-        options: ["唐代", "清代", "明代", "宋代"],
-        answer: 1,
-        explanation: "三灶鹤舞起源于清代，已有200多年历史，是珠海市金湾区三灶镇的传统民间舞蹈。"
-      },
-      {
-        id: 2,
-        question: "三灶鹤舞被列入哪级非物质文化遗产名录？",
-        options: ["国家级", "省级", "市级", "区级"],
-        answer: 1,
-        explanation: "三灶鹤舞被列入广东省非物质文化遗产名录，是珠海市重要的文化遗产。"
-      },
-      {
-        id: 3,
-        question: "海澄村竹编工艺的主要原料是什么？",
-        options: ["竹子", "木材", "藤条", "草绳"],
-        answer: 0,
-        explanation: "海澄村竹编工艺以当地盛产的竹子为原料，制作各种生活用具和工艺品。"
-      },
-      {
-        id: 4,
-        question: "海澄村传统制糖技艺的主要原料是什么？",
-        options: ["甜菜", "甘蔗", "玉米", "红薯"],
-        answer: 1,
-        explanation: "海澄村传统制糖技艺以甘蔗为原料，采用传统工艺制糖，包括榨汁、熬煮、结晶等步骤。"
-      },
-      {
-        id: 5,
-        question: "海澄村渔家文化不包括以下哪项？",
-        options: ["渔网编织", "渔船制作", "海鲜烹饪", "陶瓷制作"],
-        answer: 3,
-        explanation: "海澄村渔家文化包括渔网编织、渔船制作、海鲜烹饪技艺、渔家祭海仪式等，不包括陶瓷制作。"
-      }
+
+    const categories = [
+      { file: 'content/heritage/题库.json', type: '非遗', idOffset: 0 },
+      { file: 'content/nature/题库.json', type: '自然', idOffset: 100 },
+      { file: 'content/red/题库.json', type: '红色', idOffset: 200 }
     ];
-    
-    const natureQuestions = [
-      {
-        id: 1,
-        question: "海澄村的标志性古树是什么树？",
-        options: ["榕树", "松树", "银杏", "槐树"],
-        answer: 0,
-        explanation: "海澄村的标志性古树是榕树，树龄超过百年，是村庄的象征。"
-      },
-      {
-        id: 2,
-        question: "海澄村的主要自然景观不包括以下哪项？",
-        options: ["海滩", "山林", "湖泊", "沙漠"],
-        answer: 3,
-        explanation: "海澄村位于沿海地区，拥有海滩、山林、湖泊等自然景观，沙漠不属于其自然景观。"
-      },
-      {
-        id: 3,
-        question: "海澄村的生态保护重点是什么？",
-        options: ["保护古树", "保护海洋", "保护森林", "保护耕地"],
-        answer: 0,
-        explanation: "海澄村的生态保护重点是保护古树，尤其是那些树龄超过百年的榕树。"
+
+    categories.forEach(cat => {
+      try {
+        const fs = wx.getFileSystemManager();
+        const raw = fs.readFileSync(cat.file, 'utf8');
+        const data = JSON.parse(raw);
+        const questions = data.questions || data;
+        questions.forEach(q => {
+          allQuestions.push({
+            id: q.id + cat.idOffset,
+            type: cat.type,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.answer,
+            explanation: q.explanation
+          });
+        });
+      } catch (e) {
+        console.error(`加载题库失败: ${cat.file}`, e);
       }
-    ];
-    
-    const redQuestions = [
-      {
-        id: 1,
-        question: "海澄村的红色遗址是？",
-        options: ["革命纪念馆", "抗战遗址", "红军指挥部", "烈士墓"],
-        answer: 2,
-        explanation: "海澄村的红色遗址是红军指挥部，记录了革命时期的重要历史。"
-      },
-      {
-        id: 2,
-        question: "海澄村在革命时期的主要贡献是什么？",
-        options: ["提供物资", "提供情报", "作为根据地", "以上都是"],
-        answer: 3,
-        explanation: "海澄村在革命时期为红军提供物资、情报，并作为根据地，为革命事业做出了重要贡献。"
-      }
-    ];
-    
-    heritageQuestions.forEach(q => {
-      allQuestions.push({
-        id: q.id,
-        type: '非遗',
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.answer,
-        explanation: q.explanation
-      });
     });
-    
-    natureQuestions.forEach(q => {
-      allQuestions.push({
-        id: q.id + 100,
-        type: '自然',
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.answer,
-        explanation: q.explanation
-      });
-    });
-    
-    redQuestions.forEach(q => {
-      allQuestions.push({
-        id: q.id + 200,
-        type: '红色',
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.answer,
-        explanation: q.explanation
-      });
-    });
-    
+
     return this.shuffleArray(allQuestions).slice(0, this.questionCount);
   }
   
@@ -181,14 +92,14 @@ class QuizPage {
   }
 
   render(ctx) {
-    if (this.backgroundImage) {
-      ctx.drawImage(this.backgroundImage, 0, 0, this.width, this.height);
-    } else {
-      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-      gradient.addColorStop(0, '#4a6fa5');
-      gradient.addColorStop(1, '#6e5b7b');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, this.width, this.height);
+    this.drawBackground(ctx);
+
+    if (!this.questions || this.questions.length === 0) {
+      ctx.font = '16px Arial';
+      ctx.fillStyle = '#FF0000';
+      ctx.textAlign = 'center';
+      ctx.fillText('题库加载失败，请检查 content/ 目录', this.width / 2, this.height / 2);
+      return;
     }
 
     drawRoundedRect(ctx, 20, 20, this.width - 40, 60, 15);
@@ -325,7 +236,8 @@ class QuizPage {
       const endY = this.drawWrappedText(ctx, question.explanation, 60, startY, maxWidth, lineHeight);
       
       const buttonY = endY + 40;
-      
+      this.resultButtonRect = { x: this.width / 2 - 110, y: buttonY, w: 200, h: 50 };
+
       if (this.currentQuestion < this.questions.length - 1) {
         drawRoundedRect(ctx, this.width / 2 - 110, buttonY, 200, 50, 25);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
@@ -372,7 +284,7 @@ class QuizPage {
       ctx.textAlign = 'center';
       ctx.fillText('返回', 60, this.height - 38);
       
-      const hintButtonX = this.width / 2 - 50;
+      const hintButtonX = this.width / 2 - 110;
       drawRoundedRect(ctx, hintButtonX, this.height - 60, 100, 40, 20);
       const orangeGradient = ctx.createLinearGradient(hintButtonX, this.height - 60, hintButtonX + 100, this.height - 20);
       orangeGradient.addColorStop(0, '#FF9800');
@@ -385,10 +297,10 @@ class QuizPage {
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`提示 (${this.hintCount})`, this.width / 2, this.height - 38);
-      
+      ctx.fillText(`提示 (${this.hintCount})`, hintButtonX + 50, this.height - 38);
+
       if (this.selectedOption !== null) {
-        const submitButtonX = this.width / 2 - 50;
+        const submitButtonX = this.width / 2 + 10;
         drawRoundedRect(ctx, submitButtonX, this.height - 60, 100, 40, 20);
         const submitGradient = ctx.createLinearGradient(submitButtonX, this.height - 60, submitButtonX + 100, this.height - 20);
         submitGradient.addColorStop(0, '#10B981');
@@ -401,7 +313,7 @@ class QuizPage {
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('提交答案', this.width / 2, this.height - 38);
+        ctx.fillText('提交答案', submitButtonX + 50, this.height - 38);
       }
       
       drawRoundedRect(ctx, this.width - 120, this.height - 60, 100, 40, 20);
@@ -465,11 +377,11 @@ class QuizPage {
         this.returnToHome();
       }
 
-      if (!this.isAnswered && this.selectedOption !== null && x >= this.width / 2 - 50 && x <= this.width / 2 + 50 && y >= this.height - 60 && y <= this.height - 20) {
+      if (!this.isAnswered && this.selectedOption !== null && x >= this.width / 2 + 10 && x <= this.width / 2 + 110 && y >= this.height - 60 && y <= this.height - 20) {
         this.submitAnswer();
       }
 
-      if (x >= this.width / 2 - 50 && x <= this.width / 2 + 50 && y >= this.height - 60 && y <= this.height - 20) {
+      if (!this.isAnswered && this.selectedOption === null && x >= this.width / 2 - 110 && x <= this.width / 2 - 10 && y >= this.height - 60 && y <= this.height - 20) {
         this.useHint();
       }
 
@@ -477,7 +389,8 @@ class QuizPage {
         this.skipQuestion();
       }
     } else {
-      if (x >= this.width / 2 - 110 && x <= this.width / 2 + 90 && y >= this.height / 2 + 60 && y <= this.height - 50) {
+      const rect = this.resultButtonRect;
+      if (rect && x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h) {
         if (this.currentQuestion < this.questions.length - 1) {
           this.nextQuestion();
         } else {
@@ -495,12 +408,8 @@ class QuizPage {
     if (this.isCorrect) {
       this.score += 10;
       this.consecutiveCorrect++;
-      if (this.consecutiveCorrect >= 3) {
-        GameGlobal.databus.setKnowledgeBuff(true);
-      }
     } else {
       this.consecutiveCorrect = 0;
-      GameGlobal.databus.setKnowledgeBuff(false);
     }
 
     GameGlobal.databus.updateQuizData(this.isCorrect);
@@ -585,19 +494,6 @@ class QuizPage {
     this.stopTimer();
     if (GameGlobal.app && GameGlobal.app.showPage) {
       GameGlobal.app.showPage('home');
-    }
-  }
-
-  loadBackgroundImage() {
-    const resourceManager = GameGlobal.resourceManager;
-    if (resourceManager) {
-      this.backgroundImage = resourceManager.getImage('bg');
-    }
-    if (!this.backgroundImage) {
-      const img = wx.createImage();
-      img.onload = () => { this.backgroundImage = img; };
-      img.onerror = (err) => { console.error('Failed to load background image:', err); };
-      img.src = 'images/ui/bg2.jpg';
     }
   }
 

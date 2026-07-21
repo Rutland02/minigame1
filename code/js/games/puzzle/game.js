@@ -1,11 +1,10 @@
 const { drawRoundedRect } = require('../../utils/canvasUtils');
+const BasePage = require('../../common/basePage');
 
-class PuzzleGame {
+class PuzzleGame extends BasePage {
   constructor() {
-    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
-    this.width = sys.windowWidth;
-    this.height = sys.windowHeight;
-    this.pixelRatio = sys.pixelRatio || 1;
+    super();
+
     this.level = 1;
     this.pieces = [];
     this.gameStatus = 'playing';
@@ -18,10 +17,8 @@ class PuzzleGame {
     this.animations = [];
     this.animationFrame = 0;
     this.isAnimating = false;
-    this.backgroundImage = null;
     this.puzzleImage = null;
     this.initPuzzle();
-    this.loadBackgroundImage();
     this.loadPuzzleImage();
   }
 
@@ -407,15 +404,7 @@ class PuzzleGame {
 
   render(ctx) {
     try {
-      if (this.backgroundImage) {
-        ctx.drawImage(this.backgroundImage, 0, 0, this.width, this.height);
-      } else {
-        const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-        gradient.addColorStop(0, '#4a6fa5');
-        gradient.addColorStop(1, '#6e5b7b');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, this.width, this.height);
-      }
+      this.drawBackground(ctx);
 
       const infoWidth = 300;
       const infoHeight = 50;
@@ -659,9 +648,6 @@ class PuzzleGame {
     this.touchStartX = x;
     this.touchStartY = y;
 
-    console.log('触摸坐标:', x, y);
-    console.log('屏幕尺寸:', this.width, this.height);
-
     if (this.gameStatus === 'showing_difficulty') {
       this.handleDifficultyDialogClick(x, y);
       return;
@@ -676,27 +662,20 @@ class PuzzleGame {
     const buttonAreaTop = buttonY;
     const buttonAreaBottom = buttonY + buttonHeight;
 
-    console.log('按钮区域顶部:', buttonAreaTop);
-
     if (y >= buttonAreaTop && y <= buttonAreaBottom) {
-      console.log('点击了底部按钮区域');
-      
       if (x >= buttonStartX && x <= buttonStartX + buttonWidth) {
-        console.log('点击了返回按钮');
         GameGlobal.app.showPage('home');
         return;
       }
-      
+
       const difficultyX = buttonStartX + buttonWidth + buttonSpacing;
       if (x >= difficultyX && x <= difficultyX + buttonWidth) {
-        console.log('点击了难度设置按钮');
         this.showDifficultyDialog();
         return;
       }
-      
+
       const restartX = difficultyX + buttonWidth + buttonSpacing;
       if (x >= restartX && x <= restartX + buttonWidth) {
-        console.log('点击了重新开始按钮');
         this.initPuzzle();
         return;
       }
@@ -718,28 +697,6 @@ class PuzzleGame {
       if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= this.height / 2 + 120 && y <= this.height / 2 + 170) {
         GameGlobal.app.showPage('home');
       }
-    }
-  }
-
-  loadBackgroundImage() {
-    if (typeof wx !== 'undefined' && wx.createImage) {
-      const img = wx.createImage();
-      img.onload = () => {
-        this.backgroundImage = img;
-      };
-      img.onerror = (err) => {
-        console.error('Failed to load background image:', err);
-      };
-      img.src = 'images/ui/bg2.jpg';
-    } else if (typeof window !== 'undefined' && window.Image) {
-      const img = new Image();
-      img.onload = () => {
-        this.backgroundImage = img;
-      };
-      img.onerror = (err) => {
-        console.error('Failed to load background image:', err);
-      };
-      img.src = 'images/ui/bg2.jpg';
     }
   }
 

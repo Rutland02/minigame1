@@ -17,21 +17,6 @@ class GamePiece {
   }
 }
 
-class SpecialPiece extends GamePiece {
-  constructor(type, color, specialType) {
-    super(type, color);
-    this.special = true;
-    this.specialType = specialType;
-  }
-  
-  reset(type, color, specialType) {
-    super.reset(type, color);
-    this.special = true;
-    this.specialType = specialType;
-    return this;
-  }
-}
-
 class ObjectPool {
   constructor() {
     this.pool = [];
@@ -50,6 +35,7 @@ class ObjectPool {
 }
 
 const { drawRoundedRect } = require('../../utils/canvasUtils');
+const BasePage = require('../../common/basePage');
 
 const animationPool = new ObjectPool();
 
@@ -71,17 +57,6 @@ const ColorType = {
     PINK: 3,
     BLUE: 4,
     GREEN: 5,
-    ANY: 6,
-    COUNT: 7
-};
-
-const PieceType = {
-    EMPTY: 0,
-    NORMAL: 1,
-    BUBBLE: 2,
-    ROW_CLEAR: 3,
-    COLUMN_CLEAR: 4,
-    RAINBOW: 5,
     COUNT: 6
 };
 
@@ -91,17 +66,12 @@ const COLORS = [
     '#F8FAFC',
     '#EC4899',
     '#3B82F6',
-    '#10B981',
-    '#F8FAFC'
+    '#10B981'
 ];
 
-// 颜色到索引的映射，O(1) 查找
-// 注意：COLORS[2] 和 COLORS[6] 都是 '#F8FAFC'，只映射到有效的图标索引 (0-5)
 const COLOR_INDEX_MAP = {};
 COLORS.forEach((color, i) => {
-  if (i < 6) { // 只映射有效的图标索引
-    COLOR_INDEX_MAP[color] = i;
-  }
+  COLOR_INDEX_MAP[color] = i;
 });
 
 const ICONS = [
@@ -110,8 +80,7 @@ const ICONS = [
     'images/match3/icon_0002_white.png',
     'images/match3/icon_0003_pinlk.png',
     'images/match3/icon_0004_blue.png',
-    'images/match3/icon_0005_green.png',
-    null
+    'images/match3/icon_0005_green.png'
 ];
 
 const iconCache = [];
@@ -124,33 +93,9 @@ const AnimationType = {
     SPECIAL: 'special'
 };
 
-class Match3Game {
+class Match3Game extends BasePage {
   constructor() {
-    try {
-      if (typeof GameGlobal !== 'undefined' && GameGlobal.systemInfo) {
-        this.width = GameGlobal.systemInfo.windowWidth || 375;
-        this.height = GameGlobal.systemInfo.windowHeight || 667;
-        this.pixelRatio = GameGlobal.systemInfo.pixelRatio || 1;
-      } else if (typeof wx !== 'undefined' && wx.getSystemInfoSync) {
-        const systemInfo = wx.getSystemInfoSync();
-        this.width = systemInfo.windowWidth || 375;
-        this.height = systemInfo.windowHeight || 667;
-        this.pixelRatio = systemInfo.pixelRatio || 1;
-      } else if (typeof window !== 'undefined') {
-        this.width = window.innerWidth || 375;
-        this.height = window.innerHeight || 667;
-        this.pixelRatio = window.devicePixelRatio || 1;
-      } else {
-        this.width = 375;
-        this.height = 667;
-        this.pixelRatio = 1;
-      }
-    } catch (error) {
-      console.error('Get system info error:', error);
-      this.width = 375;
-      this.height = 667;
-      this.pixelRatio = 1;
-    }
+    super();
     
     this.level = 1;
     this.score = 0;
@@ -167,13 +112,11 @@ class Match3Game {
     this.cellSize = 0;
     this.startX = 0;
     this.startY = 0;
-    this.backgroundImage = null;
     this._pendingCallbacks = null;
 
     try {
       this.initBoard();
       this.calculateLayout();
-      this.loadBackgroundImage();
       this.loadIcons();
     } catch (error) {
       console.error('Initialize game error:', error);
@@ -181,7 +124,7 @@ class Match3Game {
   }
   
   loadIcons() {
-    for (let i = 0; i < ICONS.length - 1; i++) {
+    for (let i = 0; i < ICONS.length; i++) {
       const iconPath = ICONS[i];
       if (iconPath) {
         if (typeof wx !== 'undefined' && wx.createImage) {
@@ -300,7 +243,7 @@ class Match3Game {
   }
 
   getRandomPiece() {
-    const colorIndex = Math.floor(Math.random() * (ColorType.COUNT - 1));
+    const colorIndex = Math.floor(Math.random() * ColorType.COUNT);
     const color = COLORS[colorIndex];
     const type = 'normal';
     
@@ -420,18 +363,9 @@ class Match3Game {
   }
 
   _createSpecialPiece(piece, specialType) {
-    // 回收旧棋子，从池中获取或创建新特殊棋子
-    piecePool.recycle(piece);
-    let sp = piecePool.get();
-    if (sp && sp.special !== undefined) {
-      // 复用旧 SpecialPiece 或 GamePiece（直接设属性，跳过 reset 签名差异）
-      sp.type = piece.type;
-      sp.color = piece.color;
-      sp.special = true;
-      sp.specialType = specialType;
-      return sp;
-    }
-    return new SpecialPiece(piece.type, piece.color, specialType);
+    piece.special = true;
+    piece.specialType = specialType;
+    return piece;
   }
 
   _removeLineMatches(match, removed, isHorizontal) {
@@ -841,15 +775,7 @@ class Match3Game {
 
   render(ctx) {
     try {
-      if (this.backgroundImage) {
-        ctx.drawImage(this.backgroundImage, 0, 0, this.width, this.height);
-      } else {
-        const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-        gradient.addColorStop(0, '#2563EB');
-        gradient.addColorStop(1, '#3B82F6');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, this.width, this.height);
-      }
+      this.drawBackground(ctx, '#2563EB', '#3B82F6');
 
       this.drawGameInfo(ctx);
 
@@ -1337,26 +1263,6 @@ class Match3Game {
     ctx.quadraticCurveTo(this.width / 2, this.height - 120, this.width, this.height - 80);
     ctx.stroke();
     ctx.restore();
-  }
-
-  loadBackgroundImage() {
-    const resourceManager = GameGlobal.resourceManager;
-    if (resourceManager) {
-      this.backgroundImage = resourceManager.getImage('bg');
-    }
-    if (!this.backgroundImage) {
-      if (typeof wx !== 'undefined' && wx.createImage) {
-        const img = wx.createImage();
-        img.onload = () => { this.backgroundImage = img; };
-        img.onerror = (err) => { console.error('Failed to load background image:', err); };
-        img.src = 'images/ui/bg2.jpg';
-      } else if (typeof window !== 'undefined' && window.Image) {
-        const img = new Image();
-        img.onload = () => { this.backgroundImage = img; };
-        img.onerror = (err) => { console.error('Failed to load background image:', err); };
-        img.src = 'images/ui/bg2.jpg';
-      }
-    }
   }
 
   _getTouchPosition(e) {
