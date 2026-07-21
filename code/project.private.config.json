@@ -18,5 +18,17 @@
     "checkInvalidKey": true,
     "ignoreDevUnusedFiles": true
   },
-  "condition": {}
+  "condition": {
+    "game": {
+      "list": [
+        {
+          "name": "debug",
+          "pathName": "",
+          "query": "debug=1",
+          "scene": null,
+          "launchMode": "defalut"
+        }
+      ]
+    }
+  }
 }
