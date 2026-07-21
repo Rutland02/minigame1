@@ -1,37 +1,19 @@
 const { getTouchCoords } = require('../../utils/canvasUtils');
+const BasePage = require('../../common/basePage');
 
-class LoginPage {
+class LoginPage extends BasePage {
   constructor() {
-    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
-    this.width = sys.windowWidth;
-    this.height = sys.windowHeight;
+    super();
+
     this.isLoading = false;
     this._loginTimer = null;
-    this.backgroundImage = null;
     this.logoImage = null;
     this.loginButtonImage = null;
-    
+
     this.loadImages();
   }
   
   loadImages() {
-    const loadBackground = () => {
-      const resourceManager = GameGlobal.resourceManager;
-      if (resourceManager) {
-        this.backgroundImage = resourceManager.getImage('bg');
-      }
-      if (!this.backgroundImage) {
-        const img = wx.createImage();
-        img.onload = () => {
-          this.backgroundImage = img;
-        };
-        img.onerror = (err) => {
-          console.error('Failed to load background image:', err);
-        };
-        img.src = 'images/ui/bg2.jpg';
-      }
-    };
-
     const loadLogo = () => {
       const resourceManager = GameGlobal.resourceManager;
       if (resourceManager) {
@@ -58,24 +40,13 @@ class LoginPage {
       }
     };
 
-    loadBackground();
     loadLogo();
     loadLoginButton();
   }
 
   render(ctx) {
     try {
-      if (this.backgroundImage) {
-        const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
-        const scaledWidth = this.backgroundImage.width * scale;
-        const scaledHeight = this.backgroundImage.height * scale;
-        const offsetX = (this.width - scaledWidth) / 2;
-        const offsetY = (this.height - scaledHeight) / 2;
-        ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
-      } else {
-        ctx.fillStyle = '#f0f0f0';
-        ctx.fillRect(0, 0, this.width, this.height);
-      }
+      this.drawBackground(ctx, '#f0f0f0', '#f0f0f0');
 
       this.drawLogo(ctx);
       this.drawLoginButton(ctx);

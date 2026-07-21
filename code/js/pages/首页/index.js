@@ -1,14 +1,12 @@
 const { drawRoundedRect } = require('../../utils/canvasUtils');
+const BasePage = require('../../common/basePage');
 
 const databus = GameGlobal.databus;
 
-class HomePage {
+class HomePage extends BasePage {
   constructor() {
-    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
-    this.width = sys.windowWidth;
-    this.height = sys.windowHeight;
-    this.pixelRatio = sys.pixelRatio || 1;
-    
+    super();
+
     this.assets = {};
     this.loadAssets();
     
@@ -31,9 +29,9 @@ class HomePage {
       userCenter: { x: 20 * scale, y: 40, w: 150 * scale, h: 60 },
       
       gameButtons: [
-        { id: 'match3', iconId: 'match3', text: '消消乐', sub: '精彩糖巧，清洁消乐！', x: 25 * scale, y: 180, w: 325 * scale, h: 80, color: this.colors.greenCard },
-        { id: 'puzzle', iconId: 'puzzle', text: '三色拼图', sub: '精彩缝补，三色拼图！', x: 25 * scale, y: 280, w: 325 * scale, h: 80, color: this.colors.yellowCard },
-        { id: 'quiz', iconId: 'quiz', text: '三色答题', sub: '详漫数字，问答答题！', x: 25 * scale, y: 380, w: 325 * scale, h: 80, color: this.colors.blueCard }
+        { id: 'match3', iconId: 'match3', text: '消消乐', sub: '精彩糖巧，轻松消乐！', x: 25 * scale, y: 180, w: 325 * scale, h: 80, color: this.colors.greenCard },
+        { id: 'puzzle', iconId: 'puzzle', text: '三色拼图', sub: '精彩拼补，三色拼图！', x: 25 * scale, y: 280, w: 325 * scale, h: 80, color: this.colors.yellowCard },
+        { id: 'quiz', iconId: 'quiz', text: '三色答题', sub: '相约数字，趣味答题！', x: 25 * scale, y: 380, w: 325 * scale, h: 80, color: this.colors.blueCard }
       ],
       
       actionButtons: [
@@ -47,17 +45,6 @@ class HomePage {
   }
 
   loadAssets() {
-    const resourceManager = GameGlobal.resourceManager;
-    if (resourceManager) {
-      const cachedBg = resourceManager.getImage('bg');
-      if (cachedBg) this.assets.bg = cachedBg;
-    }
-    if (!this.assets.bg) {
-      const bg = wx.createImage();
-      bg.onload = () => { this.assets.bg = bg; };
-      bg.src = 'images/ui/bg2.jpg';
-    }
-
     const iconMap = {
       match3: 'images/page/home/icon_0000_match3.png',
       puzzle: 'images/page/home/icon_0001_puzzle.png',
@@ -69,9 +56,8 @@ class HomePage {
 
     Object.keys(iconMap).forEach(key => {
       const img = wx.createImage();
-      img.onload = () => { 
-        this.assets[key] = img; 
-        console.log(`Resource Loaded: ${key}`); 
+      img.onload = () => {
+        this.assets[key] = img;
       };
       img.onerror = (e) => { console.error(`Failed to load: ${key}`, e); };
       img.src = iconMap[key];
@@ -86,12 +72,7 @@ class HomePage {
   }
 
   drawBackground(ctx) {
-    if (this.assets.bg) {
-      ctx.drawImage(this.assets.bg, 0, 0, this.width, this.height);
-    } else {
-      ctx.fillStyle = '#E1F5FE';
-      ctx.fillRect(0, 0, this.width, this.height);
-    }
+    super.drawBackground(ctx, '#E1F5FE', '#E1F5FE');
   }
 
   drawUserInfo(ctx) {
@@ -211,6 +192,7 @@ class HomePage {
   }
 
   clearAchievements() {
+
     wx.showModal({
       title: '清除成就',
       content: '确定要清除所有已解锁的成就吗？',
@@ -226,8 +208,6 @@ class HomePage {
       }
     });
   }
-
-  destroy() {}
 }
 
 module.exports = HomePage;

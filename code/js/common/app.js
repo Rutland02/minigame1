@@ -4,7 +4,6 @@ const AchievementPage = require('../pages/成就页/index');
 const QuizPage = require('../pages/答题页/index');
 const Match3Game = require('../games/match3/game');
 const PuzzleGame = require('../games/puzzle/game');
-const DataManager = require('../utils/dataManager');
 const ResourceManager = require('../utils/resourceManager');
 const DataBus = require('../databus');
 
@@ -53,12 +52,12 @@ GameGlobal.resourceManager = resourceManager;
 GameGlobal.systemInfo = wx.getSystemInfoSync();
 
 GameGlobal.databus = new DataBus();
-GameGlobal.dataManager = new DataManager();
 
 class App {
   constructor() {
     GameGlobal.app = this;
     this.databus = GameGlobal.databus;
+    this.currentPage = null;
     this._boundLoop = this.loop.bind(this);
     this.init();
   }
@@ -75,9 +74,7 @@ class App {
       console.error('加载图片资源失败:', error);
     }
 
-  
-    GameGlobal.dataManager.init();
-    
+
     try {
       if (typeof wx !== 'undefined' && wx.onTouchStart) {
         wx.onTouchStart(this.onTouchStart.bind(this));
@@ -101,45 +98,45 @@ class App {
   loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.update) {
-      GameGlobal.databus.currentPage.update();
+    if (this.currentPage && this.currentPage.update) {
+      this.currentPage.update();
     }
     
-    if (GameGlobal.databus.currentPage) {
-      GameGlobal.databus.currentPage.render(ctx);
+    if (this.currentPage) {
+      this.currentPage.render(ctx);
     }
     
     requestAnimationFrame(this._boundLoop);
   }
 
   showPage(pageName) {
-    if (GameGlobal.databus.currentPage) {
-      GameGlobal.databus.currentPage.destroy();
+    if (this.currentPage) {
+      this.currentPage.destroy();
     }
 
     switch (pageName) {
       case 'login':
-        GameGlobal.databus.currentPage = new LoginPage();
+        this.currentPage = new LoginPage();
         break;
       case 'home':
-        GameGlobal.databus.currentPage = new HomePage();
+        this.currentPage = new HomePage();
         break;
       case 'achievement':
-        GameGlobal.databus.currentPage = new AchievementPage();
+        this.currentPage = new AchievementPage();
         break;
       case 'match3':
-        GameGlobal.databus.currentPage = new Match3Game();
+        this.currentPage = new Match3Game();
         break;
       case 'puzzle':
-        GameGlobal.databus.currentPage = new PuzzleGame();
+        this.currentPage = new PuzzleGame();
         break;
       case 'quiz':
-        GameGlobal.databus.currentPage = new QuizPage();
+        this.currentPage = new QuizPage();
         break;
     }
 
-    if (GameGlobal.databus.currentPage) {
-      GameGlobal.databus.currentPage.render(ctx);
+    if (this.currentPage) {
+      this.currentPage.render(ctx);
     }
   }
 
@@ -151,8 +148,8 @@ class App {
     } catch (error) {
       // preventDefault not available on all event types
     }
-    if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchStart) {
-      GameGlobal.databus.currentPage.handleTouchStart(e);
+    if (this.currentPage && this.currentPage.handleTouchStart) {
+      this.currentPage.handleTouchStart(e);
     }
   }
 
@@ -164,8 +161,8 @@ class App {
     } catch (error) {
       // preventDefault not available on all event types
     }
-    if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchMove) {
-      GameGlobal.databus.currentPage.handleTouchMove(e);
+    if (this.currentPage && this.currentPage.handleTouchMove) {
+      this.currentPage.handleTouchMove(e);
     }
   }
 
@@ -177,8 +174,8 @@ class App {
     } catch (error) {
       // preventDefault not available on all event types
     }
-    if (GameGlobal.databus.currentPage && GameGlobal.databus.currentPage.handleTouchEnd) {
-      GameGlobal.databus.currentPage.handleTouchEnd(e);
+    if (this.currentPage && this.currentPage.handleTouchEnd) {
+      this.currentPage.handleTouchEnd(e);
     }
   }
 }

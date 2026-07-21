@@ -1,20 +1,16 @@
-const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
+const { drawRoundedRect, drawButton, getTouchCoords } = require('../../utils/canvasUtils');
+const BasePage = require('../../common/basePage');
 
-class AchievementPage {
+class AchievementPage extends BasePage {
   constructor() {
-    const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
-    this.width = sys.windowWidth;
-    this.height = sys.windowHeight;
-    this.backgroundImage = null;
-    
+    super();
+
     this.scrollY = 0;
     this.maxScrollY = 0;
     this.isDragging = false;
     this.startY = 0;
     this.startScrollY = 0;
-    
-    this.loadBackgroundImage();
-    
+
     this.allAchievements = this.getAllAchievements();
   }
   
@@ -28,20 +24,7 @@ class AchievementPage {
   }
 
   render(ctx) {
-    if (this.backgroundImage) {
-      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
-      const scaledWidth = this.backgroundImage.width * scale;
-      const scaledHeight = this.backgroundImage.height * scale;
-      const offsetX = (this.width - scaledWidth) / 2;
-      const offsetY = (this.height - scaledHeight) / 2;
-      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
-    } else {
-      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-      gradient.addColorStop(0, '#4a6fa5');
-      gradient.addColorStop(1, '#6e5b7b');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, this.width, this.height);
-    }
+    this.drawBackground(ctx);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.fillRect(0, 0, this.width, this.height);
@@ -161,7 +144,7 @@ class AchievementPage {
     const buttonHeight = 50;
     const buttonWidth = 100;
     const buttonY = this.height - buttonHeight - 30;
-    
+
     drawRoundedRect(ctx, 40, buttonY, buttonWidth, buttonHeight, 25);
     const backGradient = ctx.createLinearGradient(40, buttonY, 140, buttonY + buttonHeight);
     backGradient.addColorStop(0, '#6B7280');
@@ -175,6 +158,21 @@ class AchievementPage {
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('返回', 90, buttonY + 28);
+
+    const certX = this.width - 140;
+    drawRoundedRect(ctx, certX, buttonY, buttonWidth, buttonHeight, 25);
+    const certGradient = ctx.createLinearGradient(certX, buttonY, certX + buttonWidth, buttonY + buttonHeight);
+    certGradient.addColorStop(0, '#10B981');
+    certGradient.addColorStop(1, '#059669');
+    ctx.fillStyle = certGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('查看证书', certX + 50, buttonY + 28);
   }
 
   renderCertificate(ctx) {
@@ -211,13 +209,13 @@ class AchievementPage {
     const databus = this.getDatabus();
     const userInfo = databus.getUserInfo();
     const totalScore = databus.getTotalScore();
-    const achievements = databus.getAchievements();
+    const achievements = databus.scoreManager.achievements.unlocked;
     const scores = databus.getAllScores();
     
     ctx.font = '18px Arial';
     ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
-    ctx.fillText(`兹证明 ${userInfo ? userInfo.nickname : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, 200);
+    ctx.fillText(`兹证明 ${userInfo ? userInfo.nickName : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, 200);
     ctx.fillText('积极参与，表现优异，特此颁发此证。', this.width / 2, 240);
     
     drawRoundedRect(ctx, this.width / 2 - 140, 280, 280, 120, 15);
@@ -298,6 +296,11 @@ class AchievementPage {
         }
         return;
       }
+
+      if (x >= this.width - 140 && x <= this.width - 40 && y >= this.height - 80 && y <= this.height - 30) {
+        this.generateCertificate();
+        return;
+      }
       
       this.isDragging = true;
       this.startY = y;
@@ -349,24 +352,6 @@ class AchievementPage {
     console.log('[成就页面] 已清除成就:', clearedCount);
   }
 
-  loadBackgroundImage() {
-    const resourceManager = GameGlobal.resourceManager;
-    if (resourceManager) {
-      this.backgroundImage = resourceManager.getImage('bg');
-    }
-    if (!this.backgroundImage) {
-      const img = wx.createImage();
-      img.onload = () => { this.backgroundImage = img; };
-      img.onerror = (err) => { console.error('Failed to load background image:', err); };
-      img.src = 'images/ui/bg2.jpg';
-    }
-  }
-
-  update() {
-  }
-
-  destroy() {
-  }
 }
 
 module.exports = AchievementPage;

@@ -111,9 +111,7 @@ class ScoreManager {
     }
     
     this.scores.overall.totalGamesPlayed++;
-    
-    console.log('[成就系统] 记录消消乐成绩:', { score, level, gamesPlayed: match3.gamesPlayed });
-    
+
     this.checkMatch3Achievements(score, level);
     this.checkOverallAchievements();
     this.save();
@@ -132,9 +130,7 @@ class ScoreManager {
     }
     
     this.scores.overall.totalGamesPlayed++;
-    
-    console.log('[成就系统] 记录拼图成绩:', { level, time, isCompleted, gamesPlayed: puzzle.gamesPlayed });
-    
+
     this.checkPuzzleAchievements(level, time, isCompleted);
     this.checkOverallAchievements();
     this.save();
@@ -152,9 +148,7 @@ class ScoreManager {
     }
     
     this.scores.overall.totalGamesPlayed++;
-    
-    console.log('[成就系统] 记录答题成绩:', { correctCount, totalQuestions, score, accuracy: quiz.accuracy, gamesPlayed: quiz.gamesPlayed });
-    
+
     this.checkQuizAchievements(correctCount, totalQuestions, score);
     this.checkOverallAchievements();
     this.save();
@@ -162,8 +156,6 @@ class ScoreManager {
 
   checkMatch3Achievements(score, level) {
     const match3 = this.scores.match3;
-
-    console.log('[成就系统] 检查消消乐成就:', { score, level, highestScore: match3.highestScore, bestLevel: match3.bestLevel });
 
     this.unlockAchievement('first_game');
 
@@ -183,10 +175,7 @@ class ScoreManager {
   checkPuzzleAchievements(level, time, isCompleted) {
     const puzzle = this.scores.puzzle;
 
-    console.log('[成就系统] 检查拼图成就:', { level, time, isCompleted, completedCount: puzzle.completedCount });
-
     if (!isCompleted) {
-      console.log('[成就系统] 拼图未完成，跳过成就检查');
       return;
     }
 
@@ -207,8 +196,6 @@ class ScoreManager {
 
   checkQuizAchievements(correctCount, totalQuestions, score) {
     const quiz = this.scores.quiz;
-
-    console.log('[成就系统] 检查答题成就:', { correctCount, totalQuestions, score, accuracy: quiz.accuracy });
 
     this.unlockAchievement('first_game');
 
@@ -250,17 +237,7 @@ class ScoreManager {
       this.checkCollectorAchievement();
       
       this.save();
-      
-      const achievement = this.getAchievementDefinition(achievementId);
-      console.log('[成就系统] 成就解锁:', {
-        id: achievementId,
-        title: achievement ? achievement.title : '未知成就',
-        description: achievement ? achievement.description : '未知描述',
-        unlockedAt: new Date(this.achievements.unlockDates[achievementId]).toLocaleString(),
-        totalUnlocked: this.achievements.unlocked.length,
-        allAchievements: this.achievements.unlocked
-      });
-      
+
       return true;
     }
     return false;
