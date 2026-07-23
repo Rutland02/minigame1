@@ -155,8 +155,6 @@ class ScoreManager {
   }
 
   checkMatch3Achievements(score, level) {
-    const match3 = this.scores.match3;
-
     this.unlockAchievement('first_game');
 
     if (score >= 1000) {
@@ -173,8 +171,6 @@ class ScoreManager {
   }
 
   checkPuzzleAchievements(level, time, isCompleted) {
-    const puzzle = this.scores.puzzle;
-
     if (!isCompleted) {
       return;
     }
@@ -194,9 +190,7 @@ class ScoreManager {
     }
   }
 
-  checkQuizAchievements(correctCount, totalQuestions, score) {
-    const quiz = this.scores.quiz;
-
+  checkQuizAchievements(correctCount, totalQuestions) {
     this.unlockAchievement('first_game');
 
     if (quiz.accuracy >= 80) {

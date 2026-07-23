@@ -1,4 +1,4 @@
-const { drawRoundedRect } = require('../../utils/canvasUtils');
+const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
 class PuzzleGame extends BasePage {
@@ -12,8 +12,6 @@ class PuzzleGame extends BasePage {
     this.endTime = null;
     this.touchStartX = 0;
     this.touchStartY = 0;
-    this.touchEndX = 0;
-    this.touchEndY = 0;
     this.animations = [];
     this.animationFrame = 0;
     this.isAnimating = false;
@@ -251,16 +249,22 @@ class PuzzleGame extends BasePage {
   handleTouchEnd(e) {
     if (this.gameStatus !== 'playing') return;
 
-    let endX, endY;
-    if (e.touches && e.touches[0]) {
-      endX = e.touches[0].x || e.touches[0].clientX || e.touches[0].pageX || 0;
-      endY = e.touches[0].y || e.touches[0].clientY || e.touches[0].pageY || 0;
-    } else if (e.changedTouches && e.changedTouches[0]) {
-      endX = e.changedTouches[0].x || e.changedTouches[0].clientX || e.changedTouches[0].pageX || 0;
-      endY = e.changedTouches[0].y || e.changedTouches[0].clientY || e.changedTouches[0].pageY || 0;
-    } else {
+    const buttonHeight = 50;
+    const buttonWidth = 100;
+    const buttonSpacing = 20;
+    const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
+    const buttonStartX = (this.width - totalButtonWidth) / 2;
+    const buttonY = this.height - buttonHeight - 20;
+
+    if (this.touchStartY >= buttonY && this.touchStartY <= buttonY + buttonHeight &&
+        this.touchStartX >= buttonStartX && this.touchStartX <= buttonStartX + totalButtonWidth) {
       return;
     }
+
+    const endCoords = getTouchCoords(e.touches, e.changedTouches);
+    if (!endCoords) return;
+    const endX = endCoords.x;
+    const endY = endCoords.y;
 
     const deltaX = endX - this.touchStartX;
     const deltaY = endY - this.touchStartY;
@@ -493,7 +497,7 @@ class PuzzleGame extends BasePage {
             ctx.restore();
           } else {
             const colorIndex = (piece.correctRow * size + piece.correctCol) % 3;
-            const colors = ['#FF5722', '#4CAF50', '#F44336'];
+            const colors = ['#EF4444', '#F59E0B', '#3B82F6'];
             const color = colors[colorIndex];
             
             const pieceGradient = ctx.createLinearGradient(x, y, x, y + pieceSize);
@@ -634,16 +638,9 @@ class PuzzleGame extends BasePage {
   }
 
   handleTouchStart(e) {
-    let x, y;
-    if (e.touches && e.touches[0]) {
-      x = e.touches[0].x || e.touches[0].clientX || e.touches[0].pageX || 0;
-      y = e.touches[0].y || e.touches[0].clientY || e.touches[0].pageY || 0;
-    } else if (e.changedTouches && e.changedTouches[0]) {
-      x = e.changedTouches[0].x || e.changedTouches[0].clientX || e.changedTouches[0].pageX || 0;
-      y = e.changedTouches[0].y || e.changedTouches[0].clientY || e.changedTouches[0].pageY || 0;
-    } else {
-      return;
-    }
+    const coords = getTouchCoords(e.touches, e.changedTouches);
+    if (!coords) return;
+    const { x, y } = coords;
 
     this.touchStartX = x;
     this.touchStartY = y;
@@ -723,6 +720,8 @@ class PuzzleGame extends BasePage {
   }
 
   destroy() {
+    this.animations = [];
+    this.puzzleImage = null;
   }
 }
 

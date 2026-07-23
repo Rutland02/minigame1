@@ -1,8 +1,6 @@
 const { drawRoundedRect } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
-const databus = GameGlobal.databus;
-
 class HomePage extends BasePage {
   constructor() {
     super();
@@ -165,7 +163,7 @@ class HomePage extends BasePage {
             icon: 'success',
             duration: 1500
           });
-          databus.unlockAchievement('check_in_master');
+          GameGlobal.databus.unlockAchievement('check_in_master');
         },
         fail: (err) => {
           console.error('扫码失败:', err);
@@ -191,23 +189,6 @@ class HomePage extends BasePage {
     }
   }
 
-  clearAchievements() {
-
-    wx.showModal({
-      title: '清除成就',
-      content: '确定要清除所有已解锁的成就吗？',
-      success: (res) => {
-        if (res.confirm) {
-          databus.clearAllAchievements();
-          wx.showToast({
-            title: '成就已清除',
-            icon: 'success',
-            duration: 2000
-          });
-        }
-      }
-    });
-  }
 }
 
 module.exports = HomePage;

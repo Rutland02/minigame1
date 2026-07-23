@@ -1,4 +1,4 @@
-const { drawRoundedRect, drawButton, getTouchCoords } = require('../../utils/canvasUtils');
+const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
 class QuizPage extends BasePage {
@@ -15,7 +15,6 @@ class QuizPage extends BasePage {
     this.consecutiveCorrect = 0;
 
     this.animationFrame = 0;
-    this.showResult = false;
     this.resultAnimation = 0;
     
     this.setupDifficulty();

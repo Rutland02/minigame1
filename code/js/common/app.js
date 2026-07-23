@@ -19,6 +19,7 @@ try {
 } catch (error) {
   console.error('Failed to create canvas:', error);
   canvas = {
+    isMock: true,
     getContext: function() {
       return {
         clearRect: function() {},

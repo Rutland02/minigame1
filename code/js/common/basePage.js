@@ -3,7 +3,6 @@ class BasePage {
     const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
     this.width = sys.windowWidth;
     this.height = sys.windowHeight;
-    this.pixelRatio = sys.pixelRatio || 1;
     this.backgroundImage = null;
     this.loadBackgroundImage();
   }
@@ -36,6 +35,12 @@ class BasePage {
   update() {}
 
   render() {}
+
+  handleTouchStart(e) {}
+
+  handleTouchMove(e) {}
+
+  handleTouchEnd(e) {}
 
   destroy() {}
 }

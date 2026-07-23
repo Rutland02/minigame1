@@ -1,3 +1,10 @@
+const BasePage = require('../../common/basePage');
+const { BOARD_SIZE, INITIAL_TIME, SCORE_PER_REMOVE, CHAIN_SCORE_MULTIPLIER, LEVEL_UP_TIME_BONUS, LEVEL_TARGET_MULTIPLIER, SWIPE_THRESHOLD, ColorType, COLORS } = require('./constants');
+const { ObjectPool, AnimationManager } = require('./animation');
+const Match3Renderer = require('./renderer');
+
+const piecePool = new ObjectPool();
+
 class GamePiece {
   constructor(type, color) {
     this.type = type;
@@ -7,7 +14,7 @@ class GamePiece {
     this.row = -1;
     this.col = -1;
   }
-  
+
   reset(type, color) {
     this.type = type;
     this.color = color;
@@ -17,86 +24,10 @@ class GamePiece {
   }
 }
 
-class ObjectPool {
-  constructor() {
-    this.pool = [];
-  }
-  
-  get() {
-    if (this.pool.length > 0) {
-      return this.pool.pop();
-    }
-    return null;
-  }
-  
-  recycle(obj) {
-    this.pool.push(obj);
-  }
-}
-
-const { drawRoundedRect } = require('../../utils/canvasUtils');
-const BasePage = require('../../common/basePage');
-
-const animationPool = new ObjectPool();
-
-const piecePool = new ObjectPool();
-
-// 游戏配置常量
-const BOARD_SIZE = 8;
-const INITIAL_TIME = 60;
-const SCORE_PER_REMOVE = 10;
-const CHAIN_SCORE_MULTIPLIER = 15;
-const LEVEL_UP_TIME_BONUS = 10;
-const LEVEL_TARGET_MULTIPLIER = 100;
-const SWIPE_THRESHOLD = 20;
-
-const ColorType = {
-    RED: 0,
-    YELLOW: 1,
-    WHITE: 2,
-    PINK: 3,
-    BLUE: 4,
-    GREEN: 5,
-    COUNT: 6
-};
-
-const COLORS = [
-    '#EF4444',
-    '#F59E0B',
-    '#F8FAFC',
-    '#EC4899',
-    '#3B82F6',
-    '#10B981'
-];
-
-const COLOR_INDEX_MAP = {};
-COLORS.forEach((color, i) => {
-  COLOR_INDEX_MAP[color] = i;
-});
-
-const ICONS = [
-    'images/match3/icon_0000_red.png',
-    'images/match3/icon_0001_yellow.png',
-    'images/match3/icon_0002_white.png',
-    'images/match3/icon_0003_pinlk.png',
-    'images/match3/icon_0004_blue.png',
-    'images/match3/icon_0005_green.png'
-];
-
-const iconCache = [];
-
-const AnimationType = {
-    SWAP: 'swap',
-    ELIMINATION: 'elimination',
-    DROP: 'drop',
-    POP: 'pop',
-    SPECIAL: 'special'
-};
-
 class Match3Game extends BasePage {
   constructor() {
     super();
-    
+
     this.level = 1;
     this.score = 0;
     this.moves = 0;
@@ -105,51 +36,23 @@ class Match3Game extends BasePage {
     this.selectedCell = null;
     this.gameStatus = 'playing';
     this.lastUpdateTime = Date.now();
-    this.animations = [];
-    this.isAnimating = false;
     this.touchStart = null;
     this.touchEnd = null;
     this.cellSize = 0;
     this.startX = 0;
     this.startY = 0;
-    this._pendingCallbacks = null;
+
+    this.anim = new AnimationManager();
+    this.renderer = new Match3Renderer(this);
 
     try {
       this.initBoard();
       this.calculateLayout();
-      this.loadIcons();
     } catch (error) {
       console.error('Initialize game error:', error);
     }
   }
-  
-  loadIcons() {
-    for (let i = 0; i < ICONS.length; i++) {
-      const iconPath = ICONS[i];
-      if (iconPath) {
-        if (typeof wx !== 'undefined' && wx.createImage) {
-          const img = wx.createImage();
-          img.onload = () => {
-            iconCache[i] = img;
-          };
-          img.onerror = (err) => {
-            console.error(`Failed to load icon ${iconPath}:`, err);
-          };
-          img.src = iconPath;
-        } else if (typeof window !== 'undefined' && window.Image) {
-          const img = new Image();
-          img.onload = () => {
-            iconCache[i] = img;
-          };
-          img.onerror = (err) => {
-            console.error(`Failed to load icon ${iconPath}:`, err);
-          };
-          img.src = iconPath;
-        }
-      }
-    }
-  }
-  
+
   calculateLayout() {
     const size = this.board.length;
     this.cellSize = Math.min((this.width - 40) / size, (this.height - 200) / size);
@@ -159,7 +62,7 @@ class Match3Game extends BasePage {
 
   initBoard() {
     const size = BOARD_SIZE;
-    
+
     for (let i = 0; i < this.board.length; i++) {
       for (let j = 0; j < this.board[i].length; j++) {
         const piece = this.board[i][j];
@@ -168,25 +71,25 @@ class Match3Game extends BasePage {
         }
       }
     }
-    
+
     this.board = [];
     for (let i = 0; i < size; i++) {
       const row = [];
       this.board.push(row);
-      
+
       for (let j = 0; j < size; j++) {
         let piece;
         let validPiece = false;
         let attempts = 0;
         const maxAttempts = 100;
-        
+
         while (!validPiece && attempts < maxAttempts) {
           piece = this.getRandomPiece();
           piece.row = i;
           piece.col = j;
-          
+
           row.push(piece);
-          
+
           try {
             const matches = this.findMatches();
             validPiece = matches.length === 0;
@@ -194,14 +97,14 @@ class Match3Game extends BasePage {
             console.error('Find matches error:', error);
             validPiece = true;
           }
-          
+
           if (!validPiece) {
             row.pop();
           }
-          
+
           attempts++;
         }
-        
+
         if (!validPiece) {
           piece.row = i;
           piece.col = j;
@@ -209,7 +112,7 @@ class Match3Game extends BasePage {
         }
       }
     }
-    
+
     let attempts = 0;
     const maxAttempts = 10;
     while (this.findMatches().length > 0 && attempts < maxAttempts) {
@@ -238,7 +141,7 @@ class Match3Game extends BasePage {
       }
       attempts++;
     }
-    
+
     this.calculateLayout();
   }
 
@@ -246,7 +149,7 @@ class Match3Game extends BasePage {
     const colorIndex = Math.floor(Math.random() * ColorType.COUNT);
     const color = COLORS[colorIndex];
     const type = 'normal';
-    
+
     let piece = piecePool.get();
     if (piece) {
       return piece.reset(type, color);
@@ -371,19 +274,19 @@ class Match3Game extends BasePage {
   _removeLineMatches(match, removed, isHorizontal) {
     let removedCount = 0;
     const size = this.board.length;
-    const len = match.end - match.start;
+    const matchLength = match.end - match.start + 1;
 
     for (let k = match.start; k <= match.end; k++) {
       const row = isHorizontal ? match.row : k;
       const col = isHorizontal ? k : match.col;
       if (removed[row][col] || !this.board[row][col]) continue;
 
-      if (len === 2) {
+      if (matchLength === 3) {
         this.board[row][col] = null;
-      } else if (len === 3 && k === match.start) {
+      } else if (matchLength === 4 && k === match.start) {
         const st = isHorizontal ? 'row_clear' : 'column_clear';
         this.board[row][col] = this._createSpecialPiece(this.board[row][col], st);
-      } else if (len >= 4 && k === match.start) {
+      } else if (matchLength >= 5 && k === match.start) {
         this.board[row][col] = this._createSpecialPiece(this.board[row][col], 'rainbow');
       } else {
         this.board[row][col] = null;
@@ -417,7 +320,7 @@ class Match3Game extends BasePage {
     const size = this.board.length;
     const dropAnimations = [];
     let hasDropped = false;
-    
+
     for (let j = 0; j < size; j++) {
       let emptySpaces = 0;
       for (let i = size - 1; i >= 0; i--) {
@@ -429,7 +332,9 @@ class Match3Game extends BasePage {
             type: piece.type,
             color: piece.color,
             special: piece.special,
-            specialType: piece.specialType
+            specialType: piece.specialType,
+            row: i + emptySpaces,
+            col: j
           };
           dropAnimations.push({
             row: i,
@@ -449,7 +354,9 @@ class Match3Game extends BasePage {
           type: newPiece.type,
           color: newPiece.color,
           special: newPiece.special,
-          specialType: newPiece.specialType
+          specialType: newPiece.specialType,
+          row: i,
+          col: j
         };
         this.board[i][j] = newPiece;
         dropAnimations.push({
@@ -462,27 +369,27 @@ class Match3Game extends BasePage {
         hasDropped = true;
       }
     }
-    
+
     dropAnimations.forEach(anim => {
-      this.addAnimation('drop', anim, 0.5);
+      this.anim.addAnimation('drop', anim, 0.5);
     });
-    
+
     return hasDropped;
   }
 
   handleCellClick(row, col) {
-    if (this.gameStatus !== 'playing' || this.isAnimating) return;
+    if (this.gameStatus !== 'playing' || this.anim.isAnimating) return;
 
     const size = this.board.length;
     if (row < 0 || row >= size || col < 0 || col >= size) return;
 
     if (!this.selectedCell) {
       this.selectedCell = { row, col };
-      this.addAnimation('pop', { row, col }, 0.2);
+      this.anim.addAnimation('pop', { row, col }, 0.2);
     } else {
       const rowDiff = Math.abs(row - this.selectedCell.row);
       const colDiff = Math.abs(col - this.selectedCell.col);
-      
+
       if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
         this.handleCellSwap(this.selectedCell.row, this.selectedCell.col, row, col);
       }
@@ -491,7 +398,7 @@ class Match3Game extends BasePage {
   }
 
   handleCellSwap(row1, col1, row2, col2) {
-    if (this.gameStatus !== 'playing' || this.isAnimating) return;
+    if (this.gameStatus !== 'playing' || this.anim.isAnimating) return;
 
     const size = this.board.length;
     if (row1 < 0 || row1 >= size || col1 < 0 || col1 >= size || row2 < 0 || row2 >= size || col2 < 0 || col2 >= size) return;
@@ -500,9 +407,9 @@ class Match3Game extends BasePage {
     const piece2 = this.board[row2][col2];
     if (!piece1 || !piece2) return;
 
-    this.addAnimation('swap', { row1, col1, row2, col2, piece1, piece2 }, 0.3);
+    this.anim.addAnimation('swap', { row1, col1, row2, col2, piece1, piece2 }, 0.3);
 
-    this.waitForAnimations(() => {
+    this.anim.waitForAnimations(() => {
       this.board[row1][col1] = piece2;
       this.board[row2][col2] = piece1;
 
@@ -510,21 +417,21 @@ class Match3Game extends BasePage {
       if (matches.length > 0) {
         const matchColors = this.buildMatchColors(matches);
 
+        this.playMatchEffects(matchColors);
+
         const removedCount = this.removeMatches(matches);
         this.score += removedCount * SCORE_PER_REMOVE;
         this.moves++;
 
-        this.playMatchEffects(matchColors);
-
-        this.waitForAnimations(() => {
+        this.anim.waitForAnimations(() => {
           const hasDropped = this.dropPieces();
-          
+
           const checkNewMatchesCallback = () => {
             this.checkNewMatches();
           };
-          
+
           if (hasDropped) {
-            this.waitForAnimations(checkNewMatchesCallback);
+            this.anim.waitForAnimations(checkNewMatchesCallback);
           } else {
             checkNewMatchesCallback();
           }
@@ -534,8 +441,8 @@ class Match3Game extends BasePage {
           this.levelUp();
         }
       } else {
-        this.addAnimation('swap', { row1, col1, row2, col2, piece1, piece2 }, 0.3);
-        this.waitForAnimations(() => {
+        this.anim.addAnimation('swap', { row1, col1, row2, col2, piece1, piece2 }, 0.3);
+        this.anim.waitForAnimations(() => {
           this.board[row1][col1] = piece1;
           this.board[row2][col2] = piece2;
         });
@@ -551,21 +458,21 @@ class Match3Game extends BasePage {
     this.level++;
     this.time += LEVEL_UP_TIME_BONUS;
     this.lastUpdateTime = Date.now();
-    this.addAnimation('special', { row: 3, col: 3, specialType: 'level_up', color: '#FFD700' }, 1.0);
+    this.anim.addAnimation('special', { row: 3, col: 3, specialType: 'level_up', color: '#FFD700' }, 1.0);
   }
 
   checkNewMatches(_depth = 0) {
-    if (_depth > 20) return; // 防止极端情况下无限链式消除
+    if (_depth > 20) return;
     let newMatches = this.findMatches();
     if (newMatches.length > 0) {
       const matchColors = this.buildMatchColors(newMatches);
 
+      this.playMatchEffects(matchColors);
+
       const newRemovedCount = this.removeMatches(newMatches);
       this.score += newRemovedCount * CHAIN_SCORE_MULTIPLIER;
 
-      this.playMatchEffects(matchColors);
-
-      this.waitForAnimations(() => {
+      this.anim.waitForAnimations(() => {
         const hasDropped = this.dropPieces();
 
         const checkAfterDropCallback = () => {
@@ -576,7 +483,7 @@ class Match3Game extends BasePage {
         };
 
         if (hasDropped) {
-          this.waitForAnimations(checkAfterDropCallback);
+          this.anim.waitForAnimations(checkAfterDropCallback);
         } else {
           checkAfterDropCallback();
         }
@@ -589,11 +496,11 @@ class Match3Game extends BasePage {
       const now = Date.now();
       const deltaTime = (now - this.lastUpdateTime) / 1000;
       this.lastUpdateTime = now;
-      
+
       const clampedDeltaTime = Math.min(deltaTime, 0.1);
-      
-      this.updateAnimations(clampedDeltaTime);
-      
+
+      this.anim.updateAnimations(clampedDeltaTime);
+
       this.time -= clampedDeltaTime;
       if (this.time <= 0) {
         this.time = 0;
@@ -606,101 +513,6 @@ class Match3Game extends BasePage {
   saveGameScore() {
     if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.databus) {
       GameGlobal.app.databus.recordMatch3Score(this.score, this.level);
-    }
-  }
-
-  updateAnimations(deltaTime) {
-    if (this.isAnimating) {
-      let allDone = true;
-      const completedAnims = [];
-      
-      for (let i = 0; i < this.animations.length; i++) {
-        const anim = this.animations[i];
-        anim.progress += deltaTime / anim.duration;
-        if (anim.progress < 1) {
-          allDone = false;
-        } else {
-          anim.progress = 1;
-          completedAnims.push(anim);
-        }
-      }
-      
-      if (allDone) {
-        for (const anim of this.animations) {
-          animationPool.recycle(anim);
-        }
-        this.animations = [];
-        this.isAnimating = false;
-        this._flushPendingCallbacks();
-      } else if (completedAnims.length > 0) {
-        this.animations = this.animations.filter(anim => !completedAnims.includes(anim));
-        for (const anim of completedAnims) {
-          animationPool.recycle(anim);
-        }
-      }
-    }
-  }
-
-  addAnimation(type, data, duration = 0.3) {
-    let anim = animationPool.get();
-    if (!anim) {
-      anim = {
-        type: '',
-        data: null,
-        progress: 0,
-        duration: 0
-      };
-    }
-    
-    anim.type = type;
-    anim.data = data;
-    anim.progress = 0;
-    anim.duration = duration;
-    
-    this.animations.push(anim);
-    this.isAnimating = true;
-  }
-
-  easeOutQuad(t) {
-    return t * (2 - t);
-  }
-
-  easeOutElastic(t) {
-    const c4 = (2 * Math.PI) / 3;
-    return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
-  }
-
-  easeOutBounce(t) {
-    const n1 = 7.5625;
-    const d1 = 2.75;
-
-    if (t < 1 / d1) {
-      return n1 * t * t;
-    } else if (t < 2 / d1) {
-      return n1 * (t -= 1.5 / d1) * t + 0.75;
-    } else if (t < 2.5 / d1) {
-      return n1 * (t -= 2.25 / d1) * t + 0.9375;
-    } else {
-      return n1 * (t -= 2.625 / d1) * t + 0.984375;
-    }
-  }
-
-  waitForAnimations(callback) {
-    if (!this.isAnimating) {
-      callback();
-      return;
-    }
-    if (!this._pendingCallbacks) {
-      this._pendingCallbacks = [];
-    }
-    this._pendingCallbacks.push(callback);
-  }
-
-  _flushPendingCallbacks() {
-    if (this._pendingCallbacks && this._pendingCallbacks.length > 0) {
-      const callbacks = this._pendingCallbacks;
-      this._pendingCallbacks = null;
-      callbacks.forEach(cb => cb());
     }
   }
 
@@ -741,528 +553,31 @@ class Match3Game extends BasePage {
   playMatchEffects(matchColors) {
     matchColors.forEach(matchColor => {
       if (matchColor.type === 'horizontal' || matchColor.type === 'vertical') {
-        this.addAnimation('elimination', { row: matchColor.row, col: matchColor.col, color: matchColor.color }, 0.6);
+        this.anim.addAnimation('elimination', { row: matchColor.row, col: matchColor.col, color: matchColor.color }, 0.6);
       } else if (matchColor.type === 'special') {
-        this.addAnimation('special', { row: matchColor.row, col: matchColor.col, specialType: matchColor.specialType, color: matchColor.color }, 0.8);
+        this.anim.addAnimation('special', { row: matchColor.row, col: matchColor.col, specialType: matchColor.specialType, color: matchColor.color }, 0.8);
       }
     });
-  }
-
-  drawPieceIcon(ctx, icon, pieceColor, x, y, cellSize) {
-    const iconSize = Math.floor(cellSize * 2 / 3);
-    const iconX = Math.floor(x + (cellSize - iconSize) / 2);
-    const iconY = Math.floor(y + (cellSize - iconSize) / 2);
-
-    if (icon) {
-      const scaleRatio = iconSize / icon.width;
-      ctx.imageSmoothingEnabled = scaleRatio >= 0.5;
-      if (scaleRatio < 0.5) {
-        ctx.imageSmoothingQuality = 'high';
-      }
-      ctx.drawImage(icon, iconX, iconY, iconSize, iconSize);
-      ctx.imageSmoothingEnabled = true;
-    } else {
-      this.drawPieceFallback(ctx, pieceColor, x + cellSize / 2, y + cellSize / 2, cellSize / 3);
-    }
-  }
-
-  drawPieceFallback(ctx, color, cx, cy, radius) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   render(ctx) {
     try {
       this.drawBackground(ctx, '#2563EB', '#3B82F6');
 
-      this.drawGameInfo(ctx);
+      this.renderer.drawGameInfo(ctx);
 
-      this.drawGameBoard(ctx);
+      this.renderer.drawGameBoard(ctx);
 
-      this.drawBottomButtons(ctx);
+      this.renderer.drawBottomButtons(ctx);
 
       if (this.gameStatus === 'gameOver') {
-        this.drawGameOver(ctx);
+        this.renderer.drawGameOver(ctx);
       }
 
-      this.drawCulturalElements(ctx);
+      this.renderer.drawCulturalElements(ctx);
     } catch (error) {
       console.error('Render error:', error);
     }
-  }
-
-  drawGameInfo(ctx) {
-    const size = this.board.length;
-    const boardHeight = this.cellSize * size;
-    const boardBottomY = this.startY + boardHeight + 20;
-    
-    const x = 20;
-    const y = boardBottomY;
-    const width = this.width - 40;
-    const height = 80;
-    const radius = 15;
-    
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 4;
-    
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    drawRoundedRect(ctx, x, y, width, height, radius);
-    ctx.fill();
-    ctx.restore();
-    
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#1E293B';
-    ctx.textAlign = 'left';
-    ctx.fillText(`得分: ${this.score}`, 40, boardBottomY + 22);
-    ctx.fillText(`等级: ${this.level}`, 150, boardBottomY + 22);
-    ctx.fillText(`时间: ${Math.ceil(this.time)}s`, 260, boardBottomY + 22);
-    
-    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#64748B';
-    ctx.fillText('SCORE', 40, boardBottomY + 42);
-    ctx.fillText('LEVEL', 150, boardBottomY + 42);
-    ctx.fillText('TIME', 260, boardBottomY + 42);
-  }
-
-  _buildAnimatingCellsSet() {
-    const set = new Set();
-    this.animations.forEach(anim => {
-      if (anim.type === 'swap') {
-        const { row1, col1, row2, col2 } = anim.data;
-        set.add(row1 + ',' + col1);
-        set.add(row2 + ',' + col2);
-      } else if (anim.type === 'drop') {
-        set.add(anim.data.targetRow + ',' + anim.data.targetCol);
-      } else if (anim.type === 'pop' || anim.type === 'elimination' || anim.type === 'special') {
-        set.add(anim.data.row + ',' + anim.data.col);
-      }
-    });
-    return set;
-  }
-
-  _drawSpecialIndicator(ctx, piece, cx, cy, cellSize) {
-    ctx.fillStyle = '#fff';
-    if (piece.specialType === 'row_clear') {
-      ctx.fillRect(cx - cellSize / 4, cy - 5, cellSize / 2, 10);
-    } else if (piece.specialType === 'column_clear') {
-      ctx.fillRect(cx - 5, cy - cellSize / 4, 10, cellSize / 2);
-    }
-  }
-
-  _drawStaticPiece(ctx, piece, x, y, cellSize) {
-    const icon = iconCache[COLOR_INDEX_MAP[piece.color]];
-
-    if (piece.special) {
-      switch (piece.specialType) {
-        case 'row_clear':
-        case 'column_clear':
-          this.drawPieceIcon(ctx, icon, piece.color, x, y, cellSize);
-          this._drawSpecialIndicator(ctx, piece, x + cellSize / 2, y + cellSize / 2, cellSize);
-          break;
-        case 'rainbow':
-          const g = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
-          g.addColorStop(0, '#FF0000'); g.addColorStop(0.2, '#FF7F00');
-          g.addColorStop(0.4, '#FFFF00'); g.addColorStop(0.6, '#00FF00');
-          g.addColorStop(0.8, '#0000FF'); g.addColorStop(1, '#8B00FF');
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 3, 0, Math.PI * 2);
-          ctx.fill();
-          break;
-        default:
-          this.drawPieceIcon(ctx, icon, piece.color, x, y, cellSize);
-      }
-    } else {
-      this.drawPieceIcon(ctx, icon, piece.color, x, y, cellSize);
-    }
-  }
-
-  // ── 动画绘制辅助方法 ──
-
-  _drawEliminationAnim(ctx, anim, startX, startY, cellSize) {
-    const { row, col } = anim.data;
-    const x = startX + col * cellSize;
-    const y = startY + row * cellSize;
-    const t = this.easeOutQuad(anim.progress);
-    const scale = 1 + t * 1.5;
-    const opacity = 1 - t;
-    ctx.globalAlpha = opacity;
-
-    const icon = iconCache[COLOR_INDEX_MAP[anim.data.color || '#ffffff']];
-    if (icon) {
-      const shrink = (cellSize / 6) * (scale - 1);
-      ctx.drawImage(icon, x + cellSize / 6 - shrink, y + cellSize / 6 - shrink,
-        cellSize * 2 / 3 * scale, cellSize * 2 / 3 * scale);
-    } else {
-      ctx.fillStyle = anim.data.color || '#ffffff';
-      ctx.beginPath();
-      ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // 粒子
-    ctx.fillStyle = anim.data.color || '#ffffff';
-    for (let p = 0; p < 6; p++) {
-      const angle = (p / 6) * Math.PI * 2;
-      const dist = t * cellSize;
-      ctx.beginPath();
-      ctx.arc(x + cellSize / 2 + Math.cos(angle) * dist,
-        y + cellSize / 2 + Math.sin(angle) * dist,
-        (1 - t) * (cellSize / 6), 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  _drawSwapAnim(ctx, anim, startX, startY, cellSize) {
-    const { row1, col1, row2, col2, piece1, piece2 } = anim.data;
-    const t = this.easeOutBounce(anim.progress);
-    const x1 = startX + col1 * cellSize + cellSize / 2;
-    const y1 = startY + row1 * cellSize + cellSize / 2;
-    const x2 = startX + col2 * cellSize + cellSize / 2;
-    const y2 = startY + row2 * cellSize + cellSize / 2;
-
-    const drawPieceAt = (piece, fromX, fromY, toX, toY) => {
-      if (!piece) return;
-      const cx = fromX + (toX - fromX) * t;
-      const cy = fromY + (toY - fromY) * t;
-      const icon = iconCache[COLOR_INDEX_MAP[piece.color]];
-      if (icon) {
-        ctx.drawImage(icon, cx - cellSize / 3, cy - cellSize / 3, cellSize * 2 / 3, cellSize * 2 / 3);
-      } else {
-        ctx.fillStyle = piece.color;
-        ctx.beginPath();
-        ctx.arc(cx, cy, cellSize / 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      if (piece.special) this._drawSpecialIndicator(ctx, piece, cx, cy, cellSize);
-    };
-
-    drawPieceAt(piece1, x1, y1, x2, y2);
-    drawPieceAt(piece2, x2, y2, x1, y1);
-  }
-
-  _drawDropAnim(ctx, anim, startX, startY, cellSize) {
-    const { row, col, targetRow, piece } = anim.data;
-    const t = this.easeOutBounce(anim.progress);
-    const startYPos = row === -1 ? startY - cellSize : startY + row * cellSize + cellSize / 2;
-    const targetYPos = startY + targetRow * cellSize + cellSize / 2;
-    const cx = startX + col * cellSize + cellSize / 2;
-    const cy = startYPos + (targetYPos - startYPos) * t;
-
-    const icon = iconCache[COLOR_INDEX_MAP[piece.color]];
-    if (icon) {
-      ctx.drawImage(icon, cx - cellSize / 3, cy - cellSize / 3, cellSize * 2 / 3, cellSize * 2 / 3);
-    } else {
-      ctx.fillStyle = piece.color;
-      ctx.beginPath();
-      ctx.arc(cx, cy, cellSize / 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    if (piece.special) this._drawSpecialIndicator(ctx, piece, cx, cy, cellSize);
-  }
-
-  _drawPopAnim(ctx, anim, startX, startY, cellSize) {
-    const { row, col } = anim.data;
-    const x = startX + col * cellSize;
-    const y = startY + row * cellSize;
-    const t = this.easeOutElastic(anim.progress);
-    const scale = 1 + t * 0.3;
-    const piece = this.board[row]?.[col];
-    if (!piece) return;
-    const icon = iconCache[COLOR_INDEX_MAP[piece.color]];
-    if (icon) {
-      const shrink = (cellSize / 6) * (scale - 1);
-      ctx.drawImage(icon, x + cellSize / 6 - shrink, y + cellSize / 6 - shrink,
-        cellSize * 2 / 3 * scale, cellSize * 2 / 3 * scale);
-    } else {
-      ctx.fillStyle = piece.color;
-      ctx.beginPath();
-      ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 3) * scale, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  _drawSpecialAnim(ctx, anim, startX, startY, cellSize) {
-    const { row, col, specialType, color } = anim.data;
-    const x = startX + col * cellSize;
-    const y = startY + row * cellSize;
-    const t = this.easeOutQuad(anim.progress);
-    const scale = 1 + t * 2;
-    const opacity = 1 - t;
-    ctx.globalAlpha = opacity;
-
-    if (specialType === 'level_up') {
-      const g = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
-      g.addColorStop(0, '#FFD700'); g.addColorStop(0.5, '#FFA500'); g.addColorStop(1, '#FFD700');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = '20px Inter, Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('LEVEL UP!', x + cellSize / 2, y + cellSize / 2 + 8);
-    } else {
-      const icon = iconCache[COLOR_INDEX_MAP[color || '#ffffff']];
-      if (icon) {
-        const shrink = (cellSize / 6) * (scale - 1);
-        ctx.drawImage(icon, x + cellSize / 6 - shrink, y + cellSize / 6 - shrink,
-          cellSize * 2 / 3 * scale, cellSize * 2 / 3 * scale);
-      } else {
-        ctx.fillStyle = color || '#ffffff';
-        ctx.beginPath();
-        ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      for (let r = 0; r < 3; r++) {
-        ctx.strokeStyle = color || '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = opacity * (1 - r * 0.3);
-        ctx.beginPath();
-        ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2 + r * 10) * scale, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  // ── 主绘制方法 ──
-
-  drawGameBoard(ctx) {
-    const size = this.board.length;
-    const cellSize = this.cellSize;
-    const startX = this.startX;
-    const startY = this.startY;
-
-    // 棋盘背景
-    const boardWidth = cellSize * size;
-    const boardHeight = cellSize * size;
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 4;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    drawRoundedRect(ctx, startX - 10, startY - 10, boardWidth + 20, boardHeight + 20, 20);
-    ctx.fill();
-    ctx.restore();
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    const animatingCells = this._buildAnimatingCellsSet();
-
-    // 第一趟：网格背景 + 静态棋子  O(cells)
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        const x = startX + j * cellSize;
-        const y = startY + i * cellSize;
-
-        ctx.fillStyle = 'rgba(241, 245, 249, 0.5)';
-        ctx.fillRect(x, y, cellSize, cellSize);
-        ctx.strokeStyle = 'rgba(203, 213, 225, 0.5)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, cellSize, cellSize);
-
-        if (this.board[i][j] && !animatingCells.has(i + ',' + j)) {
-          this._drawStaticPiece(ctx, this.board[i][j], x, y, cellSize);
-        }
-      }
-    }
-
-    // 第二趟：只遍历动画数组  O(animations)
-    for (const anim of this.animations) {
-      switch (anim.type) {
-        case 'elimination': this._drawEliminationAnim(ctx, anim, startX, startY, cellSize); break;
-        case 'swap':        this._drawSwapAnim(ctx, anim, startX, startY, cellSize); break;
-        case 'drop':        this._drawDropAnim(ctx, anim, startX, startY, cellSize); break;
-        case 'pop':         this._drawPopAnim(ctx, anim, startX, startY, cellSize); break;
-        case 'special':     this._drawSpecialAnim(ctx, anim, startX, startY, cellSize); break;
-      }
-    }
-  }
-
-  drawBottomButtons(ctx) {
-    const x = 40;
-    const y = this.height - 60;
-    const width = 100;
-    const height = 40;
-    const radius = 20;
-    
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 3;
-    
-    const backGradient = ctx.createLinearGradient(x, y, x + width, y);
-    backGradient.addColorStop(0, '#6B7280');
-    backGradient.addColorStop(1, '#4B5563');
-    ctx.fillStyle = backGradient;
-
-    drawRoundedRect(ctx, x, y, width, height, radius);
-    ctx.fill();
-    ctx.restore();
-    
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('返回', 90, this.height - 35);
-
-    const restartX = this.width - 140;
-    const restartY = this.height - 60;
-    const restartWidth = 100;
-    const restartHeight = 40;
-    const restartRadius = 20;
-    
-    ctx.save();
-    ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 3;
-    
-    const restartGradient = ctx.createLinearGradient(restartX, restartY, restartX + restartWidth, restartY);
-    restartGradient.addColorStop(0, '#10B981');
-    restartGradient.addColorStop(1, '#059669');
-    ctx.fillStyle = restartGradient;
-
-    drawRoundedRect(ctx, restartX, restartY, restartWidth, restartHeight, restartRadius);
-    ctx.fill();
-    ctx.restore();
-    
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('重新开始', this.width - 90, this.height - 35);
-  }
-
-  drawGameOver(ctx) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, this.width, this.height);
-    
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 1;
-    
-    const cardWidth = 300;
-    const cardHeight = 250;
-    const cardX = (this.width - cardWidth) / 2;
-    const cardY = (this.height - cardHeight) / 2;
-    
-    const x = cardX;
-    const y = cardY;
-    const width = cardWidth;
-    const height = cardHeight;
-    const radius = 20;
-    
-    drawRoundedRect(ctx, x, y, width, height, radius);
-
-    ctx.fill();
-    ctx.stroke();
-    
-    // 游戏结束文字
-    ctx.fillStyle = '#2563EB';
-    ctx.font = '28px Inter, Arial';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 1;
-    ctx.fillText('游戏结束', this.width / 2, this.height / 2 - 40);
-    
-    // 得分和等级
-    ctx.font = '20px Inter, Arial';
-    ctx.fillStyle = '#1E293B';
-    ctx.shadowBlur = 0;
-    ctx.fillText(`最终得分: ${this.score}`, this.width / 2, this.height / 2);
-    ctx.fillText(`等级: ${this.level}`, this.width / 2, this.height / 2 + 30);
-
-    // 重新开始按钮
-    const restartGradient = ctx.createLinearGradient(this.width / 2 - 100, this.height / 2 + 60, this.width / 2 + 100, this.height / 2 + 60);
-    restartGradient.addColorStop(0, '#10B981');
-    restartGradient.addColorStop(1, '#059669');
-    ctx.fillStyle = restartGradient;
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-    
-    const restartX = this.width / 2 - 100;
-    const restartY = this.height / 2 + 60;
-    const restartWidth = 200;
-    const restartHeight = 50;
-    const restartRadius = 25;
-    
-    drawRoundedRect(ctx, restartX, restartY, restartWidth, restartHeight, restartRadius);
-
-    ctx.fill();
-    ctx.stroke();
-    
-    ctx.fillStyle = '#fff';
-    ctx.font = '18px Inter, Arial';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 1;
-    ctx.fillText('重新开始', this.width / 2, this.height / 2 + 90);
-    ctx.shadowBlur = 0;
-
-    const homeGradient = ctx.createLinearGradient(this.width / 2 - 100, this.height / 2 + 120, this.width / 2 + 100, this.height / 2 + 120);
-    homeGradient.addColorStop(0, '#6B7280');
-    homeGradient.addColorStop(1, '#4B5563');
-    ctx.fillStyle = homeGradient;
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-    
-    const homeX = this.width / 2 - 100;
-    const homeY = this.height / 2 + 120;
-    const homeWidth = 200;
-    const homeHeight = 50;
-    const homeRadius = 25;
-    
-    drawRoundedRect(ctx, homeX, homeY, homeWidth, homeHeight, homeRadius);
-
-    ctx.fill();
-    ctx.stroke();
-    
-    ctx.fillStyle = '#fff';
-    ctx.font = '18px Inter, Arial';
-    ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetY = 1;
-    ctx.fillText('返回首页', this.width / 2, this.height / 2 + 150);
-    ctx.shadowBlur = 0;
-  }
-
-  drawCulturalElements(ctx) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.beginPath();
-    ctx.arc(50, 50, 20, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, this.height - 80);
-    ctx.quadraticCurveTo(this.width / 2, this.height - 120, this.width, this.height - 80);
-    ctx.stroke();
-    ctx.restore();
   }
 
   _getTouchPosition(e) {
@@ -1382,15 +697,11 @@ class Match3Game extends BasePage {
     this.selectedCell = null;
     this.gameStatus = 'playing';
     this.lastUpdateTime = Date.now();
-    
-    for (const anim of this.animations) {
-      animationPool.recycle(anim);
-    }
-    this.animations = [];
-    this.isAnimating = false;
+
+    this.anim.clear();
     this.touchStart = null;
     this.touchEnd = null;
-    
+
     this.initBoard();
   }
 
@@ -1403,14 +714,10 @@ class Match3Game extends BasePage {
         }
       }
     }
-    
-    for (const anim of this.animations) {
-      animationPool.recycle(anim);
-    }
-    
+
+    this.anim.clear();
+
     this.board = [];
-    this.animations = [];
-    this.isAnimating = false;
     this.touchStart = null;
     this.touchEnd = null;
     this.selectedCell = null;

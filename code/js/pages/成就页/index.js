@@ -1,4 +1,4 @@
-const { drawRoundedRect, drawButton, getTouchCoords } = require('../../utils/canvasUtils');
+const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
 class AchievementPage extends BasePage {

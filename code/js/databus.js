@@ -3,7 +3,6 @@ const ScoreManager = require('./utils/scoreManager');
 class DataBus {
   constructor() {
     this.userInfo = null;
-    this.score = 0;
     this.quizData = { total: 0, correct: 0 };
     this.resources = { 非遗: 0, 自然: 0, 红色: 0 };
 
@@ -16,7 +15,6 @@ class DataBus {
     try {
       wx.setStorageSync('databus', {
         userInfo: this.userInfo,
-        score: this.score,
         quizData: this.quizData,
         resources: this.resources
       });
@@ -30,7 +28,6 @@ class DataBus {
       const data = wx.getStorageSync('databus');
       if (data) {
         this.userInfo = data.userInfo;
-        this.score = data.score || 0;
         this.quizData = data.quizData || { total: 0, correct: 0 };
         this.resources = data.resources || { 非遗: 0, 自然: 0, 红色: 0 };
       }
@@ -60,9 +57,7 @@ class DataBus {
     this.quizData.total++;
     if (isCorrect) {
       this.quizData.correct++;
-      this.score += 10;
     }
-    this.saveToStorage();
   }
 
   updateResource(type, amount) {

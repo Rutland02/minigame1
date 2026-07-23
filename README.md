@@ -15,7 +15,7 @@
 - **答题页** - 文化知识问答
 
 ### 小游戏
-- **消消乐** - 三消类益智游戏
+- **消消乐** - 三消类益智游戏（模块化架构：constants/animation/renderer/game）
 - **拼图游戏** - 图像拼图益智游戏
 
 ### 题库系统
@@ -39,16 +39,20 @@ code/
 │   └── red/           # 红色题库
 ├── images/            # 图片资源
 ├── js/
-│   ├── common/        # 公共模块
+│   ├── common/        # 公共模块（app.js、basePage.js）
 │   ├── games/         # 游戏模块
-│   │   ├── match3/    # 消消乐
+│   │   ├── match3/    # 消消乐（模块化架构）
+│   │   │   ├── constants.js   # 游戏常量配置
+│   │   │   ├── animation.js   # 动画系统（对象池+缓动函数）
+│   │   │   ├── renderer.js    # Canvas 渲染器
+│   │   │   └── game.js        # 核心游戏逻辑
 │   │   └── puzzle/    # 拼图游戏
 │   ├── pages/         # 页面模块
 │   │   ├── 登录页/
 │   │   ├── 首页/
 │   │   ├── 成就页/
 │   │   └── 答题页/
-│   ├── utils/         # 工具类
+│   ├── utils/         # 工具类（canvasUtils、scoreManager）
 │   └── libs/          # 第三方库
 ├── game.js            # 游戏入口
 └── game.json          # 游戏配置
