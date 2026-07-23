@@ -1,18 +1,19 @@
 # 依赖包
 node_modules/
 .venv/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# 编辑器相关
+# 编辑器 / IDE
 .vscode/
 .idea/
+.opencode/
+.trae/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 *~
 
-# 操作系统相关
+# 操作系统
 .DS_Store
 Thumbs.db
 
@@ -25,47 +26,27 @@ build/
 *.temp
 .cache/
 
-# 环境变量文件
+# 环境变量
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# 日志文件
-logs
+# 日志 & 错误报告
+logs/
 *.log
+error/
 
-# 包管理文件
-package-lock.json
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# IDE文件
-.idea/
-.vscode/
-*.sublime-project
-*.sublime-workspace
-
-# 系统文件
-Thumbs.db
-.DS_Store
-
-# 微信小程序相关
-*.wxapkg
-*.wxs
-
-# 测试相关
+# 测试产物
 coverage/
 .nyc_output/
+test-report.json
 
 # 性能分析
 *.cpuprofile
 *.heapdump
 
-# Trae IDE相关
-.trae/
-
-# 文档目录
-docs/
+# 微信小程序
+*.wxapkg
+*.wxs
