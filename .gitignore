@@ -3,6 +3,6 @@
 
 # 只跟踪代码和项目配置
 !.gitignore
-!CLAUDE.md
+!README.md
 !code/
 !code/**
