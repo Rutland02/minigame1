@@ -1,52 +1,8 @@
-# 依赖包
-node_modules/
-.venv/
+# 忽略所有
+*
 
-# 编辑器 / IDE
-.vscode/
-.idea/
-.opencode/
-.trae/
-*.swp
-*.swo
-*.sublime-project
-*.sublime-workspace
-*~
-
-# 操作系统
-.DS_Store
-Thumbs.db
-
-# 构建产物
-dist/
-build/
-
-# 临时文件
-*.tmp
-*.temp
-.cache/
-
-# 环境变量
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# 日志 & 错误报告
-logs/
-*.log
-error/
-
-# 测试产物
-coverage/
-.nyc_output/
-test-report.json
-
-# 性能分析
-*.cpuprofile
-*.heapdump
-
-# 微信小程序
-*.wxapkg
-*.wxs
+# 只跟踪代码和项目配置
+!.gitignore
+!CLAUDE.md
+!code/
+!code/**
