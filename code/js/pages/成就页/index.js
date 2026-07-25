@@ -198,8 +198,10 @@ class AchievementPage extends BasePage {
   renderBottomButtons(ctx) {
     const back = this.buttons.back;
     const cert = this.buttons.certificate;
+    const btnRadius = this.scaleSize(25);
+    const textBaselineOffset = this.scaleSize(6);
 
-    drawRoundedRect(ctx, back.x, back.y, back.w, back.h, 25);
+    drawRoundedRect(ctx, back.x, back.y, back.w, back.h, btnRadius);
     const backGradient = ctx.createLinearGradient(back.x, back.y, back.x + back.w, back.y + back.h);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
@@ -212,9 +214,9 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('返回', back.centerX, back.centerY + 6);
+    ctx.fillText('返回', back.centerX, back.centerY + textBaselineOffset);
 
-    drawRoundedRect(ctx, cert.x, cert.y, cert.w, cert.h, 25);
+    drawRoundedRect(ctx, cert.x, cert.y, cert.w, cert.h, btnRadius);
     const certGradient = ctx.createLinearGradient(cert.x, cert.y, cert.x + cert.w, cert.y + cert.h);
     certGradient.addColorStop(0, '#10B981');
     certGradient.addColorStop(1, '#059669');
@@ -227,7 +229,7 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('查看证书', cert.centerX, cert.centerY + 6);
+    ctx.fillText('查看证书', cert.centerX, cert.centerY + textBaselineOffset);
   }
 
   renderAchievementDetail(ctx) {
@@ -240,11 +242,12 @@ class AchievementPage extends BasePage {
     ctx.restore();
 
     const card = this.detailCardRect;
+    const cardRadius = this.scaleSize(20);
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 20;
     ctx.shadowOffsetY = 4;
-    drawRoundedRect(ctx, card.x, card.y, card.w, card.h, 20);
+    drawRoundedRect(ctx, card.x, card.y, card.w, card.h, cardRadius);
     ctx.fillStyle = isUnlocked ? '#ffffff' : 'rgba(220, 220, 220, 0.95)';
     ctx.fill();
     ctx.restore();
@@ -252,7 +255,7 @@ class AchievementPage extends BasePage {
     ctx.save();
     ctx.strokeStyle = isUnlocked ? 'rgba(76, 175, 80, 0.5)' : 'rgba(0, 0, 0, 0.2)';
     ctx.lineWidth = 2;
-    drawRoundedRect(ctx, card.x, card.y, card.w, card.h, 20);
+    drawRoundedRect(ctx, card.x, card.y, card.w, card.h, cardRadius);
     ctx.stroke();
     ctx.restore();
 
@@ -330,7 +333,7 @@ class AchievementPage extends BasePage {
     }
 
     const closeBtn = this.detailCloseBtn;
-    drawRoundedRect(ctx, closeBtn.x, closeBtn.y, closeBtn.w, closeBtn.h, 20);
+    drawRoundedRect(ctx, closeBtn.x, closeBtn.y, closeBtn.w, closeBtn.h, this.scaleSize(20));
     const closeGradient = ctx.createLinearGradient(closeBtn.x, closeBtn.y, closeBtn.x + closeBtn.w, closeBtn.y + closeBtn.h);
     closeGradient.addColorStop(0, '#6B7280');
     closeGradient.addColorStop(1, '#4B5563');
@@ -342,7 +345,7 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('关闭', closeBtn.centerX, closeBtn.centerY + 6);
+    ctx.fillText('关闭', closeBtn.centerX, closeBtn.centerY + this.scaleSize(6));
   }
 
   renderCertificate(ctx) {

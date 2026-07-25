@@ -415,7 +415,7 @@ class Match3Renderer {
       const fs = scores[i];
       const t = easeOutCubic(fs.progress);
       const px = startX + fs.x * cellSize + cellSize / 2;
-      const py = startY + fs.y * cellSize - t * 60;
+      const py = startY + fs.y * cellSize - t * this.scaleSize(60);
       const alpha = 1 - fs.progress;
 
       ctx.save();
