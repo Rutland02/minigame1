@@ -13,6 +13,11 @@ class QuizPage extends BasePage {
 
     this.animationFrame = 0;
     this.resultButtonRect = null;
+    this.gameOverButtons = {};
+    this.pressedId = null;
+    this._lastTimeLeft = 30;
+    this.hintAnimating = false;
+    this.hintFrame = 0;
   }
 
   getButtonRects() {
@@ -30,10 +35,15 @@ class QuizPage extends BasePage {
     const { vm } = this;
 
     if (!vm.questions || vm.questions.length === 0) {
-      ctx.font = '16px Arial';
+      ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#FF0000';
       ctx.textAlign = 'center';
       ctx.fillText('题库加载失败，请检查 content/ 目录', this.width / 2, this.height / 2);
+      return;
+    }
+
+    if (vm.gameOver) {
+      this._drawGameOver(ctx);
       return;
     }
 
@@ -41,6 +51,17 @@ class QuizPage extends BasePage {
     this._drawQuestionCard(ctx);
     this._drawOptions(ctx);
     this.animationFrame++;
+    if (this.hintAnimating) {
+      this.hintFrame++;
+      if (this.hintFrame > 60) {
+        this.hintAnimating = false;
+      }
+    }
+
+    if (vm.timeLeft < 5 && this._lastTimeLeft >= 5) {
+      try { wx.vibrateShort({ type: 'medium' }); } catch(err) {}
+    }
+    this._lastTimeLeft = vm.timeLeft;
 
     if (vm.showResult) {
       this._drawResultOverlay(ctx);
@@ -58,13 +79,22 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.font = '18px Arial';
+    ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.fillText(`第${vm.progress}题`, 40, 50);
 
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#000000';
+    let timerColor = '#000000';
+    if (vm.timeLeft > 15) {
+      timerColor = '#10B981';
+    } else if (vm.timeLeft > 5) {
+      timerColor = '#F59E0B';
+    } else {
+      const blink = Math.sin(this.animationFrame * 0.3) > 0;
+      timerColor = blink ? '#EF4444' : '#DC2626';
+    }
+    ctx.font = `bold ${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillStyle = timerColor;
     ctx.textAlign = 'right';
     ctx.fillText(`剩余时间: ${vm.timeLeft}s`, this.width - 140, 50);
 
@@ -75,7 +105,7 @@ class QuizPage extends BasePage {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
     ctx.fillText(question.type, this.width - 70, 45);
@@ -92,7 +122,7 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.font = '17px Arial';
+    ctx.font = `${this.scaleSize(17)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -110,15 +140,25 @@ class QuizPage extends BasePage {
       let strokeColor = '#ffffff';
       if (vm.isAnswered) {
         if (index === question.correctAnswer) {
-          fillColor = 'rgba(76, 175, 80, 0.15)';
+          fillColor = 'rgba(76, 175, 80, 0.3)';
           strokeColor = '#ffffff';
         } else if (index === vm.selectedOption) {
-          fillColor = 'rgba(244, 67, 54, 0.15)';
+          fillColor = 'rgba(244, 67, 54, 0.3)';
           strokeColor = '#ffffff';
         }
       } else if (index === vm.selectedOption) {
         fillColor = 'rgba(33, 150, 243, 0.15)';
         strokeColor = '#ffffff';
+      }
+
+      if (this.hintAnimating && !vm.isAnswered && index !== vm.selectedOption) {
+        fillColor = 'rgba(156, 163, 175, 0.3)';
+        strokeColor = 'rgba(156, 163, 175, 0.5)';
+      }
+      if (this.hintAnimating && !vm.isAnswered && index === vm.selectedOption) {
+        const pulse = 0.3 + Math.sin(this.hintFrame * 0.15) * 0.15;
+        fillColor = `rgba(76, 175, 80, ${pulse})`;
+        strokeColor = '#4CAF50';
       }
 
       let scale = 1;
@@ -143,11 +183,37 @@ class QuizPage extends BasePage {
         if (index === question.correctAnswer) textColor = '#059669';
         else if (index === vm.selectedOption) textColor = '#DC2626';
       }
+      if (this.hintAnimating && !vm.isAnswered && index !== vm.selectedOption) {
+        textColor = 'rgba(0, 0, 0, 0.3)';
+      }
       ctx.fillStyle = textColor;
-      ctx.font = '16px Arial';
+      ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${String.fromCharCode(65 + index)}. ${option}`, 40, optionYStart + index * optionHeight + 25);
+
+      if (vm.isAnswered && index === question.correctAnswer) {
+        ctx.fillStyle = '#059669';
+        ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('✓', this.width - 35, optionYStart + index * optionHeight + 25);
+      }
+
+      if (vm.isAnswered && index === vm.selectedOption && !vm.isCorrect) {
+        const textY = optionYStart + index * optionHeight + 25;
+        ctx.strokeStyle = '#DC2626';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(40, textY);
+        ctx.lineTo(this.width - 40, textY);
+        ctx.stroke();
+        ctx.fillStyle = '#DC2626';
+        ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('✗', this.width - 35, textY);
+      }
 
       ctx.restore();
     });
@@ -173,12 +239,12 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.font = '24px Arial';
+    ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = vm.isCorrect ? '#4CAF50' : '#F44336';
     ctx.textAlign = 'center';
     ctx.fillText(vm.isCorrect ? '回答正确！' : '回答错误！', this.width / 2, this.height / 2 - 50);
 
-    ctx.font = '16px Arial';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.fillText('解析：', 60, this.height / 2);
@@ -195,11 +261,12 @@ class QuizPage extends BasePage {
     drawRoundedRect(ctx, this.resultButtonRect.x, this.resultButtonRect.y, this.resultButtonRect.w, this.resultButtonRect.h, 25);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
+    if (this.pressedId === 'result') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#000000';
-    ctx.font = '16px Arial';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(btnText, this.resultButtonRect.centerX, this.resultButtonRect.centerY + 6);
 
@@ -220,11 +287,12 @@ class QuizPage extends BasePage {
     backGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = backGradient;
     ctx.fill();
+    if (this.pressedId === 'back') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回', btns.back.centerX, btns.back.centerY + 6);
 
@@ -234,11 +302,12 @@ class QuizPage extends BasePage {
     orangeGradient.addColorStop(1, '#F57C00');
     ctx.fillStyle = orangeGradient;
     ctx.fill();
+    if (this.pressedId === 'hint') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(`提示 (${vm.hintCount})`, btns.hint.centerX, btns.hint.centerY + 6);
 
@@ -255,12 +324,87 @@ class QuizPage extends BasePage {
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     }
     ctx.fill();
+    if (this.pressedId === 'submit') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.4)';
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('确定', btns.submit.centerX, btns.submit.centerY + 6);
+  }
+
+  _drawGameOver(ctx) {
+    const { vm } = this;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    const cardW = this.width - 80;
+    const cardH = 380;
+    const cardX = 40;
+    const cardY = (this.height - cardH) / 2;
+
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fill();
+    ctx.strokeStyle = '#E2E8F0';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillStyle = '#10B981';
+    ctx.textAlign = 'center';
+    ctx.fillText('答题完成！', this.width / 2, cardY + 50);
+
+    const stats = [
+      `答对题数: ${vm.correctCount} / ${vm.questions.length}`,
+      `得分: ${vm.score}`,
+      `正确率: ${vm.accuracy}%`,
+      `最高连击: ${vm.maxConsecutiveCorrect}`,
+    ];
+
+    ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillStyle = '#333333';
+    stats.forEach((text, i) => {
+      ctx.fillText(text, this.width / 2, cardY + 100 + i * 36);
+    });
+
+    const btnW = cardW - 60;
+    const btnH = 50;
+    const btnX = cardX + 30;
+
+    this.gameOverButtons.replay = new LayoutRect(btnX, cardY + 260, btnW, btnH);
+    this.gameOverButtons.home = new LayoutRect(btnX, cardY + 320, btnW, btnH);
+
+    const replay = this.gameOverButtons.replay;
+    drawRoundedRect(ctx, replay.x, replay.y, replay.w, replay.h, 25);
+    const replayGradient = ctx.createLinearGradient(replay.x, replay.y, replay.x + replay.w, replay.y + replay.h);
+    replayGradient.addColorStop(0, '#10B981');
+    replayGradient.addColorStop(1, '#059669');
+    ctx.fillStyle = replayGradient;
+    ctx.fill();
+    if (this.pressedId === 'go_replay') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillText('再来一轮', replay.centerX, replay.centerY + 6);
+
+    const home = this.gameOverButtons.home;
+    drawRoundedRect(ctx, home.x, home.y, home.w, home.h, 25);
+    const homeGradient = ctx.createLinearGradient(home.x, home.y, home.x + home.w, home.y + home.h);
+    homeGradient.addColorStop(0, '#6B7280');
+    homeGradient.addColorStop(1, '#4B5563');
+    ctx.fillStyle = homeGradient;
+    ctx.fill();
+    if (this.pressedId === 'go_home') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillText('返回首页', home.centerX, home.centerY + 6);
   }
 
   _drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -289,13 +433,26 @@ class QuizPage extends BasePage {
     const { x, y } = coords;
     const { vm } = this;
 
+    if (vm.gameOver) {
+      if (this.gameOverButtons.replay && this.gameOverButtons.replay.contains(x, y)) {
+        this.pressedId = 'go_replay';
+        vm.reset();
+        vm.loadQuestions().then(() => vm._startTimer());
+      }
+      if (this.gameOverButtons.home && this.gameOverButtons.home.contains(x, y)) {
+        this.pressedId = 'go_home';
+        this.navigateTo('home');
+      }
+      return;
+    }
+
     if (vm.showResult) {
       if (this.resultButtonRect && this.resultButtonRect.contains(x, y)) {
+        this.pressedId = 'result';
         if (vm.currentIndex < vm.questions.length - 1) {
           vm.nextQuestion();
         } else {
           vm.showScore(this.databus);
-          this.navigateTo('home');
         }
       }
       return;
@@ -307,7 +464,7 @@ class QuizPage extends BasePage {
     for (let i = 0; i < question.options.length; i++) {
       if (x >= 20 && x <= this.width - 20 &&
           y >= optionYStart + i * optionHeight &&
-          y <= optionYStart + i * optionHeight + 50) {
+          y <= optionYStart + i * optionHeight + 56) {
         vm.selectOption(i);
         break;
       }
@@ -315,17 +472,33 @@ class QuizPage extends BasePage {
 
     const btns = this.getButtonRects();
     if (btns.back.contains(x, y)) {
+      this.pressedId = 'back';
       vm._stopTimer();
       this.navigateTo('home');
       return;
     }
     if (!vm.isAnswered && vm.selectedOption !== null && btns.submit.contains(x, y)) {
+      this.pressedId = 'submit';
+      this.hintAnimating = false;
       vm.submitAnswer(this.databus);
+      if (!vm.isCorrect) {
+        try { wx.vibrateShort({ type: 'medium' }); } catch(err) {}
+      }
       return;
     }
     if (!vm.isAnswered && btns.hint.contains(x, y)) {
+      this.pressedId = 'hint';
       vm.useHint();
+      if (vm.selectedOption !== null) {
+        this.hintAnimating = true;
+        this.hintFrame = 0;
+        try { wx.showToast({ title: '已使用提示', icon: 'none', duration: 1000 }); } catch(e) {}
+      }
     }
+  }
+
+  handleTouchEnd(e) {
+    this.pressedId = null;
   }
 
   destroy() {

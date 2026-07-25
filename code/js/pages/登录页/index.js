@@ -62,7 +62,7 @@ class LoginPage extends BasePage {
       ctx.fillStyle = '#C41E3A';
       ctx.fillRect(this.width / 2 - 120, this.height * 0.75, 240, 50);
       ctx.fillStyle = '#fff';
-      ctx.font = '18px Arial';
+      ctx.font = `${this.scaleSize(18)}px Arial`;
       ctx.textAlign = 'center';
       ctx.fillText('立即登录', this.width / 2, this.height * 0.75 + 25);
     }
@@ -94,7 +94,7 @@ class LoginPage extends BasePage {
       const buttonX = this.width / 2 - 100;
       const buttonY = this.height * 0.8;
       drawButton(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 20, '#C41E3A', '#C41E3A', '立即登录', {
-        font: '16px Inter, Arial',
+        font: `${this.scaleSize(16)}px Inter, Arial`,
         strokeColor: 'rgba(255, 255, 255, 0.3)'
       });
       this.loginButtonRect = { x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight };
@@ -120,7 +120,7 @@ class LoginPage extends BasePage {
     ctx.stroke();
     
     ctx.fillStyle = '#2563EB';
-    ctx.font = '16px Inter, Arial';
+    ctx.font = `${this.scaleSize(16)}px Inter, Arial`;
     ctx.textAlign = 'center';
     ctx.fillText('登录中...', this.width / 2, this.height / 2 + 5);
   }

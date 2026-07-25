@@ -1,5 +1,6 @@
 const { drawRoundedRect, getTouchCoords, LayoutRect } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
+const { easeOutCubic } = require('../match3/animation');
 
 class PuzzleGame extends BasePage {
   constructor() {
@@ -22,8 +23,18 @@ class PuzzleGame extends BasePage {
     this.animationFrame = 0;
     this.isAnimating = false;
     this.puzzleImage = null;
+    this.pressedId = null;
+    this.earnedScore = 0;
+    this.celebrating = false;
+    this.celebrationParticles = [];
+    this.celebrationStartTime = 0;
+    this.puzzleImages = [
+      'images/puzzle/he.jpg',
+      'images/puzzle/lotus.jpg',
+      'images/puzzle/village.jpg',
+    ];
+    this.currentImageIndex = Math.floor(Math.random() * this.puzzleImages.length);
     this.initPuzzle();
-    this.loadPuzzleImage();
     this.updateLayout();
   }
 
@@ -49,6 +60,10 @@ class PuzzleGame extends BasePage {
     this.startTime = Date.now();
     this.endTime = null;
     this.gameStatus = this.STATES.PLAYING;
+    this.earnedScore = 0;
+    this.celebrating = false;
+    this.celebrationParticles = [];
+    this.loadPuzzleImage();
     this.updateLayout();
   }
 
@@ -85,12 +100,12 @@ class PuzzleGame extends BasePage {
     };
 
     // Completed dialog buttons
-    const dlgW = 300, dlgH = 280;
+    const dlgW = 300, dlgH = 310;
     const dlgX = (this.width - dlgW) / 2;
     const dlgY = (this.height - dlgH) / 2;
     this.completedButtons = {
-      replay: new LayoutRect(dlgX + 30, dlgY + 140, dlgW - 60, 50),
-      home:   new LayoutRect(dlgX + 30, dlgY + 200, dlgW - 60, 50),
+      replay: new LayoutRect(dlgX + 30, dlgY + 170, dlgW - 60, 50),
+      home:   new LayoutRect(dlgX + 30, dlgY + 230, dlgW - 60, 50),
     };
 
     // Difficulty dialog buttons
@@ -227,7 +242,7 @@ class PuzzleGame extends BasePage {
   }
 
   handlePieceClick(x, y) {
-    if (this.gameStatus !== this.STATES.PLAYING) return;
+    if (this.gameStatus !== this.STATES.PLAYING || this.celebrating) return;
 
     const size = this.getPuzzleSize();
     const pieceSize = this.pieceSize;
@@ -260,17 +275,30 @@ class PuzzleGame extends BasePage {
     }
 
     if (moved && this.checkCompletion()) {
-      this.gameStatus = this.STATES.COMPLETED;
       this.endTime = Date.now();
       this.saveGameScore();
+      this.celebrating = true;
+      this.celebrationStartTime = Date.now();
+      this.celebrationParticles = this._generateParticles();
+      try { wx.vibrateShort({ type: 'heavy' }); } catch(e) {}
     }
   }
 
   saveGameScore() {
     const time = this.getElapsedTime();
+    this.earnedScore = this._calculatePuzzleScore(time);
     if (this.databus) {
       this.databus.recordPuzzleScore(this.level, time, true);
     }
+  }
+
+  _calculatePuzzleScore(time) {
+    const baseScores = { 1: 100, 2: 200, 3: 300 };
+    const base = baseScores[this.level] || 100;
+    const penalty = time * 2;
+    const minScores = { 1: 20, 2: 40, 3: 60 };
+    const min = minScores[this.level] || 20;
+    return Math.max(base - penalty, min);
   }
 
   checkCompletion() {
@@ -294,7 +322,8 @@ class PuzzleGame extends BasePage {
   }
 
   handleTouchEnd(e) {
-    if (this.gameStatus !== this.STATES.PLAYING) return;
+    this.pressedId = null;
+    if (this.gameStatus !== this.STATES.PLAYING || this.celebrating) return;
 
     if (this.buttons.back.contains(this.touchStartX, this.touchStartY) ||
         this.buttons.difficulty.contains(this.touchStartX, this.touchStartY) ||
@@ -345,9 +374,12 @@ class PuzzleGame extends BasePage {
       this.movePiece(piece, direction);
       
       if (this.checkCompletion()) {
-        this.gameStatus = this.STATES.COMPLETED;
         this.endTime = Date.now();
         this.saveGameScore();
+        this.celebrating = true;
+        this.celebrationStartTime = Date.now();
+        this.celebrationParticles = this._generateParticles();
+        try { wx.vibrateShort({ type: 'heavy' }); } catch(e) {}
       }
     }
   }
@@ -373,18 +405,19 @@ class PuzzleGame extends BasePage {
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '24px Arial';
+    ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('选择难度', this.width / 2, dialogY + 60);
 
     drawRoundedRect(ctx, dialogX + 30, dialogY + 100, dialogWidth - 60, 50, 25);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
+    if (this.pressedId === 'easy') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '16px Arial';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('简单 (3×3)', this.width / 2, dialogY + 132);
 
@@ -394,11 +427,12 @@ class PuzzleGame extends BasePage {
     mediumGradient.addColorStop(1, '#6e5b7b');
     ctx.fillStyle = mediumGradient;
     ctx.fill();
+    if (this.pressedId === 'medium') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '16px Arial';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('中等 (4×4)', this.width / 2, dialogY + 192);
 
@@ -408,27 +442,31 @@ class PuzzleGame extends BasePage {
     hardGradient.addColorStop(1, '#D32F2F');
     ctx.fillStyle = hardGradient;
     ctx.fill();
+    if (this.pressedId === 'hard') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '16px Arial';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('困难 (5×5)', this.width / 2, dialogY + 252);
   }
 
   handleDifficultyDialogClick(x, y) {
     if (this.difficultyButtons.easy.contains(x, y)) {
+      this.pressedId = 'easy';
       this.changeLevel(1);
       this.gameStatus = this.STATES.PLAYING;
       return;
     }
     if (this.difficultyButtons.medium.contains(x, y)) {
+      this.pressedId = 'medium';
       this.changeLevel(2);
       this.gameStatus = this.STATES.PLAYING;
       return;
     }
     if (this.difficultyButtons.hard.contains(x, y)) {
+      this.pressedId = 'hard';
       this.changeLevel(3);
       this.gameStatus = this.STATES.PLAYING;
       return;
@@ -458,7 +496,7 @@ class PuzzleGame extends BasePage {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.font = '16px Arial';
+      ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       const difficultyText = `难度: ${this.getPuzzleSize()}×${this.getPuzzleSize()}`;
@@ -573,11 +611,12 @@ class PuzzleGame extends BasePage {
       backGradient.addColorStop(1, '#4B5563');
       ctx.fillStyle = backGradient;
       ctx.fill();
+      if (this.pressedId === 'back') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial';
+      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('返回', back.centerX, back.centerY + 6);
 
@@ -588,11 +627,12 @@ class PuzzleGame extends BasePage {
       orangeGradient.addColorStop(1, '#F57C00');
       ctx.fillStyle = orangeGradient;
       ctx.fill();
+      if (this.pressedId === 'difficulty') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial';
+      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('难度设置', difficulty.centerX, difficulty.centerY + 6);
 
@@ -603,19 +643,25 @@ class PuzzleGame extends BasePage {
       restartGradient.addColorStop(1, '#059669');
       ctx.fillStyle = restartGradient;
       ctx.fill();
+      if (this.pressedId === 'restart') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial';
+      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('重新开始', restart.centerX, restart.centerY + 6);
 
-      // State overlays
+      if (this.celebrating) {
+        this._drawCelebration(ctx);
+      }
+
       const overlays = {
-        [this.STATES.COMPLETED]: () => this.renderCompletedOverlay(ctx),
         [this.STATES.DIFFICULTY]: () => this.renderDifficultyDialog(ctx),
       };
+      if (this.gameStatus === this.STATES.COMPLETED && !this.celebrating) {
+        overlays[this.STATES.COMPLETED] = () => this.renderCompletedOverlay(ctx);
+      }
       overlays[this.gameStatus]?.();
     } catch (error) {
       console.error('Render error:', error);
@@ -627,7 +673,7 @@ class PuzzleGame extends BasePage {
     ctx.fillRect(0, 0, this.width, this.height);
 
     const dialogWidth = 300;
-    const dialogHeight = 280;
+    const dialogHeight = 310;
     const dialogX = (this.width - dialogWidth) / 2;
     const dialogY = (this.height - dialogHeight) / 2;
 
@@ -639,36 +685,45 @@ class PuzzleGame extends BasePage {
     ctx.stroke();
 
     ctx.fillStyle = '#fff';
-    ctx.font = '28px Arial';
+    ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('拼图完成！', this.width / 2, dialogY + 60);
 
-    ctx.font = '20px Arial';
+    ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, dialogY + 100);
 
-    drawRoundedRect(ctx, dialogX + 30, dialogY + 140, dialogWidth - 60, 50, 25);
-    const replayGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 140, dialogX + dialogWidth - 30, dialogY + 190);
+    if (this.earnedScore > 0) {
+      ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.fillStyle = '#FFD700';
+      ctx.fillText(`积分: +${this.earnedScore}`, this.width / 2, dialogY + 130);
+      ctx.fillStyle = '#fff';
+    }
+
+    drawRoundedRect(ctx, dialogX + 30, dialogY + 170, dialogWidth - 60, 50, 25);
+    const replayGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 170, dialogX + dialogWidth - 30, dialogY + 220);
     replayGradient.addColorStop(0, '#4CAF50');
     replayGradient.addColorStop(1, '#45a049');
     ctx.fillStyle = replayGradient;
     ctx.fill();
+    if (this.pressedId === 'replay') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#fff';
-    ctx.font = '16px Arial';
-    ctx.fillText('再玩一次', this.width / 2, dialogY + 172);
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillText('再玩一次', this.width / 2, dialogY + 202);
 
-    drawRoundedRect(ctx, dialogX + 30, dialogY + 200, dialogWidth - 60, 50, 25);
+    drawRoundedRect(ctx, dialogX + 30, dialogY + 230, dialogWidth - 60, 50, 25);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
+    if (this.pressedId === 'home') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#fff';
-    ctx.font = '16px Arial';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('返回首页', this.width / 2, dialogY + 232);
+    ctx.fillText('返回首页', this.width / 2, dialogY + 262);
   }
 
   handleTouchStart(e) {
@@ -687,9 +742,11 @@ class PuzzleGame extends BasePage {
 
     if (this.gameStatus === this.STATES.COMPLETED) {
       if (this.completedButtons.replay.contains(x, y)) {
+        this.pressedId = 'replay';
         this.initPuzzle();
       }
       if (this.completedButtons.home.contains(x, y)) {
+        this.pressedId = 'home';
         this.navigateTo('home');
       }
       return;
@@ -697,14 +754,17 @@ class PuzzleGame extends BasePage {
 
     // Buttons available in all active states
     if (this.buttons.back.contains(x, y)) {
+      this.pressedId = 'back';
       this.navigateTo('home');
       return;
     }
     if (this.buttons.difficulty.contains(x, y)) {
+      this.pressedId = 'difficulty';
       this.showDifficultyDialog();
       return;
     }
     if (this.buttons.restart.contains(x, y)) {
+      this.pressedId = 'restart';
       this.initPuzzle();
       return;
     }
@@ -716,30 +776,92 @@ class PuzzleGame extends BasePage {
   }
 
   loadPuzzleImage() {
+    const images = this.puzzleImages || ['images/puzzle/he.jpg'];
+    // Cycle to next image each time
+    this.currentImageIndex = (this.currentImageIndex + 1) % images.length;
+    const imgSrc = images[this.currentImageIndex];
+
     if (typeof wx !== 'undefined' && wx.createImage) {
       const img = wx.createImage();
       img.onload = () => {
         this.puzzleImage = img;
       };
       img.onerror = (err) => {
-        console.error('Failed to load puzzle image:', err);
+        console.error('Failed to load puzzle image:', imgSrc, err);
       };
-      img.src = 'images/puzzle/he.jpg';
+      img.src = imgSrc;
     } else if (typeof window !== 'undefined' && window.Image) {
       const img = new Image();
       img.onload = () => {
         this.puzzleImage = img;
       };
       img.onerror = (err) => {
-        console.error('Failed to load puzzle image:', err);
+        console.error('Failed to load puzzle image:', imgSrc, err);
       };
-      img.src = 'images/puzzle/he.jpg';
+      img.src = imgSrc;
+    }
+  }
+
+  _generateParticles() {
+    const particles = [];
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+    for (let i = 0; i < 30; i++) {
+      particles.push({
+        x: this.width / 2 + (Math.random() - 0.5) * 100,
+        y: this.height / 2,
+        vx: (Math.random() - 0.5) * 8,
+        vy: -Math.random() * 8 - 2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: Math.random() * 8 + 4,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.3,
+        life: 1
+      });
+    }
+    return particles;
+  }
+
+  _drawCelebration(ctx) {
+    const elapsed = Date.now() - this.celebrationStartTime;
+    const progress = Math.min(elapsed / 2000, 1);
+    const easedAlpha = 1 - easeOutCubic(progress);
+
+    ctx.save();
+    ctx.globalAlpha = easedAlpha;
+
+    for (let i = this.celebrationParticles.length - 1; i >= 0; i--) {
+      const p = this.celebrationParticles[i];
+      p.vy += 0.15;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rotation += p.rotSpeed;
+      p.life = Math.max(0, p.life - 0.008);
+
+      if (p.life <= 0) continue;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation);
+      ctx.globalAlpha = easedAlpha * p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.restore();
+    }
+
+    ctx.restore();
+
+    if (progress >= 1) {
+      this.celebrating = false;
+      this.celebrationParticles = [];
+      this.gameStatus = this.STATES.COMPLETED;
     }
   }
 
   destroy() {
     this.animations = [];
     this.puzzleImage = null;
+    this.celebrating = false;
+    this.celebrationParticles = [];
   }
 }
 

@@ -1,4 +1,4 @@
-const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
+const { drawRoundedRect, getTouchCoords, LayoutRect } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
 class HomePage extends BasePage {
@@ -7,7 +7,7 @@ class HomePage extends BasePage {
 
     this.assets = {};
     this.loadAssets();
-    
+
     this.colors = {
       primaryText: '#0F172A',
       subText: '#475569',
@@ -20,18 +20,18 @@ class HomePage extends BasePage {
       shadow: 'rgba(0, 0, 0, 0.15)'
     };
 
-    const baseW = 375; 
+    const baseW = 375;
     const scale = this.width / baseW;
 
     this.regions = {
       userCenter: { x: 20 * scale, y: 40, w: 150 * scale, h: 60 },
-      
+
       gameButtons: [
         { id: 'match3', iconId: 'match3', text: '消消乐', sub: '精彩糖巧，轻松消乐！', x: 25 * scale, y: 180, w: 325 * scale, h: 80, color: this.colors.greenCard },
         { id: 'puzzle', iconId: 'puzzle', text: '三色拼图', sub: '精彩拼补，三色拼图！', x: 25 * scale, y: 280, w: 325 * scale, h: 80, color: this.colors.yellowCard },
         { id: 'quiz', iconId: 'quiz', text: '三色答题', sub: '相约数字，趣味答题！', x: 25 * scale, y: 380, w: 325 * scale, h: 80, color: this.colors.blueCard }
       ],
-      
+
       actionButtons: [
         { id: 'scan', iconId: 'scan', text: '扫码打卡', x: 80 * scale, y: 640, r: 35 },
         { id: 'tour', iconId: 'tour', text: '线上游览', x: 187 * scale, y: 640, r: 35 },
@@ -39,7 +39,29 @@ class HomePage extends BasePage {
       ]
     };
 
+    // 排行榜按钮（位于 actionButtons 区域下方）
+    const actionBtns = this.regions.actionButtons;
+    const leaderboardY = actionBtns[0].y + actionBtns[0].r + 60;
+    this.leaderboardButton = new LayoutRect(
+      (this.width - 160) / 2, leaderboardY, 160, 44
+    );
+
     this.selectedId = null;
+
+    // A-2: 难度选择浮层状态
+    this.showDifficultyDialog = false;
+    this.difficultyButtons = {};
+
+    // A-5: 排行榜浮层状态
+    this.showLeaderboard = false;
+
+    this.showTutorial = !this.databus.hasSeenTutorial;
+    this.tutorialPage = 0;
+    this.tutorialPages = [
+      { title: '欢迎来到海澄村', text: '探索三色文化，感受数字赋能的魅力', icon: '🏘️' },
+      { title: '三大趣味游戏', text: '消消乐、拼图、答题，寓教于乐', icon: '🎮' },
+      { title: '收集成就', text: '完成挑战，解锁成就，获得专属证书', icon: '🏆' }
+    ];
   }
 
   loadAssets() {
@@ -64,8 +86,19 @@ class HomePage extends BasePage {
 
   render(ctx) {
     this.drawBackground(ctx);
+    this._drawUserCenter(ctx);
     this.drawGameCards(ctx);
     this.drawCircleActions(ctx);
+    this._drawLeaderboardButton(ctx);
+    if (this.showDifficultyDialog) {
+      this._drawDifficultyDialog(ctx);
+    }
+    if (this.showLeaderboard) {
+      this._drawLeaderboard(ctx);
+    }
+    if (this.showTutorial) {
+      this.drawTutorial(ctx);
+    }
   }
 
   drawBackground(ctx) {
@@ -126,16 +159,97 @@ class HomePage extends BasePage {
 
       ctx.textAlign = 'center';
       ctx.fillStyle = this.colors.primaryText;
-      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.font = `bold ${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillText(btn.text, btn.x, btn.y + 50);
     });
     ctx.imageSmoothingEnabled = true;
+  }
+
+  drawTutorial(ctx) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    const cardW = 300;
+    const cardH = 400;
+    const cardX = (this.width - cardW) / 2;
+    const cardY = (this.height - cardH) / 2;
+
+    ctx.fillStyle = '#FFFFFF';
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 20);
+    ctx.fill();
+
+    const page = this.tutorialPages[this.tutorialPage];
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${this.scaleSize(80)}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillText(page.icon, this.width / 2, cardY + 120);
+
+    ctx.fillStyle = '#0F172A';
+    ctx.font = `bold ${this.scaleSize(24)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillText(page.title, this.width / 2, cardY + 200);
+
+    ctx.fillStyle = '#475569';
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillText(page.text, this.width / 2, cardY + 240);
+
+    const btnW = 200;
+    const btnH = 44;
+    const btnX = (this.width - btnW) / 2;
+    const btnY = cardY + cardH - 80;
+    const gradient = ctx.createLinearGradient(btnX, btnY, btnX + btnW, btnY + btnH);
+    gradient.addColorStop(0, '#DC2626');
+    gradient.addColorStop(1, '#B91C1C');
+    ctx.fillStyle = gradient;
+    drawRoundedRect(ctx, btnX, btnY, btnW, btnH, 22);
+    ctx.fill();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold ${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    const btnText = this.tutorialPage < this.tutorialPages.length - 1 ? '下一步' : '开始体验';
+    ctx.fillText(btnText, this.width / 2, btnY + btnH / 2 + 1);
+
+    const dotY = cardY + cardH - 30;
+    const dotSpacing = 20;
+    const dotsStartX = this.width / 2 - dotSpacing;
+    for (let i = 0; i < this.tutorialPages.length; i++) {
+      ctx.beginPath();
+      ctx.arc(dotsStartX + i * dotSpacing, dotY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = i === this.tutorialPage ? '#DC2626' : '#CBD5E1';
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 
   handleTouchStart(e) {
     const coords = getTouchCoords(e.touches, e.changedTouches);
     if (!coords) return;
     const { x, y } = coords;
+
+    if (this.showTutorial) {
+      if (this.tutorialPage < this.tutorialPages.length - 1) {
+        this.tutorialPage++;
+      } else {
+        this.databus.markTutorialSeen();
+        this.showTutorial = false;
+      }
+      return;
+    }
+
+    // A-2: 难度选择浮层优先处理
+    if (this.showDifficultyDialog) {
+      this._handleDifficultyTouch(x, y);
+      return;
+    }
+
+    // A-5: 排行榜浮层优先处理
+    if (this.showLeaderboard) {
+      this.showLeaderboard = false;
+      return;
+    }
+
     this.regions.gameButtons.forEach(btn => {
       if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
         this.selectedId = btn.id;
@@ -143,8 +257,13 @@ class HomePage extends BasePage {
     });
     this.regions.actionButtons.forEach(btn => {
       const dist = Math.sqrt((x - btn.x) ** 2 + (y - btn.y) ** 2);
-      if (dist < btn.r + 5) this.selectedId = btn.id;
+      if (dist < btn.r + 10) this.selectedId = btn.id;
     });
+
+    // A-5: 排行榜按钮触摸判定
+    if (this.leaderboardButton.contains(x, y)) {
+      this.selectedId = 'leaderboard';
+    }
   }
 
   handleTouchEnd(e) {
@@ -157,8 +276,14 @@ class HomePage extends BasePage {
   navigateToPage(id) {
     const app = this.app;
     if (!app || !app.showPage) return;
-    if (['match3', 'puzzle', 'quiz', 'achievement'].includes(id)) {
+    if (['match3', 'puzzle', 'achievement'].includes(id)) {
       app.showPage(id);
+    } else if (id === 'quiz') {
+      // A-2: 弹出难度选择浮层
+      this.showDifficultyDialog = true;
+    } else if (id === 'leaderboard') {
+      // A-5: 弹出排行榜浮层
+      this.showLeaderboard = true;
     } else if (id === 'scan') {
       wx.scanCode({
         onlyFromCamera: true,
@@ -184,16 +309,236 @@ class HomePage extends BasePage {
         }
       });
     } else if (id === 'tour') {
-      console.log('显示线上游览链接');
+      // A-11: 复制 URL 到剪贴板
       const url = 'https://www.kuleiman.com/tv/183553/index.html';
-      
-      wx.showModal({
-        title: '线上游览',
-        content: '请复制以下链接到浏览器打开:\n' + url,
-        showCancel: false,
-        confirmText: '确定'
+      wx.setClipboardData({
+        data: url,
+        success: () => {
+          wx.showToast({
+            title: '链接已复制，请在浏览器中打开',
+            icon: 'none',
+            duration: 3000
+          });
+        }
       });
     }
+  }
+
+  // A-2: 难度选择触摸处理
+  _handleDifficultyTouch(x, y) {
+    for (const [key, btn] of Object.entries(this.difficultyButtons)) {
+      if (btn.contains(x, y)) {
+        this.showDifficultyDialog = false;
+        this.app.showPage('quiz', key);
+        return;
+      }
+    }
+    // 点击浮层外部关闭
+    this.showDifficultyDialog = false;
+  }
+
+  // A-4: 用户中心绘制
+  _drawUserCenter(ctx) {
+    const region = this.regions.userCenter;
+    const userInfo = this.databus.getUserInfo();
+    const totalScore = this.databus.getTotalScore();
+
+    // 背景卡片
+    ctx.save();
+    ctx.shadowColor = this.colors.shadow;
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 2;
+    drawRoundedRect(ctx, region.x, region.y, region.w, region.h, 15);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fill();
+    ctx.restore();
+    drawRoundedRect(ctx, region.x, region.y, region.w, region.h, 15);
+    ctx.strokeStyle = this.colors.cardBorder;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 头像占位圆
+    const avatarX = region.x + 30;
+    const avatarY = region.y + region.h / 2;
+    ctx.beginPath();
+    ctx.arc(avatarX, avatarY, 20, 0, Math.PI * 2);
+    ctx.fillStyle = '#3B82F6';
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(userInfo ? (userInfo.nickName ? userInfo.nickName[0] : '用') : '用', avatarX, avatarY);
+
+    // 昵称
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = this.colors.primaryText;
+    ctx.font = `bold ${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    const displayName = userInfo ? (userInfo.nickName || '用户') : '用户';
+    ctx.fillText(displayName, region.x + 60, region.y + 22);
+
+    // 总积分
+    ctx.fillStyle = this.colors.subText;
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillText('积分: ' + totalScore, region.x + 60, region.y + 44);
+  }
+
+  // A-5: 排行榜按钮绘制
+  _drawLeaderboardButton(ctx) {
+    const btn = this.leaderboardButton;
+    const gradient = ctx.createLinearGradient(btn.x, btn.y, btn.x + btn.w, btn.y + btn.h);
+    gradient.addColorStop(0, '#8B5CF6');
+    gradient.addColorStop(1, '#7C3AED');
+    drawRoundedRect(ctx, btn.x, btn.y, btn.w, btn.h, 22);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('排行榜', btn.centerX, btn.centerY);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  // A-2: 难度选择浮层绘制
+  _drawDifficultyDialog(ctx) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    const dlgW = 300;
+    const dlgH = 280;
+    const dlgX = (this.width - dlgW) / 2;
+    const dlgY = (this.height - dlgH) / 2;
+
+    // 卡片背景
+    drawRoundedRect(ctx, dlgX, dlgY, dlgW, dlgH, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.97)';
+    ctx.fill();
+
+    // 标题
+    ctx.fillStyle = this.colors.primaryText;
+    ctx.font = `bold ${this.scaleSize(22)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('选择难度', this.width / 2, dlgY + 40);
+
+    // 难度按钮
+    const levels = [
+      { key: 'easy', label: '简单 (5题 30s)', color: '#10B981' },
+      { key: 'medium', label: '普通 (8题 25s)', color: '#F59E0B' },
+      { key: 'hard', label: '困难 (10题 20s)', color: '#EF4444' },
+    ];
+
+    this.difficultyButtons = {};
+    levels.forEach((lv, i) => {
+      const btnY = dlgY + 80 + i * 60;
+      const btn = new LayoutRect(dlgX + 30, btnY, dlgW - 60, 50);
+      this.difficultyButtons[lv.key] = btn;
+
+      drawRoundedRect(ctx, btn.x, btn.y, btn.w, btn.h, 25);
+      ctx.fillStyle = lv.color;
+      ctx.fill();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(lv.label, btn.centerX, btn.centerY);
+    });
+
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  }
+
+  // A-5: 排行榜浮层绘制
+  _drawLeaderboard(ctx) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    const dlgW = 300;
+    const dlgH = 320;
+    const dlgX = (this.width - dlgW) / 2;
+    const dlgY = (this.height - dlgH) / 2;
+
+    // 卡片背景
+    drawRoundedRect(ctx, dlgX, dlgY, dlgW, dlgH, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.97)';
+    ctx.fill();
+
+    // 标题
+    ctx.fillStyle = this.colors.primaryText;
+    ctx.font = `bold ${this.scaleSize(22)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('排行榜', this.width / 2, dlgY + 40);
+
+    // 获取成绩数据
+    const match3Scores = this.databus.getMatch3Scores();
+    const puzzleScores = this.databus.getPuzzleScores();
+    const quizScores = this.databus.getQuizScores();
+
+    const items = [
+      { label: '消消乐最高分', value: match3Scores.highestScore ? match3Scores.highestScore + ' 分' : '暂无记录', color: '#10B981' },
+      { label: '拼图最佳时间', value: this._formatPuzzleBestTime(puzzleScores.bestTime), color: '#F59E0B' },
+      { label: '答题最高分', value: quizScores.bestScore ? quizScores.bestScore + ' 分' : '暂无记录', color: '#3B82F6' },
+    ];
+
+    items.forEach((item, i) => {
+      const itemY = dlgY + 80 + i * 70;
+      const itemX = dlgX + 20;
+      const itemW = dlgW - 40;
+      const itemH = 60;
+
+      drawRoundedRect(ctx, itemX, itemY, itemW, itemH, 12);
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fill();
+      ctx.strokeStyle = this.colors.cardBorder;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 左侧色条
+      drawRoundedRect(ctx, itemX, itemY, 4, itemH, 2);
+      ctx.fillStyle = item.color;
+      ctx.fill();
+
+      // 标签
+      ctx.textAlign = 'left';
+      ctx.fillStyle = this.colors.subText;
+      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.fillText(item.label, itemX + 16, itemY + 24);
+
+      // 值
+      ctx.fillStyle = this.colors.primaryText;
+      ctx.font = `bold ${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.fillText(item.value, itemX + 16, itemY + 46);
+    });
+
+    // 提示关闭
+    ctx.textAlign = 'center';
+    ctx.fillStyle = this.colors.subText;
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillText('点击任意位置关闭', this.width / 2, dlgY + dlgH - 20);
+
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  }
+
+  // 格式化拼图最佳时间
+  _formatPuzzleBestTime(bestTime) {
+    if (!bestTime) return '暂无记录';
+    const times = Object.values(bestTime).filter(t => t != null);
+    if (times.length === 0) return '暂无记录';
+    const best = Math.min(...times);
+    if (best >= 60) {
+      const mins = Math.floor(best / 60);
+      const secs = best % 60;
+      return mins + '分' + secs + '秒';
+    }
+    return best + '秒';
   }
 
 }

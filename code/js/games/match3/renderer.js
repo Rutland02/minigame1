@@ -1,6 +1,6 @@
 const { drawRoundedRect, LayoutRect } = require('../../utils/canvasUtils');
 const { COLORS, ICONS } = require('./constants');
-const { easeOutQuad, easeOutElastic, easeOutBounce } = require('./animation');
+const { easeOutQuad, easeOutElastic, easeOutBounce, easeOutCubic } = require('./animation');
 
 const COLOR_INDEX_MAP = {};
 COLORS.forEach((color, i) => {
@@ -13,6 +13,10 @@ class Match3Renderer {
   constructor(game) {
     this.game = game;
     this.loadIcons();
+  }
+
+  scaleSize(base) {
+    return this.game.scaleSize(base);
   }
 
   loadIcons() {
@@ -94,7 +98,7 @@ class Match3Renderer {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = `bold ${this.scaleSize(17)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#1E293B';
     ctx.textAlign = 'center';
     const colWidth = width / 3;
@@ -102,7 +106,7 @@ class Match3Renderer {
     ctx.fillText(`等级: ${game.level}`, x + colWidth * 1.5, boardBottomY + 22);
     ctx.fillText(`时间: ${Math.ceil(game.time)}s`, x + colWidth * 2.5, boardBottomY + 22);
 
-    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#64748B';
     ctx.fillText('SCORE', x + colWidth * 0.5, boardBottomY + 42);
     ctx.fillText('LEVEL', x + colWidth * 1.5, boardBottomY + 42);
@@ -275,39 +279,63 @@ class Match3Renderer {
     const t = easeOutQuad(anim.progress);
     const scale = 1 + t * 2;
     const opacity = 1 - t;
-    ctx.globalAlpha = opacity;
 
     if (specialType === 'level_up') {
-      const g = ctx.createLinearGradient(x, y, x + cellSize, y + cellSize);
-      g.addColorStop(0, '#FFD700'); g.addColorStop(0.5, '#FFA500'); g.addColorStop(1, '#FFD700');
-      ctx.fillStyle = g;
+      const game = this.game;
+      const flashAlpha = 0.3 * (1 - anim.progress);
+      ctx.fillStyle = `rgba(255, 215, 0, ${flashAlpha})`;
+      ctx.fillRect(0, 0, game.width, game.height);
+
+      let textScale;
+      if (anim.progress < 0.4) {
+        textScale = 0.5 + 0.7 * easeOutElastic(anim.progress / 0.4);
+      } else {
+        textScale = 1.2 - 0.2 * easeOutQuad((anim.progress - 0.4) / 0.6);
+      }
+
+      const centerX = game.width / 2;
+      const centerY = game.height / 2;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.scale(textScale, textScale);
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = '#FFD700';
+      ctx.font = `bold ${this.scaleSize(42)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 3;
+      ctx.fillText('LEVEL UP!', 0, 14);
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = opacity * 0.9;
+      ctx.fillText('LEVEL UP!', -1, 12);
+      ctx.restore();
+      return;
+    }
+
+    ctx.globalAlpha = opacity;
+    const icon = iconCache[COLOR_INDEX_MAP[color || '#ffffff']];
+    if (icon) {
+      const shrink = (cellSize / 6) * (scale - 1);
+      ctx.drawImage(icon, x + cellSize / 6 - shrink, y + cellSize / 6 - shrink,
+        cellSize * 2 / 3 * scale, cellSize * 2 / 3 * scale);
+    } else {
+      ctx.fillStyle = color || '#ffffff';
       ctx.beginPath();
       ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = '20px Inter, Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('LEVEL UP!', x + cellSize / 2, y + cellSize / 2 + 8);
-    } else {
-      const icon = iconCache[COLOR_INDEX_MAP[color || '#ffffff']];
-      if (icon) {
-        const shrink = (cellSize / 6) * (scale - 1);
-        ctx.drawImage(icon, x + cellSize / 6 - shrink, y + cellSize / 6 - shrink,
-          cellSize * 2 / 3 * scale, cellSize * 2 / 3 * scale);
-      } else {
-        ctx.fillStyle = color || '#ffffff';
-        ctx.beginPath();
-        ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      for (let r = 0; r < 3; r++) {
-        ctx.strokeStyle = color || '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = opacity * (1 - r * 0.3);
-        ctx.beginPath();
-        ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2 + r * 10) * scale, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+    }
+    for (let r = 0; r < 3; r++) {
+      ctx.strokeStyle = color || '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = opacity * (1 - r * 0.3);
+      ctx.beginPath();
+      ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2 + r * 10) * scale, 0, Math.PI * 2);
+      ctx.stroke();
     }
     ctx.globalAlpha = 1;
   }
@@ -367,6 +395,40 @@ class Match3Renderer {
         case 'special':     this._drawSpecialAnim(ctx, anim, startX, startY, cellSize); break;
       }
     }
+
+    this.drawFloatingScores(ctx);
+  }
+
+  drawFloatingScores(ctx) {
+    const game = this.game;
+    const scores = game.floatingScores;
+    if (!scores || scores.length === 0) return;
+    const cellSize = game.cellSize;
+    const startX = game.startX;
+    const startY = game.startY;
+
+    for (let i = 0; i < scores.length; i++) {
+      const fs = scores[i];
+      const t = easeOutCubic(fs.progress);
+      const px = startX + fs.x * cellSize + cellSize / 2;
+      const py = startY + fs.y * cellSize - t * 60;
+      const alpha = 1 - fs.progress;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = fs.isChain
+        ? `bold ${this.scaleSize(22)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`
+        : `bold ${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = fs.isChain ? '#FFD700' : '#10B981';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
+      const text = fs.isChain ? '连击! +' + fs.score : '+' + fs.score;
+      ctx.fillText(text, px, py);
+      ctx.restore();
+    }
   }
 
   getButtonRects() {
@@ -412,13 +474,14 @@ class Match3Renderer {
     drawRoundedRect(ctx, back.x, back.y, back.w, back.h, radius);
     ctx.fill();
     ctx.restore();
+    if (game.pressedId === 'back') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
 
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = `bold ${this.scaleSize(15)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回', back.centerX, back.centerY + 6);
 
@@ -436,50 +499,70 @@ class Match3Renderer {
     drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, radius);
     ctx.fill();
     ctx.restore();
+    if (game.pressedId === 'restart') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
 
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = `bold ${this.scaleSize(15)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('重新开始', restart.centerX, restart.centerY + 6);
   }
 
   drawGameOver(ctx) {
     const game = this.game;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    const progress = Math.min(game._gameOverAnimProgress || 0, 1.0);
+
+    const maskAlpha = 0.7 * easeOutQuad(progress);
+    ctx.fillStyle = `rgba(0, 0, 0, ${maskAlpha})`;
     ctx.fillRect(0, 0, game.width, game.height);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 1;
-
+    const cardScale = easeOutElastic(progress);
     const cardWidth = 300;
     const cardHeight = 250;
     const cardX = (game.width - cardWidth) / 2;
     const cardY = (game.height - cardHeight) / 2;
+    const cardCenterX = cardX + cardWidth / 2;
+    const cardCenterY = cardY + cardHeight / 2;
+
+    ctx.save();
+    ctx.translate(cardCenterX, cardCenterY);
+    ctx.scale(cardScale, cardScale);
+    ctx.translate(-cardCenterX, -cardCenterY);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
 
     drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, 20);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#2563EB';
-    ctx.font = '28px Inter, Arial';
+    ctx.font = `${this.scaleSize(28)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
     ctx.fillText('游戏结束', game.width / 2, game.height / 2 - 40);
 
-    ctx.font = '20px Inter, Arial';
+    ctx.font = `${this.scaleSize(20)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#1E293B';
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.shadowOffsetY = 0;
     ctx.fillText(`最终得分: ${game.score}`, game.width / 2, game.height / 2);
     ctx.fillText(`等级: ${game.level}`, game.width / 2, game.height / 2 + 30);
+
+    ctx.restore();
+
+    const buttonAlpha = easeOutQuad(Math.max(0, (progress - 0.4) / 0.6));
+    if (buttonAlpha <= 0) return;
+
+    ctx.save();
+    ctx.globalAlpha = buttonAlpha;
 
     const btns = this.getGameOverRects();
     const restart = btns.restart;
@@ -493,10 +576,11 @@ class Match3Renderer {
 
     drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, 25);
     ctx.fill();
+    if (game.pressedId === 'go_restart') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.stroke();
 
     ctx.fillStyle = '#fff';
-    ctx.font = '18px Inter, Arial';
+    ctx.font = `${this.scaleSize(18)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
@@ -514,10 +598,11 @@ class Match3Renderer {
 
     drawRoundedRect(ctx, home.x, home.y, home.w, home.h, 25);
     ctx.fill();
+    if (game.pressedId === 'go_home') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.stroke();
 
     ctx.fillStyle = '#fff';
-    ctx.font = '18px Inter, Arial';
+    ctx.font = `${this.scaleSize(18)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
@@ -526,6 +611,8 @@ class Match3Renderer {
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.shadowOffsetY = 0;
+
+    ctx.restore();
   }
 
   drawCulturalElements(ctx) {
