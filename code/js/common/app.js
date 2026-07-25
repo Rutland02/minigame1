@@ -41,8 +41,8 @@ try {
       };
     },
     addEventListener: function() {},
-    width: 750,
-    height: 1334
+    width: (GameGlobal.systemInfo && GameGlobal.systemInfo.windowWidth) || 375,
+    height: (GameGlobal.systemInfo && GameGlobal.systemInfo.windowHeight) || 667
   };
   ctx = canvas.getContext('2d');
 }
@@ -61,7 +61,12 @@ class App {
     GameGlobal.app = this;
     this.databus = GameGlobal.databus;
     this.currentPage = null;
+    this._transition = null;
+    this._lastLoopTime = 0;
+    this._achievementQueue = [];
+    this._achievementBanner = null;
     this._boundLoop = this.loop.bind(this);
+    this.dpr = GameGlobal.systemInfo ? GameGlobal.systemInfo.pixelRatio : 1;
     this.init();
   }
 
@@ -77,15 +82,10 @@ class App {
       console.error('加载图片资源失败:', error);
     }
 
-    // 监听成就解锁事件
     if (GameGlobal.eventBus) {
       GameGlobal.eventBus.on('achievement:unlocked', ({ achievement }) => {
         if (achievement) {
-          wx.showToast({
-            title: `解锁成就: ${achievement.title}`,
-            icon: 'success',
-            duration: 2000
-          });
+          this._achievementQueue.push(achievement);
         }
       });
     }
@@ -104,64 +104,209 @@ class App {
       console.error('添加触摸事件监听失败:', error);
     }
     
+    ctx.scale(this.dpr, this.dpr);
+
     this.showPage('login');
-    
+
     this.loop();
   }
 
-  // 游戏主循环
   loop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    if (this.currentPage && this.currentPage.update) {
-      this.currentPage.update();
+    const now = Date.now();
+    const dt = this._lastLoopTime ? (now - this._lastLoopTime) / 1000 : 0;
+    this._lastLoopTime = now;
+
+    ctx.clearRect(0, 0, canvas.width / this.dpr, canvas.height / this.dpr);
+
+    this._processAchievementQueue();
+
+    if (this._transition) {
+      const t = this._transition;
+      t.progress += dt;
+
+      if (t.phase === 'fadeOut') {
+        const alpha = Math.min(t.progress / t.duration, 1);
+        ctx.save();
+        ctx.globalAlpha = 1 - alpha;
+        t.fromPage.render(ctx);
+        ctx.restore();
+
+        if (t.progress >= t.duration) {
+          t.fromPage.destroy();
+          this.currentPage = t.toPage;
+          t.phase = 'fadeIn';
+          t.progress = 0;
+        }
+      }
+
+      if (t.phase === 'fadeIn') {
+        const alpha = Math.min(t.progress / t.duration, 1);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        this.currentPage.render(ctx);
+        ctx.restore();
+
+        if (t.progress >= t.duration) {
+          this._transition = null;
+        }
+      }
+    } else {
+      if (this.currentPage && this.currentPage.update) {
+        this.currentPage.update();
+      }
+
+      if (this.currentPage) {
+        this.currentPage.render(ctx);
+      }
     }
-    
-    if (this.currentPage) {
-      this.currentPage.render(ctx);
+
+    if (this._achievementBanner) {
+      this._updateAchievementBanner(dt);
+      this._drawAchievementBanner(ctx);
     }
-    
+
     requestAnimationFrame(this._boundLoop);
   }
 
-  showPage(pageName) {
-    if (this.currentPage) {
-      this.currentPage.destroy();
-    }
+  _processAchievementQueue() {
+    if (this._achievementBanner || this._achievementQueue.length === 0) return;
+    const achievement = this._achievementQueue.shift();
+    this._achievementBanner = {
+      achievement,
+      phase: 'slideIn',
+      progress: 0,
+      duration: 0.3,
+      showTime: 2.0,
+      y: -70
+    };
+  }
 
-    switch (pageName) {
-      case 'login':
-        this.currentPage = new LoginPage();
-        break;
-      case 'home':
-        this.currentPage = new HomePage();
-        break;
-      case 'achievement':
-        this.currentPage = new AchievementPage();
-        break;
-      case 'match3':
-        this.currentPage = new Match3Game();
-        break;
-      case 'puzzle':
-        this.currentPage = new PuzzleGame();
-        break;
-      case 'quiz':
-        this.currentPage = new QuizPage();
-        break;
-    }
-
-    if (this.currentPage) {
-      this.currentPage.render(ctx);
+  _updateAchievementBanner(dt) {
+    const banner = this._achievementBanner;
+    if (!banner) return;
+    banner.progress += dt;
+    if (banner.phase === 'slideIn') {
+      const t = Math.min(banner.progress / banner.duration, 1);
+      banner.y = -70 + 70 * t;
+      if (t >= 1) {
+        banner.phase = 'show';
+        banner.progress = 0;
+      }
+    } else if (banner.phase === 'show') {
+      if (banner.progress >= banner.showTime) {
+        banner.phase = 'slideOut';
+        banner.progress = 0;
+      }
+    } else if (banner.phase === 'slideOut') {
+      const t = Math.min(banner.progress / banner.duration, 1);
+      banner.y = -70 * t;
+      if (t >= 1) {
+        this._achievementBanner = null;
+      }
     }
   }
 
+  _drawAchievementBanner(ctx) {
+    const banner = this._achievementBanner;
+    if (!banner) return;
+    const w = canvas.width / this.dpr;
+    const h = 70;
+    const y = banner.y;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+
+    const gradient = ctx.createLinearGradient(0, y, 0, y + h);
+    gradient.addColorStop(0, '#10B981');
+    gradient.addColorStop(1, '#059669');
+    ctx.fillStyle = gradient;
+
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.lineTo(w, y + h - 10);
+    ctx.arcTo(w, y + h, w - 10, y + h, 10);
+    ctx.lineTo(10, y + h);
+    ctx.arcTo(0, y + h, 0, y + h - 10, 10);
+    ctx.lineTo(0, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    ctx.font = '28px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    const icon = banner.achievement.icon || '';
+    ctx.fillText(icon, 20, y + h / 2);
+
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    const title = banner.achievement.title || '';
+    ctx.fillText(title + ' 已解锁！', 56, y + h / 2);
+
+    ctx.restore();
+  }
+
+  showPage(pageName, param) {
+    if (this._transition) {
+      this._transition.fromPage.destroy();
+      this._transition = null;
+    }
+
+    let newPage;
+    switch (pageName) {
+      case 'login':
+        newPage = new LoginPage();
+        break;
+      case 'home':
+        newPage = new HomePage();
+        break;
+      case 'achievement':
+        newPage = new AchievementPage();
+        break;
+      case 'match3':
+        newPage = new Match3Game();
+        break;
+      case 'puzzle':
+        newPage = new PuzzleGame();
+        break;
+      case 'quiz':
+        newPage = new QuizPage(param);
+        break;
+    }
+
+    if (!newPage) return;
+
+    if (!this.currentPage) {
+      this.currentPage = newPage;
+      return;
+    }
+
+    this._transition = {
+      fromPage: this.currentPage,
+      toPage: newPage,
+      progress: 0,
+      duration: 0.15,
+      phase: 'fadeOut'
+    };
+    this.currentPage = null;
+  }
+
   onTouchStart(e) {
+    if (this._transition) return;
     try {
       if (e.preventDefault) {
         e.preventDefault();
       }
     } catch (error) {
-      // preventDefault not available on all event types
     }
     if (this.currentPage && this.currentPage.handleTouchStart) {
       this.currentPage.handleTouchStart(e);
@@ -169,12 +314,12 @@ class App {
   }
 
   onTouchMove(e) {
+    if (this._transition) return;
     try {
       if (e.preventDefault) {
         e.preventDefault();
       }
     } catch (error) {
-      // preventDefault not available on all event types
     }
     if (this.currentPage && this.currentPage.handleTouchMove) {
       this.currentPage.handleTouchMove(e);
@@ -182,12 +327,12 @@ class App {
   }
 
   onTouchEnd(e) {
+    if (this._transition) return;
     try {
       if (e.preventDefault) {
         e.preventDefault();
       }
     } catch (error) {
-      // preventDefault not available on all event types
     }
     if (this.currentPage && this.currentPage.handleTouchEnd) {
       this.currentPage.handleTouchEnd(e);

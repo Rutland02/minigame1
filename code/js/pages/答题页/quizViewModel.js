@@ -14,6 +14,9 @@ class QuizViewModel {
     this.timePerQuestion = 30;
     this.questionCount = 5;
     this.resultAnimation = 0;
+    this.gameOver = false;
+    this.maxConsecutiveCorrect = 0;
+    this.correctAnswerCount = 0;
 
     this._timer = null;
     this._setupDifficulty(difficulty);
@@ -109,8 +112,17 @@ class QuizViewModel {
     this.isCorrect = this.selectedOption === question.correctAnswer;
 
     if (this.isCorrect) {
+      this.correctAnswerCount++;
       this.score += 10;
       this.consecutiveCorrect++;
+      if (this.consecutiveCorrect >= 5) {
+        this.score += 10;
+      } else if (this.consecutiveCorrect >= 3) {
+        this.score += 5;
+      }
+      if (this.consecutiveCorrect > this.maxConsecutiveCorrect) {
+        this.maxConsecutiveCorrect = this.consecutiveCorrect;
+      }
     } else {
       this.consecutiveCorrect = 0;
     }
@@ -151,16 +163,32 @@ class QuizViewModel {
   }
 
   showScore(databus) {
-    const correctCount = Math.floor(this.score / 10);
+    const correctCount = this.correctCount;
     const totalQuestions = this.questions.length;
 
     if (databus) {
       databus.recordQuizScore(correctCount, totalQuestions, this.score);
     }
 
-    console.log('答题完成！');
-    console.log(`答对题数：${correctCount}/${totalQuestions}`);
-    console.log(`得分：${this.score}`);
+    this.gameOver = true;
+    this._stopTimer();
+  }
+
+  reset() {
+    this.currentIndex = 0;
+    this.selectedOption = null;
+    this.isAnswered = false;
+    this.isCorrect = false;
+    this.showResult = false;
+    this.score = 0;
+    this.consecutiveCorrect = 0;
+    this.maxConsecutiveCorrect = 0;
+    this.correctAnswerCount = 0;
+    this.hintCount = 1;
+    this.timeLeft = this.timePerQuestion;
+    this.resultAnimation = 0;
+    this.gameOver = false;
+    this.questions = [];
   }
 
   _startTimer() {
@@ -190,7 +218,11 @@ class QuizViewModel {
   }
 
   get correctCount() {
-    return Math.floor(this.score / 10);
+    return this.correctAnswerCount;
+  }
+
+  get accuracy() {
+    return this.questions.length > 0 ? Math.round((this.correctCount / this.questions.length) * 100) : 0;
   }
 
   get progress() {

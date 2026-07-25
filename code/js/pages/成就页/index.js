@@ -11,6 +11,8 @@ class AchievementPage extends BasePage {
     this.startY = 0;
     this.startScrollY = 0;
     this.showCertificate = false;
+    this.pressedId = null;
+    this.selectedAchievement = null;
 
     this.allAchievements = this.getAllAchievements();
     this.updateLayout();
@@ -24,7 +26,16 @@ class AchievementPage extends BasePage {
       certificate: new LayoutRect(this.width - 140, btnY, btnW, btnH),
     };
     this.certBackBtn = new LayoutRect(30, 30, 80, 40);
-    this.certShareBtn = new LayoutRect(this.width / 2 - 80, this.height - 90, 160, 50);
+    const certBtnW = 140, certBtnGap = 20;
+    const certBtnY = this.height - 90;
+    this.certShareBtn = new LayoutRect(this.width / 2 - certBtnW - certBtnGap / 2, certBtnY, certBtnW, 50);
+    this.certSaveBtn = new LayoutRect(this.width / 2 + certBtnGap / 2, certBtnY, certBtnW, 50);
+
+    const cardW = 300, cardH = 350;
+    const cardX = (this.width - cardW) / 2;
+    const cardY = (this.height - cardH) / 2;
+    this.detailCloseBtn = new LayoutRect(this.width / 2 - 50, cardY + cardH - 60, 100, 40);
+    this.detailCardRect = { x: cardX, y: cardY, w: cardW, h: cardH };
   }
   
   getAllAchievements() {
@@ -32,18 +43,27 @@ class AchievementPage extends BasePage {
   }
 
   render(ctx) {
+    if (this.showCertificate) {
+      this.renderCertificate(ctx);
+      return;
+    }
+
     this.drawBackground(ctx);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.fillRect(0, 0, this.width, this.height);
 
-    ctx.font = '28px Arial';
+    ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
     ctx.fillText('成就系统', this.width / 2, 80);
 
     this.renderAchievementsList(ctx);
     this.renderBottomButtons(ctx);
+
+    if (this.selectedAchievement) {
+      this.renderAchievementDetail(ctx);
+    }
   }
 
   renderAchievementsList(ctx) {
@@ -85,24 +105,24 @@ class AchievementPage extends BasePage {
       ctx.lineWidth = 2;
       ctx.stroke();
       
-      ctx.font = '24px Arial';
+      ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillStyle = isUnlocked ? '#000000' : 'rgba(0, 0, 0, 0.4)';
       ctx.fillText(achievement.icon || '🏆', 50, y + 35);
       
-      ctx.font = '16px Arial';
+      ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'left';
       ctx.fillText(achievement.title, 90, y + 28);
       
-      ctx.font = '12px Arial';
+      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
       ctx.fillText(achievement.description, 90, y + 48);
       
       drawRoundedRect(ctx, 90, y + 55, 60, 20, 10);
       ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
       ctx.fill();
-      ctx.font = '10px Arial';
+      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'center';
       ctx.fillText(achievement.type, 120, y + 68);
@@ -113,7 +133,7 @@ class AchievementPage extends BasePage {
       ctx.strokeStyle = isUnlocked ? '#4CAF50' : 'rgba(0, 0, 0, 0.3)';
       ctx.lineWidth = 2;
       ctx.stroke();
-      ctx.font = '12px Arial';
+      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = isUnlocked ? '#4CAF50' : 'rgba(0, 0, 0, 0.8)';
       ctx.textAlign = 'center';
       ctx.fillText(isUnlocked ? '已解锁' : '未解锁', this.width - 55, y + 40);
@@ -124,7 +144,7 @@ class AchievementPage extends BasePage {
     const unlockedCount = achievementsWithStatus.filter(a => a.isUnlocked).length;
     const totalCount = achievementsWithStatus.length;
     
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
     ctx.fillText(`已解锁: ${unlockedCount}/${totalCount}`, this.width / 2, this.height - 100);
@@ -158,11 +178,12 @@ class AchievementPage extends BasePage {
     backGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = backGradient;
     ctx.fill();
+    if (this.pressedId === 'back') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回', back.centerX, back.centerY + 6);
 
@@ -172,13 +193,128 @@ class AchievementPage extends BasePage {
     certGradient.addColorStop(1, '#059669');
     ctx.fillStyle = certGradient;
     ctx.fill();
+    if (this.pressedId === 'certificate') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('查看证书', cert.centerX, cert.centerY + 6);
+  }
+
+  renderAchievementDetail(ctx) {
+    const achievement = this.selectedAchievement;
+    const isUnlocked = achievement.isUnlocked;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(0, 0, this.width, this.height);
+    ctx.restore();
+
+    const card = this.detailCardRect;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetY = 4;
+    drawRoundedRect(ctx, card.x, card.y, card.w, card.h, 20);
+    ctx.fillStyle = isUnlocked ? '#ffffff' : 'rgba(220, 220, 220, 0.95)';
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = isUnlocked ? 'rgba(76, 175, 80, 0.5)' : 'rgba(0, 0, 0, 0.2)';
+    ctx.lineWidth = 2;
+    drawRoundedRect(ctx, card.x, card.y, card.w, card.h, 20);
+    ctx.stroke();
+    ctx.restore();
+
+    const iconY = card.y + 50;
+    if (isUnlocked) {
+      ctx.font = `${this.scaleSize(48)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#000000';
+      ctx.fillText(achievement.icon || '🏆', this.width / 2, iconY);
+    } else {
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.font = `${this.scaleSize(48)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#000000';
+      ctx.fillText(achievement.icon || '🏆', this.width / 2, iconY);
+      ctx.restore();
+
+      ctx.font = `${this.scaleSize(36)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillText('🔒', this.width / 2, iconY);
+    }
+
+    const titleY = card.y + 100;
+    ctx.font = `bold ${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = isUnlocked ? '#000000' : 'rgba(0, 0, 0, 0.4)';
+    ctx.fillText(achievement.title, this.width / 2, titleY);
+
+    const descY = card.y + 135;
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.35)';
+    ctx.fillText(achievement.description, this.width / 2, descY);
+
+    const typeY = card.y + 170;
+    const typeBadgeW = 70;
+    drawRoundedRect(ctx, this.width / 2 - typeBadgeW / 2, typeY - 12, typeBadgeW, 24, 12);
+    ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+    ctx.fill();
+    ctx.font = `${this.scaleSize(12)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.3)';
+    ctx.textAlign = 'center';
+    ctx.fillText(achievement.type, this.width / 2, typeY + 4);
+
+    const statusY = card.y + 220;
+    const statusW = 90, statusH = 30;
+    drawRoundedRect(ctx, this.width / 2 - statusW / 2, statusY - 14, statusW, statusH, 15);
+    if (isUnlocked) {
+      ctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
+      ctx.fill();
+      ctx.strokeStyle = '#4CAF50';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#4CAF50';
+    } else {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    }
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(isUnlocked ? '已解锁' : '未解锁', this.width / 2, statusY + 4);
+
+    if (!isUnlocked) {
+      const hintY = card.y + 270;
+      ctx.font = `${this.scaleSize(13)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.textAlign = 'center';
+      ctx.fillText('完成更多挑战来解锁此成就', this.width / 2, hintY);
+    }
+
+    const closeBtn = this.detailCloseBtn;
+    drawRoundedRect(ctx, closeBtn.x, closeBtn.y, closeBtn.w, closeBtn.h, 20);
+    const closeGradient = ctx.createLinearGradient(closeBtn.x, closeBtn.y, closeBtn.x + closeBtn.w, closeBtn.y + closeBtn.h);
+    closeGradient.addColorStop(0, '#6B7280');
+    closeGradient.addColorStop(1, '#4B5563');
+    ctx.fillStyle = closeGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('关闭', closeBtn.centerX, closeBtn.centerY + 6);
   }
 
   renderCertificate(ctx) {
@@ -207,7 +343,7 @@ class AchievementPage extends BasePage {
     ctx.lineWidth = 4;
     ctx.stroke();
     
-    ctx.font = '32px Arial';
+    ctx.font = `${this.scaleSize(32)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#4a6fa5';
     ctx.textAlign = 'center';
     ctx.fillText('数字体验证书', this.width / 2, 120);
@@ -218,7 +354,7 @@ class AchievementPage extends BasePage {
     const achievements = databus.scoreManager.getUnlockedAchievements();
     const scores = databus.getAllScores();
     
-    ctx.font = '18px Arial';
+    ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
     ctx.fillText(`兹证明 ${userInfo ? userInfo.nickName : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, 200);
@@ -230,7 +366,7 @@ class AchievementPage extends BasePage {
     ctx.strokeStyle = 'rgba(74, 111, 165, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#4a6fa5';
     ctx.textAlign = 'center';
     ctx.fillText(`总积分: ${totalScore}`, this.width / 2, 310);
@@ -243,13 +379,13 @@ class AchievementPage extends BasePage {
     ctx.arc(this.width / 2, 450, 70, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '20px Arial';
+    ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('海澄村', this.width / 2, 440);
     ctx.fillText('数字赋能', this.width / 2, 470);
     
     const date = new Date().toLocaleDateString();
-    ctx.font = '16px Arial';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'center';
     ctx.fillText(`颁发日期: ${date}`, this.width / 2, 550);
@@ -261,13 +397,30 @@ class AchievementPage extends BasePage {
     shareGradient.addColorStop(1, '#059669');
     ctx.fillStyle = shareGradient;
     ctx.fill();
+    if (this.pressedId === 'certShare') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '16px Arial';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('分享证书', share.centerX, share.centerY + 6);
+
+    const save = this.certSaveBtn;
+    drawRoundedRect(ctx, save.x, save.y, save.w, save.h, 25);
+    const saveGradient = ctx.createLinearGradient(save.x, save.y, save.x + save.w, save.y + save.h);
+    saveGradient.addColorStop(0, '#3B82F6');
+    saveGradient.addColorStop(1, '#2563EB');
+    ctx.fillStyle = saveGradient;
+    ctx.fill();
+    if (this.pressedId === 'certSave') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('保存到相册', save.centerX, save.centerY + 6);
 
     const backBtn = this.certBackBtn;
     drawRoundedRect(ctx, backBtn.x, backBtn.y, backBtn.w, backBtn.h, 20);
@@ -276,11 +429,12 @@ class AchievementPage extends BasePage {
     backGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = backGradient;
     ctx.fill();
+    if (this.pressedId === 'certBack') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '14px Arial';
+    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回', backBtn.centerX, backBtn.centerY + 6);
   }
@@ -290,22 +444,50 @@ class AchievementPage extends BasePage {
     if (!coords) return;
     const { x, y } = coords;
 
+    if (this.selectedAchievement) {
+      if (this.detailCloseBtn.contains(x, y)) {
+        this.selectedAchievement = null;
+        return;
+      }
+      const card = this.detailCardRect;
+      if (x < card.x || x > card.x + card.w || y < card.y || y > card.y + card.h) {
+        this.selectedAchievement = null;
+        return;
+      }
+      return;
+    }
+
     if (this.showCertificate) {
       if (this.certBackBtn.contains(x, y)) {
+        this.pressedId = 'certBack';
         this.showCertificate = false;
-      }
-      if (this.certShareBtn.contains(x, y)) {
+      } else if (this.certShareBtn.contains(x, y)) {
+        this.pressedId = 'certShare';
         this.shareCertificate();
+      } else if (this.certSaveBtn.contains(x, y)) {
+        this.pressedId = 'certSave';
+        this.saveCertificate();
       }
     } else {
       if (this.buttons.back.contains(x, y)) {
+        this.pressedId = 'back';
         this.navigateTo('home');
         return;
       }
 
       if (this.buttons.certificate.contains(x, y)) {
+        this.pressedId = 'certificate';
         this.generateCertificate();
         return;
+      }
+
+      if (y >= 180 && y <= this.height - 130) {
+        const index = Math.floor((y - 180 + this.scrollY) / 80);
+        const achievements = this.databus.getAllAchievementsWithStatus();
+        if (index >= 0 && index < achievements.length) {
+          this.selectedAchievement = achievements[index];
+          return;
+        }
       }
 
       this.isDragging = true;
@@ -315,7 +497,7 @@ class AchievementPage extends BasePage {
   }
 
   handleTouchMove(e) {
-    if (!this.isDragging || this.showCertificate) return;
+    if (!this.isDragging || this.showCertificate || this.selectedAchievement) return;
 
     const coords = getTouchCoords(e.touches, e.changedTouches);
     if (!coords) return;
@@ -330,6 +512,7 @@ class AchievementPage extends BasePage {
   }
 
   handleTouchEnd(e) {
+    this.pressedId = null;
     this.isDragging = false;
   }
 
@@ -337,11 +520,53 @@ class AchievementPage extends BasePage {
     this.showCertificate = true;
   }
 
+  _exportCertificate(successCallback, failCallback) {
+    wx.canvasToTempFilePath({
+      x: 30,
+      y: 30,
+      width: this.width - 60,
+      height: this.height - 60,
+      success: (res) => {
+        successCallback(res.tempFilePath);
+      },
+      fail: (err) => {
+        console.error('导出证书失败:', err);
+        wx.showToast({ title: '导出失败', icon: 'none' });
+        if (failCallback) failCallback(err);
+      }
+    });
+  }
+
   shareCertificate() {
-    wx.showToast({
-      title: '证书分享功能已触发',
-      icon: 'success',
-      duration: 2000
+    this._exportCertificate((tempFilePath) => {
+      wx.shareAppMessage({
+        imageUrl: tempFilePath,
+        success: () => {
+          wx.showToast({ title: '分享成功', icon: 'success' });
+        },
+        fail: () => {
+          wx.showToast({ title: '分享失败', icon: 'none' });
+        }
+      });
+    });
+  }
+
+  saveCertificate() {
+    this._exportCertificate((tempFilePath) => {
+      wx.saveImageToPhotosAlbum({
+        filePath: tempFilePath,
+        success: () => {
+          wx.showToast({ title: '已保存到相册', icon: 'success' });
+        },
+        fail: (err) => {
+          console.error('保存到相册失败:', err);
+          if (err.errMsg && err.errMsg.indexOf('auth deny') !== -1) {
+            wx.showToast({ title: '请授权相册权限', icon: 'none' });
+          } else {
+            wx.showToast({ title: '保存失败', icon: 'none' });
+          }
+        }
+      });
     });
   }
 

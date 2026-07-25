@@ -2,6 +2,7 @@ const BasePage = require('../../common/basePage');
 const { BOARD_SIZE, INITIAL_TIME, SCORE_PER_REMOVE, CHAIN_SCORE_MULTIPLIER, LEVEL_UP_TIME_BONUS, LEVEL_TARGET_MULTIPLIER, SWIPE_THRESHOLD, ColorType, COLORS } = require('./constants');
 const { ObjectPool, AnimationManager } = require('./animation');
 const Match3Renderer = require('./renderer');
+const { getTouchCoords } = require('../../utils/canvasUtils');
 
 const piecePool = new ObjectPool();
 
@@ -44,8 +45,12 @@ class Match3Game extends BasePage {
     this.touchStart = null;
     this.touchEnd = null;
     this.cellSize = 0;
+    this.pressedId = null;
     this.startX = 0;
     this.startY = 0;
+
+    this.floatingScores = [];
+    this._gameOverAnimProgress = 0;
 
     this.anim = new AnimationManager();
     this.renderer = new Match3Renderer(this);
@@ -277,6 +282,48 @@ class Match3Game extends BasePage {
     return piece;
   }
 
+  _activateSpecialImmediately(row, col, removed) {
+    const piece = this.board[row][col];
+    if (!piece || !piece.special) return 0;
+
+    const size = this.board.length;
+    let count = 0;
+
+    switch (piece.specialType) {
+      case 'row_clear':
+        for (let j = 0; j < size; j++) {
+          if (!removed[row][j] && this.board[row][j]) {
+            removed[row][j] = true;
+            this.board[row][j] = null;
+            count++;
+          }
+        }
+        break;
+      case 'column_clear':
+        for (let i = 0; i < size; i++) {
+          if (!removed[i][col] && this.board[i][col]) {
+            removed[i][col] = true;
+            this.board[i][col] = null;
+            count++;
+          }
+        }
+        break;
+      case 'rainbow':
+        var targetColor = piece.color;
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            if (!removed[i][j] && this.board[i][j] && this.board[i][j].color === targetColor) {
+              removed[i][j] = true;
+              this.board[i][j] = null;
+              count++;
+            }
+          }
+        }
+        break;
+    }
+    return count;
+  }
+
   _removeLineMatches(match, removed, isHorizontal) {
     let removedCount = 0;
     const size = this.board.length;
@@ -287,18 +334,20 @@ class Match3Game extends BasePage {
       const col = isHorizontal ? k : match.col;
       if (removed[row][col] || !this.board[row][col]) continue;
 
-      if (matchLength === 3) {
-        this.board[row][col] = null;
-      } else if (matchLength === 4 && k === match.start) {
+      if (matchLength === 4 && k === match.start) {
         const st = isHorizontal ? 'row_clear' : 'column_clear';
         this.board[row][col] = this._createSpecialPiece(this.board[row][col], st);
+        removed[row][col] = true;
+        removedCount += this._activateSpecialImmediately(row, col, removed);
       } else if (matchLength >= 5 && k === match.start) {
         this.board[row][col] = this._createSpecialPiece(this.board[row][col], 'rainbow');
+        removed[row][col] = true;
+        removedCount += this._activateSpecialImmediately(row, col, removed);
       } else {
         this.board[row][col] = null;
+        removed[row][col] = true;
+        removedCount++;
       }
-      removed[row][col] = true;
-      removedCount++;
     }
     return removedCount;
   }
@@ -427,6 +476,7 @@ class Match3Game extends BasePage {
 
         const removedCount = this.removeMatches(matches);
         this.score += removedCount * SCORE_PER_REMOVE;
+        this._addFloatingScore(matchColors, removedCount * SCORE_PER_REMOVE);
         this.moves++;
 
         this.anim.waitForAnimations(() => {
@@ -477,6 +527,7 @@ class Match3Game extends BasePage {
 
       const newRemovedCount = this.removeMatches(newMatches);
       this.score += newRemovedCount * CHAIN_SCORE_MULTIPLIER;
+      this._addFloatingScore(matchColors, newRemovedCount * CHAIN_SCORE_MULTIPLIER, true);
 
       this.anim.waitForAnimations(() => {
         const hasDropped = this.dropPieces();
@@ -498,21 +549,24 @@ class Match3Game extends BasePage {
   }
 
   update() {
+    const now = Date.now();
+    const deltaTime = (now - this.lastUpdateTime) / 1000;
+    this.lastUpdateTime = now;
+    const clampedDeltaTime = Math.min(deltaTime, 0.1);
+
     if (this.gameStatus === this.STATES.PLAYING) {
-      const now = Date.now();
-      const deltaTime = (now - this.lastUpdateTime) / 1000;
-      this.lastUpdateTime = now;
-
-      const clampedDeltaTime = Math.min(deltaTime, 0.1);
-
       this.anim.updateAnimations(clampedDeltaTime);
+      this._updateFloatingScores(clampedDeltaTime);
 
       this.time -= clampedDeltaTime;
       if (this.time <= 0) {
         this.time = 0;
         this.gameStatus = this.STATES.GAME_OVER;
+        this._gameOverAnimProgress = 0;
         this.saveGameScore();
       }
+    } else if (this.gameStatus === this.STATES.GAME_OVER) {
+      this._gameOverAnimProgress = Math.min(this._gameOverAnimProgress + clampedDeltaTime / 0.8, 1.0);
     }
   }
 
@@ -566,6 +620,35 @@ class Match3Game extends BasePage {
     });
   }
 
+  _addFloatingScore(matchColors, score, isChain = false) {
+    if (!matchColors || matchColors.length === 0 || score <= 0) return;
+    let sumRow = 0;
+    let sumCol = 0;
+    matchColors.forEach(mc => {
+      sumRow += mc.row;
+      sumCol += mc.col;
+    });
+    const cx = sumCol / matchColors.length;
+    const cy = sumRow / matchColors.length;
+    this.floatingScores.push({
+      x: cx,
+      y: cy,
+      score: score,
+      progress: 0,
+      duration: 1.0,
+      isChain: isChain
+    });
+  }
+
+  _updateFloatingScores(dt) {
+    for (let i = this.floatingScores.length - 1; i >= 0; i--) {
+      this.floatingScores[i].progress += dt / this.floatingScores[i].duration;
+      if (this.floatingScores[i].progress >= 1) {
+        this.floatingScores.splice(i, 1);
+      }
+    }
+  }
+
   render(ctx) {
     try {
       this.drawBackground(ctx, '#2563EB', '#3B82F6');
@@ -587,12 +670,7 @@ class Match3Game extends BasePage {
   }
 
   _getTouchPosition(e) {
-    const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
-    if (!touch) return null;
-    return {
-      x: touch.x || touch.clientX || touch.pageX || 0,
-      y: touch.y || touch.clientY || touch.pageY || 0
-    };
+    return getTouchCoords(e.touches, e.changedTouches);
   }
 
   handleTouchStart(e) {
@@ -602,10 +680,12 @@ class Match3Game extends BasePage {
 
     const btns = this.renderer.getButtonRects();
     if (btns.back.contains(x, y)) {
+      this.pressedId = 'back';
       this.navigateTo('home');
       return;
     }
     if (btns.restart.contains(x, y)) {
+      this.pressedId = 'restart';
       this.reset();
       return;
     }
@@ -613,9 +693,11 @@ class Match3Game extends BasePage {
     if (this.gameStatus === this.STATES.GAME_OVER) {
       const goBtns = this.renderer.getGameOverRects();
       if (goBtns.restart.contains(x, y)) {
+        this.pressedId = 'go_restart';
         this.reset();
       }
       if (goBtns.home.contains(x, y)) {
+        this.pressedId = 'go_home';
         this.navigateTo('home');
       }
       return;
@@ -642,6 +724,7 @@ class Match3Game extends BasePage {
   }
 
   handleTouchEnd(e) {
+    this.pressedId = null;
     if (!this.touchStart) return;
     try {
       const size = this.board.length;
@@ -702,8 +785,10 @@ class Match3Game extends BasePage {
     this.selectedCell = null;
     this.gameStatus = this.STATES.PLAYING;
     this.lastUpdateTime = Date.now();
+    this._gameOverAnimProgress = 0;
 
     this.anim.clear();
+    this.floatingScores = [];
     this.touchStart = null;
     this.touchEnd = null;
 
@@ -721,6 +806,7 @@ class Match3Game extends BasePage {
     }
 
     this.anim.clear();
+    this.floatingScores = [];
 
     this.board = [];
     this.touchStart = null;

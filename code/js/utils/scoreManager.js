@@ -48,7 +48,14 @@ class ScoreManager {
     try {
       const data = wx.getStorageSync('gameScores');
       if (data) {
-        return data;
+        const defaults = this.getDefaultScores();
+        return {
+          match3: { ...defaults.match3, ...data.match3 },
+          puzzle: { ...defaults.puzzle, ...data.puzzle },
+          quiz: { ...defaults.quiz, ...data.quiz },
+          overall: { ...defaults.overall, ...data.overall },
+          achievements: { ...defaults.achievements, ...data.achievements },
+        };
       }
     } catch (error) {
       console.error('Failed to load scores:', error);
@@ -76,7 +83,8 @@ class ScoreManager {
       puzzle: {
         gamesPlayed: 0,
         completedCount: 0,
-        bestTime: { 1: null, 2: null, 3: null }
+        bestTime: { 1: null, 2: null, 3: null },
+        bestScore: 0
       },
       quiz: {
         gamesPlayed: 0,
@@ -123,9 +131,14 @@ class ScoreManager {
     
     if (isCompleted) {
       puzzle.completedCount++;
-      
+
       if (!puzzle.bestTime[level] || time < puzzle.bestTime[level]) {
         puzzle.bestTime[level] = time;
+      }
+
+      const score = this._calculatePuzzleScore(level, time, isCompleted);
+      if (score > puzzle.bestScore) {
+        puzzle.bestScore = score;
       }
     }
     
@@ -152,6 +165,16 @@ class ScoreManager {
     this.checkQuizAchievements(correctCount, totalQuestions, score);
     this.checkOverallAchievements();
     this.save();
+  }
+
+  _calculatePuzzleScore(level, time, isCompleted) {
+    if (!isCompleted) return 0;
+    const baseScores = { 1: 100, 2: 200, 3: 300 };
+    const base = baseScores[level] || 100;
+    const penalty = time * 2;
+    const minScores = { 1: 20, 2: 40, 3: 60 };
+    const min = minScores[level] || 20;
+    return Math.max(base - penalty, min);
   }
 
   checkMatch3Achievements(score, level) {
@@ -273,7 +296,7 @@ class ScoreManager {
   }
 
   getTotalScore() {
-    return this.scores.match3.totalScore + this.scores.quiz.bestScore;
+    return this.scores.match3.highestScore + this.scores.quiz.bestScore + (this.scores.puzzle.bestScore || 0);
   }
 
   resetAll() {
