@@ -470,6 +470,8 @@ class Match3Renderer {
     ctx.font = '20px Inter, Arial';
     ctx.fillStyle = '#1E293B';
     ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.shadowOffsetY = 0;
     ctx.fillText(`最终得分: ${game.score}`, game.width / 2, game.height / 2);
     ctx.fillText(`等级: ${game.level}`, game.width / 2, game.height / 2 + 30);
 
@@ -499,6 +501,8 @@ class Match3Renderer {
     ctx.shadowOffsetY = 1;
     ctx.fillText('重新开始', game.width / 2, game.height / 2 + 90);
     ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.shadowOffsetY = 0;
 
     const homeGradient = ctx.createLinearGradient(game.width / 2 - 100, game.height / 2 + 120, game.width / 2 + 100, game.height / 2 + 120);
     homeGradient.addColorStop(0, '#6B7280');
@@ -525,6 +529,8 @@ class Match3Renderer {
     ctx.shadowOffsetY = 1;
     ctx.fillText('返回首页', game.width / 2, game.height / 2 + 150);
     ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.shadowOffsetY = 0;
   }
 
   drawCulturalElements(ctx) {
