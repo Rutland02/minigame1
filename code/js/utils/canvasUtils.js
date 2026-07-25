@@ -49,6 +49,8 @@ function drawButton(ctx, x, y, width, height, radius, colorStart, colorEnd, text
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x + width / 2, y + height / 2);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
 }
 
 /**
