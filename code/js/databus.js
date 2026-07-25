@@ -5,6 +5,7 @@ class DataBus {
     this.userInfo = null;
     this.quizData = { total: 0, correct: 0 };
     this.resources = { 非遗: 0, 自然: 0, 红色: 0 };
+    this.hasSeenTutorial = false;
 
     this.scoreManager = new ScoreManager();
 
@@ -16,7 +17,8 @@ class DataBus {
       wx.setStorageSync('databus', {
         userInfo: this.userInfo,
         quizData: this.quizData,
-        resources: this.resources
+        resources: this.resources,
+        hasSeenTutorial: this.hasSeenTutorial
       });
     } catch (e) {
       console.error('保存数据失败:', e);
@@ -30,6 +32,7 @@ class DataBus {
         this.userInfo = data.userInfo;
         this.quizData = data.quizData || { total: 0, correct: 0 };
         this.resources = data.resources || { 非遗: 0, 自然: 0, 红色: 0 };
+        this.hasSeenTutorial = data.hasSeenTutorial || false;
       }
     } catch (e) {
       console.error('加载数据失败:', e);
@@ -122,6 +125,11 @@ class DataBus {
 
   clearAllAchievements() {
     return this.scoreManager.clearAllAchievements();
+  }
+
+  markTutorialSeen() {
+    this.hasSeenTutorial = true;
+    this.saveToStorage();
   }
 }
 
