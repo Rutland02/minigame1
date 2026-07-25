@@ -1,4 +1,4 @@
-const { getTouchCoords } = require('../../utils/canvasUtils');
+const { getTouchCoords, drawRoundedRect, drawButton } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
 class LoginPage extends BasePage {
@@ -9,6 +9,7 @@ class LoginPage extends BasePage {
     this._loginTimer = null;
     this.logoImage = null;
     this.loginButtonImage = null;
+    this.loginButtonRect = null;
 
     this.loadImages();
   }
@@ -86,40 +87,17 @@ class LoginPage extends BasePage {
       const buttonY = this.height * 0.8;
       
       ctx.drawImage(this.loginButtonImage, buttonX, buttonY, buttonWidth, buttonHeight);
+      this.loginButtonRect = { x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight };
     } else {
-      ctx.fillStyle = '#C41E3A';
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 1;
-      
-      const x = this.width / 2 - 100;
-      const y = this.height * 0.8;
-      const width = 200;
-      const height = 45;
-      const radius = 20;
-      
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.arcTo(x + width, y, x + width, y + radius, radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-      ctx.lineTo(x + radius, y + height);
-      ctx.arcTo(x, y + height, x, y + height - radius, radius);
-      ctx.lineTo(x, y + radius);
-      ctx.arcTo(x, y, x + radius, y, radius);
-      ctx.closePath();
-      
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '16px Inter, Arial';
-      ctx.textAlign = 'center';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-      ctx.shadowBlur = 3;
-      ctx.shadowOffsetY = 1;
-      ctx.fillText('立即登录', this.width / 2, y + height / 2 + 5);
-      ctx.shadowBlur = 0;
+      const buttonWidth = 200;
+      const buttonHeight = 45;
+      const buttonX = this.width / 2 - 100;
+      const buttonY = this.height * 0.8;
+      drawButton(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 20, '#C41E3A', '#C41E3A', '立即登录', {
+        font: '16px Inter, Arial',
+        strokeColor: 'rgba(255, 255, 255, 0.3)'
+      });
+      this.loginButtonRect = { x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight };
     }
   }
 
@@ -136,19 +114,8 @@ class LoginPage extends BasePage {
     const width = 200;
     const height = 100;
     const radius = 15;
-    
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.arcTo(x + width, y, x + width, y + radius, radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-    ctx.lineTo(x + radius, y + height);
-    ctx.arcTo(x, y + height, x, y + height - radius, radius);
-    ctx.lineTo(x, y + radius);
-    ctx.arcTo(x, y, x + radius, y, radius);
-    ctx.closePath();
-    
+
+    drawRoundedRect(ctx, x, y, width, height, radius);
     ctx.fill();
     ctx.stroke();
     
@@ -163,24 +130,14 @@ class LoginPage extends BasePage {
     if (!coords) return;
     const { x, y } = coords;
     
-    if (this.loginButtonImage) {
-      const buttonWidth = this.width * 0.5;
-      const buttonHeight = buttonWidth * (this.loginButtonImage.height / this.loginButtonImage.width);
-      const buttonX = (this.width - buttonWidth) / 2;
-      const buttonY = this.height * 0.8;
-      
-      if (x >= buttonX && x <= buttonX + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight) {
-        this.login();
-      }
-    } else {
-      const buttonY = this.height * 0.8;
-      if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= buttonY && y <= buttonY + 45) {
-        this.login();
-      }
+    const rect = this.loginButtonRect;
+    if (rect && x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height) {
+      this.login();
     }
   }
 
   login() {
+    if (this.isLoading) return;
     this.isLoading = true;
     
     wx.login({
@@ -225,6 +182,12 @@ class LoginPage extends BasePage {
         openid: 'o1234567890',
         sessionKey: 'session_key_123456'
       };
+
+      if (!GameGlobal.databus) {
+        console.error('databus not initialized');
+        this.isLoading = false;
+        return;
+      }
 
       GameGlobal.databus.setUserInfo(userInfo);
       console.log('登录成功，获取到用户信息:', userInfo);

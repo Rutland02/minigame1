@@ -269,8 +269,10 @@ class QuizPage extends BasePage {
     }
 
     if (!this.showResult) {
-      drawRoundedRect(ctx, 20, this.height - 60, 80, 40, 20);
-      const backGradient = ctx.createLinearGradient(20, this.height - 60, 100, this.height - 20);
+      const btns = this.getButtonRects();
+
+      drawRoundedRect(ctx, btns.back.x, btns.back.y, btns.back.w, btns.back.h, 20);
+      const backGradient = ctx.createLinearGradient(btns.back.x, btns.back.y, btns.back.x + btns.back.w, btns.back.y + btns.back.h);
       backGradient.addColorStop(0, '#6B7280');
       backGradient.addColorStop(1, '#4B5563');
       ctx.fillStyle = backGradient;
@@ -281,11 +283,10 @@ class QuizPage extends BasePage {
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('返回', 60, this.height - 38);
-      
-      const hintButtonX = this.width / 2 - 110;
-      drawRoundedRect(ctx, hintButtonX, this.height - 60, 100, 40, 20);
-      const orangeGradient = ctx.createLinearGradient(hintButtonX, this.height - 60, hintButtonX + 100, this.height - 20);
+      ctx.fillText('返回', btns.back.x + btns.back.w / 2, btns.back.y + btns.back.h / 2 + 6);
+
+      drawRoundedRect(ctx, btns.hint.x, btns.hint.y, btns.hint.w, btns.hint.h, 20);
+      const orangeGradient = ctx.createLinearGradient(btns.hint.x, btns.hint.y, btns.hint.x + btns.hint.w, btns.hint.y + btns.hint.h);
       orangeGradient.addColorStop(0, '#FF9800');
       orangeGradient.addColorStop(1, '#F57C00');
       ctx.fillStyle = orangeGradient;
@@ -296,12 +297,11 @@ class QuizPage extends BasePage {
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`提示 (${this.hintCount})`, hintButtonX + 50, this.height - 38);
+      ctx.fillText(`提示 (${this.hintCount})`, btns.hint.x + btns.hint.w / 2, btns.hint.y + btns.hint.h / 2 + 6);
 
       if (this.selectedOption !== null) {
-        const submitButtonX = this.width / 2 + 10;
-        drawRoundedRect(ctx, submitButtonX, this.height - 60, 100, 40, 20);
-        const submitGradient = ctx.createLinearGradient(submitButtonX, this.height - 60, submitButtonX + 100, this.height - 20);
+        drawRoundedRect(ctx, btns.submit.x, btns.submit.y, btns.submit.w, btns.submit.h, 20);
+        const submitGradient = ctx.createLinearGradient(btns.submit.x, btns.submit.y, btns.submit.x + btns.submit.w, btns.submit.y + btns.submit.h);
         submitGradient.addColorStop(0, '#10B981');
         submitGradient.addColorStop(1, '#059669');
         ctx.fillStyle = submitGradient;
@@ -312,11 +312,11 @@ class QuizPage extends BasePage {
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('提交答案', submitButtonX + 50, this.height - 38);
+        ctx.fillText('提交答案', btns.submit.x + btns.submit.w / 2, btns.submit.y + btns.submit.h / 2 + 6);
       }
-      
-      drawRoundedRect(ctx, this.width - 120, this.height - 60, 100, 40, 20);
-      const skipGradient = ctx.createLinearGradient(this.width - 120, this.height - 60, this.width - 20, this.height - 20);
+
+      drawRoundedRect(ctx, btns.skip.x, btns.skip.y, btns.skip.w, btns.skip.h, 20);
+      const skipGradient = ctx.createLinearGradient(btns.skip.x, btns.skip.y, btns.skip.x + btns.skip.w, btns.skip.y + btns.skip.h);
       skipGradient.addColorStop(0, '#10B981');
       skipGradient.addColorStop(1, '#059669');
       ctx.fillStyle = skipGradient;
@@ -327,8 +327,19 @@ class QuizPage extends BasePage {
       ctx.fillStyle = '#ffffff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('跳过', this.width - 70, this.height - 38);
+      ctx.fillText('跳过', btns.skip.x + btns.skip.w / 2, btns.skip.y + btns.skip.h / 2 + 6);
     }
+  }
+
+  getButtonRects() {
+    const h = this.height;
+    const w = this.width;
+    return {
+      back:    { x: 20,           y: h - 60, w: 80,  h: 40 },
+      hint:    { x: w / 2 - 110,  y: h - 60, w: 100, h: 40 },
+      submit:  { x: w / 2 + 10,   y: h - 60, w: 100, h: 40 },
+      skip:    { x: w - 120,      y: h - 60, w: 100, h: 40 },
+    };
   }
 
   drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -357,6 +368,7 @@ class QuizPage extends BasePage {
   handleTouchStart(e) {
     const coords = getTouchCoords(e.touches, e.changedTouches);
     if (!coords) return;
+    if (!this.questions || this.questions.length === 0) return;
     const { x, y } = coords;
     
     if (!this.showResult) {
@@ -372,19 +384,21 @@ class QuizPage extends BasePage {
         }
       });
 
-      if (x >= 20 && x <= 100 && y >= this.height - 60 && y <= this.height - 20) {
+      const btns = this.getButtonRects();
+
+      if (x >= btns.back.x && x <= btns.back.x + btns.back.w && y >= btns.back.y && y <= btns.back.y + btns.back.h) {
         this.returnToHome();
       }
 
-      if (!this.isAnswered && this.selectedOption !== null && x >= this.width / 2 + 10 && x <= this.width / 2 + 110 && y >= this.height - 60 && y <= this.height - 20) {
+      if (!this.isAnswered && this.selectedOption !== null && x >= btns.submit.x && x <= btns.submit.x + btns.submit.w && y >= btns.submit.y && y <= btns.submit.y + btns.submit.h) {
         this.submitAnswer();
       }
 
-      if (!this.isAnswered && this.selectedOption === null && x >= this.width / 2 - 110 && x <= this.width / 2 - 10 && y >= this.height - 60 && y <= this.height - 20) {
+      if (!this.isAnswered && this.selectedOption === null && x >= btns.hint.x && x <= btns.hint.x + btns.hint.w && y >= btns.hint.y && y <= btns.hint.y + btns.hint.h) {
         this.useHint();
       }
 
-      if (x >= this.width - 120 && x <= this.width - 20 && y >= this.height - 60 && y <= this.height - 20) {
+      if (x >= btns.skip.x && x <= btns.skip.x + btns.skip.w && y >= btns.skip.y && y <= btns.skip.y + btns.skip.h) {
         this.skipQuestion();
       }
     } else {
@@ -419,18 +433,14 @@ class QuizPage extends BasePage {
 
   nextQuestion() {
     this.currentQuestion++;
-    if (this.currentQuestion >= this.questions.length) {
-      this.showScore();
-    } else {
-      this.selectedOption = null;
-      this.isAnswered = false;
-      this.isCorrect = false;
-      this.showResult = false;
-      this.resultAnimation = 0;
-      this.animationFrame = 0;
-      this.timeLeft = this.timePerQuestion;
-      this.startTimer();
-    }
+    this.selectedOption = null;
+    this.isAnswered = false;
+    this.isCorrect = false;
+    this.showResult = false;
+    this.resultAnimation = 0;
+    this.animationFrame = 0;
+    this.timeLeft = this.timePerQuestion;
+    this.startTimer();
   }
 
   useHint() {
@@ -443,6 +453,7 @@ class QuizPage extends BasePage {
 
   skipQuestion() {
     if (!this.isAnswered) {
+      this.selectedOption = -1;
       this.isAnswered = true;
       this.isCorrect = false;
       this.showResult = true;
