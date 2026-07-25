@@ -52,11 +52,60 @@ code/
 │   │   ├── 首页/
 │   │   ├── 成就页/
 │   │   └── 答题页/
-│   ├── utils/         # 工具类（canvasUtils、scoreManager）
+│   ├── utils/         # 工具类（canvasUtils、scoreManager、errorCapture 等）
 │   └── libs/          # 第三方库
 ├── game.js            # 游戏入口
 └── game.json          # 游戏配置
+scripts/               # 测试与开发脚本
+├── test-runner.js     # 常规测试外部脚本（端口 19830）
+├── test-achievements.js # 成就测试外部脚本（端口 19831）
+├── error-capture.js   # 独立运行时错误捕获脚本
+└── write-signal.js    # 信号文件写入工具
 ```
+
+## 测试
+
+### 运行测试
+
+```bash
+npm test          # 运行全部 113 项测试 + 运行时错误捕获
+npm run test:ach  # 运行成就系统独立测试（端口 19831）
+npm run errors    # 只捕获运行时错误，不运行测试（10 秒采集）
+```
+
+**前提**：微信开发者工具已打开且项目已加载。
+
+### 测试流程
+
+`npm test` 自动完成：
+1. 写入信号文件 `.test-runner-signal`
+2. 启动本地 HTTP 服务器（端口 19830）
+3. 触发游戏热重载
+4. 游戏内测试模块运行 113 项测试
+5. 测试结果通过 `wx.request()` POST 到服务器
+6. 同时收集运行时错误（`console.error`、`wx.onError` 等）
+7. 保存 `test-report.json` 和 `error-report.json`
+
+### 运行时错误捕获
+
+测试通过不代表没有运行时错误。错误捕获模块 (`code/js/utils/errorCapture.js`) 会拦截：
+
+| 来源 | 说明 |
+|------|------|
+| `console.error` | 代码中的错误日志 |
+| `console.warn` | 警告信息 |
+| `wx.onError` | 未捕获的运行时异常 |
+| `wx.onPageNotFound` | 页面不存在错误 |
+
+错误报告保存在 `error-report.json`，包含错误类型、消息、堆栈和时间戳。
+
+### 测试报告
+
+| 文件 | 内容 |
+|------|------|
+| `test-report.json` | 测试结果（总数、通过数、失败详情） |
+| `error-report.json` | 运行时错误（按类型分组） |
+| `test-report-achievements.json` | 成就测试结果 |
 
 ## 开发指南
 
