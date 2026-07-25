@@ -129,10 +129,56 @@ function easeOutBounce(t) {
   }
 }
 
+function easeInQuad(t) {
+  return t * t;
+}
+
+function easeInOutQuad(t) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+}
+
+function easeInBack(t) {
+  const s = 1.70158;
+  return t * t * ((s + 1) * t - s);
+}
+
+function easeOutBack(t) {
+  const s = 1.70158;
+  return (t -= 1) * t * ((s + 1) * t + s) + 1;
+}
+
+function easeInOutBack(t) {
+  const s = 1.70158 * 1.525;
+  if (t < 0.5) {
+    return (t * 2 * t * ((s + 1) * t * 2 - s)) / 2;
+  }
+  return ((t * 2 - 2) * (t * 2 - 2) * ((s + 1) * (t * 2 - 2) + s) + 2) / 2;
+}
+
+function easeInCubic(t) {
+  return t * t * t;
+}
+
+function easeOutCubic(t) {
+  return (--t) * t * t + 1;
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+}
+
 module.exports = {
   ObjectPool,
   AnimationManager,
   easeOutQuad,
   easeOutElastic,
-  easeOutBounce
+  easeOutBounce,
+  easeInQuad,
+  easeInOutQuad,
+  easeInBack,
+  easeOutBack,
+  easeInOutBack,
+  easeInCubic,
+  easeOutCubic,
+  easeInOutCubic
 };
