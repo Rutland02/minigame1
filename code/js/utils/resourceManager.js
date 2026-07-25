@@ -28,7 +28,9 @@ class ResourceManager {
           return;
         }
 
-        const img = wx.createImage();
+        const img = (typeof wx !== 'undefined' && wx.createImage)
+          ? wx.createImage()
+          : new Image();
         img.onload = () => {
           this.images[key] = img;
           loaded++;
