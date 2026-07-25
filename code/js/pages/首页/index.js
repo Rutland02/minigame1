@@ -1,4 +1,4 @@
-const { drawRoundedRect } = require('../../utils/canvasUtils');
+const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
 class HomePage extends BasePage {
@@ -133,8 +133,9 @@ class HomePage extends BasePage {
   }
 
   handleTouchStart(e) {
-    const touch = e.touches[0];
-    const { clientX: x, clientY: y } = touch;
+    const coords = getTouchCoords(e.touches, e.changedTouches);
+    if (!coords) return;
+    const { x, y } = coords;
     this.regions.gameButtons.forEach(btn => {
       if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
         this.selectedId = btn.id;
