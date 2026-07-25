@@ -1,13 +1,19 @@
-const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
+const { drawRoundedRect, getTouchCoords, LayoutRect } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
 class PuzzleGame extends BasePage {
   constructor() {
     super();
 
+    this.STATES = Object.freeze({
+      PLAYING: 'playing',
+      COMPLETED: 'completed',
+      DIFFICULTY: 'showing_difficulty',
+    });
+
     this.level = 1;
     this.pieces = [];
-    this.gameStatus = 'playing';
+    this.gameStatus = this.STATES.PLAYING;
     this.startTime = Date.now();
     this.endTime = null;
     this.touchStartX = 0;
@@ -18,6 +24,7 @@ class PuzzleGame extends BasePage {
     this.puzzleImage = null;
     this.initPuzzle();
     this.loadPuzzleImage();
+    this.updateLayout();
   }
 
   initPuzzle() {
@@ -41,7 +48,8 @@ class PuzzleGame extends BasePage {
     this.shufflePuzzle();
     this.startTime = Date.now();
     this.endTime = null;
-    this.gameStatus = 'playing';
+    this.gameStatus = this.STATES.PLAYING;
+    this.updateLayout();
   }
 
   getPuzzleSize() {
@@ -55,6 +63,45 @@ class PuzzleGame extends BasePage {
       default:
         return 3;
     }
+  }
+
+  updateLayout() {
+    const size = this.getPuzzleSize();
+    const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
+    const startX = (this.width - pieceSize * size) / 2;
+    const startY = 130;
+
+    this.boardRect = new LayoutRect(startX, startY, pieceSize * size, pieceSize * size);
+    this.pieceSize = pieceSize;
+
+    const btnW = 100, btnH = 50, btnGap = 20;
+    const totalW = btnW * 3 + btnGap * 2;
+    const btnStartX = (this.width - totalW) / 2;
+    const btnY = this.height - btnH - 20;
+    this.buttons = {
+      back:       new LayoutRect(btnStartX, btnY, btnW, btnH),
+      difficulty: new LayoutRect(btnStartX + btnW + btnGap, btnY, btnW, btnH),
+      restart:    new LayoutRect(btnStartX + (btnW + btnGap) * 2, btnY, btnW, btnH),
+    };
+
+    // Completed dialog buttons
+    const dlgW = 300, dlgH = 280;
+    const dlgX = (this.width - dlgW) / 2;
+    const dlgY = (this.height - dlgH) / 2;
+    this.completedButtons = {
+      replay: new LayoutRect(dlgX + 30, dlgY + 140, dlgW - 60, 50),
+      home:   new LayoutRect(dlgX + 30, dlgY + 200, dlgW - 60, 50),
+    };
+
+    // Difficulty dialog buttons
+    const diffDlgW = 320, diffDlgH = 280;
+    const diffDlgX = (this.width - diffDlgW) / 2;
+    const diffDlgY = (this.height - diffDlgH) / 2;
+    this.difficultyButtons = {
+      easy:   new LayoutRect(diffDlgX + 30, diffDlgY + 100, diffDlgW - 60, 50),
+      medium: new LayoutRect(diffDlgX + 30, diffDlgY + 160, diffDlgW - 60, 50),
+      hard:   new LayoutRect(diffDlgX + 30, diffDlgY + 220, diffDlgW - 60, 50),
+    };
   }
 
   shufflePuzzle() {
@@ -180,14 +227,14 @@ class PuzzleGame extends BasePage {
   }
 
   handlePieceClick(x, y) {
-    if (this.gameStatus !== 'playing') return;
+    if (this.gameStatus !== this.STATES.PLAYING) return;
 
     const size = this.getPuzzleSize();
-    const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
-    const startX = (this.width - pieceSize * size) / 2;
-    const startY = 130;
+    const pieceSize = this.pieceSize;
+    const startX = this.boardRect.x;
+    const startY = this.boardRect.y;
 
-    if (x < startX || x > startX + pieceSize * size || y < startY || y > startY + pieceSize * size) {
+    if (!this.boardRect.contains(x, y)) {
       return;
     }
 
@@ -213,7 +260,7 @@ class PuzzleGame extends BasePage {
     }
 
     if (moved && this.checkCompletion()) {
-      this.gameStatus = 'completed';
+      this.gameStatus = this.STATES.COMPLETED;
       this.endTime = Date.now();
       this.saveGameScore();
     }
@@ -221,8 +268,8 @@ class PuzzleGame extends BasePage {
 
   saveGameScore() {
     const time = this.getElapsedTime();
-    if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.databus) {
-      GameGlobal.app.databus.recordPuzzleScore(this.level, time, true);
+    if (this.databus) {
+      this.databus.recordPuzzleScore(this.level, time, true);
     }
   }
 
@@ -240,24 +287,18 @@ class PuzzleGame extends BasePage {
   getElapsedTime() {
     if (this.endTime) {
       return Math.floor((this.endTime - this.startTime) / 1000);
-    } else if (this.gameStatus === 'playing') {
+    } else if (this.gameStatus === this.STATES.PLAYING) {
       return Math.floor((Date.now() - this.startTime) / 1000);
     }
     return 0;
   }
 
   handleTouchEnd(e) {
-    if (this.gameStatus !== 'playing') return;
+    if (this.gameStatus !== this.STATES.PLAYING) return;
 
-    const buttonHeight = 50;
-    const buttonWidth = 100;
-    const buttonSpacing = 20;
-    const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
-    const buttonStartX = (this.width - totalButtonWidth) / 2;
-    const buttonY = this.height - buttonHeight - 20;
-
-    if (this.touchStartY >= buttonY && this.touchStartY <= buttonY + buttonHeight &&
-        this.touchStartX >= buttonStartX && this.touchStartX <= buttonStartX + totalButtonWidth) {
+    if (this.buttons.back.contains(this.touchStartX, this.touchStartY) ||
+        this.buttons.difficulty.contains(this.touchStartX, this.touchStartY) ||
+        this.buttons.restart.contains(this.touchStartX, this.touchStartY)) {
       return;
     }
 
@@ -281,12 +322,11 @@ class PuzzleGame extends BasePage {
     }
 
     const size = this.getPuzzleSize();
-    const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
-    const startX = (this.width - pieceSize * size) / 2;
-    const startY = 130;
+    const pieceSize = this.pieceSize;
+    const startX = this.boardRect.x;
+    const startY = this.boardRect.y;
 
-    if (this.touchStartX < startX || this.touchStartX > startX + pieceSize * size || 
-        this.touchStartY < startY || this.touchStartY > startY + pieceSize * size) {
+    if (!this.boardRect.contains(this.touchStartX, this.touchStartY)) {
       return;
     }
 
@@ -305,7 +345,7 @@ class PuzzleGame extends BasePage {
       this.movePiece(piece, direction);
       
       if (this.checkCompletion()) {
-        this.gameStatus = 'completed';
+        this.gameStatus = this.STATES.COMPLETED;
         this.endTime = Date.now();
         this.saveGameScore();
       }
@@ -313,7 +353,7 @@ class PuzzleGame extends BasePage {
   }
 
   showDifficultyDialog() {
-    this.gameStatus = 'showing_difficulty';
+    this.gameStatus = this.STATES.DIFFICULTY;
   }
 
   renderDifficultyDialog(ctx) {
@@ -378,31 +418,28 @@ class PuzzleGame extends BasePage {
   }
 
   handleDifficultyDialogClick(x, y) {
-    const dialogWidth = 320;
-    const dialogHeight = 280;
-    const dialogX = (this.width - dialogWidth) / 2;
-    const dialogY = (this.height - dialogHeight) / 2;
-
-    if (x >= dialogX + 30 && x <= dialogX + dialogWidth - 30 && y >= dialogY + 100 && y <= dialogY + 150) {
+    if (this.difficultyButtons.easy.contains(x, y)) {
       this.changeLevel(1);
-      this.gameStatus = 'playing';
+      this.gameStatus = this.STATES.PLAYING;
       return;
     }
-
-    if (x >= dialogX + 30 && x <= dialogX + dialogWidth - 30 && y >= dialogY + 160 && y <= dialogY + 210) {
+    if (this.difficultyButtons.medium.contains(x, y)) {
       this.changeLevel(2);
-      this.gameStatus = 'playing';
+      this.gameStatus = this.STATES.PLAYING;
       return;
     }
-
-    if (x >= dialogX + 30 && x <= dialogX + dialogWidth - 30 && y >= dialogY + 220 && y <= dialogY + 270) {
+    if (this.difficultyButtons.hard.contains(x, y)) {
       this.changeLevel(3);
-      this.gameStatus = 'playing';
+      this.gameStatus = this.STATES.PLAYING;
       return;
     }
 
-    if (x < dialogX || x > dialogX + dialogWidth || y < dialogY || y > dialogY + dialogHeight) {
-      this.gameStatus = 'playing';
+    // Click outside dialog -> close
+    const diffDlgW = 320, diffDlgH = 280;
+    const diffDlgX = (this.width - diffDlgW) / 2;
+    const diffDlgY = (this.height - diffDlgH) / 2;
+    if (x < diffDlgX || x > diffDlgX + diffDlgW || y < diffDlgY || y > diffDlgY + diffDlgH) {
+      this.gameStatus = this.STATES.PLAYING;
     }
   }
 
@@ -431,11 +468,11 @@ class PuzzleGame extends BasePage {
       ctx.fillText(timeText, infoX + infoWidth / 2 + textWidth / 2 + 10, infoY + 27);
 
       const size = this.getPuzzleSize();
-      const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
-      const startX = (this.width - pieceSize * size) / 2;
-      const startY = 130;
-      const puzzleWidth = pieceSize * size;
-      const puzzleHeight = pieceSize * size;
+      const pieceSize = this.pieceSize;
+      const startX = this.boardRect.x;
+      const startY = this.boardRect.y;
+      const puzzleWidth = this.boardRect.w;
+      const puzzleHeight = this.boardRect.h;
 
       // 绘制拼图容器
       drawRoundedRect(ctx, startX - 10, startY - 10, puzzleWidth + 20, puzzleHeight + 20, 20);
@@ -529,15 +566,9 @@ class PuzzleGame extends BasePage {
         ctx.drawImage(this.puzzleImage, hintX, hintY, hintWidth, hintHeight);
       }
 
-      const buttonHeight = 50;
-      const buttonWidth = 100;
-      const buttonSpacing = 20;
-      const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
-      const buttonStartX = (this.width - totalButtonWidth) / 2;
-      const buttonY = this.height - buttonHeight - 20;
-      
-      drawRoundedRect(ctx, buttonStartX, buttonY, buttonWidth, buttonHeight, 25);
-      const backGradient = ctx.createLinearGradient(buttonStartX, buttonY, buttonStartX + buttonWidth, buttonY + buttonHeight);
+      const back = this.buttons.back;
+      drawRoundedRect(ctx, back.x, back.y, back.w, back.h, 25);
+      const backGradient = ctx.createLinearGradient(back.x, back.y, back.x + back.w, back.y + back.h);
       backGradient.addColorStop(0, '#6B7280');
       backGradient.addColorStop(1, '#4B5563');
       ctx.fillStyle = backGradient;
@@ -548,11 +579,11 @@ class PuzzleGame extends BasePage {
       ctx.fillStyle = '#fff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('返回', buttonStartX + buttonWidth / 2, buttonY + 32);
+      ctx.fillText('返回', back.centerX, back.centerY + 6);
 
-      const difficultyX = buttonStartX + buttonWidth + buttonSpacing;
-      drawRoundedRect(ctx, difficultyX, buttonY, buttonWidth, buttonHeight, 25);
-      const orangeGradient = ctx.createLinearGradient(difficultyX, buttonY, difficultyX + buttonWidth, buttonY + buttonHeight);
+      const difficulty = this.buttons.difficulty;
+      drawRoundedRect(ctx, difficulty.x, difficulty.y, difficulty.w, difficulty.h, 25);
+      const orangeGradient = ctx.createLinearGradient(difficulty.x, difficulty.y, difficulty.x + difficulty.w, difficulty.y + difficulty.h);
       orangeGradient.addColorStop(0, '#FF9800');
       orangeGradient.addColorStop(1, '#F57C00');
       ctx.fillStyle = orangeGradient;
@@ -563,11 +594,11 @@ class PuzzleGame extends BasePage {
       ctx.fillStyle = '#fff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('难度设置', difficultyX + buttonWidth / 2, buttonY + 32);
+      ctx.fillText('难度设置', difficulty.centerX, difficulty.centerY + 6);
 
-      const restartX = difficultyX + buttonWidth + buttonSpacing;
-      drawRoundedRect(ctx, restartX, buttonY, buttonWidth, buttonHeight, 25);
-      const restartGradient = ctx.createLinearGradient(restartX, buttonY, restartX + buttonWidth, buttonY + buttonHeight);
+      const restart = this.buttons.restart;
+      drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, 25);
+      const restartGradient = ctx.createLinearGradient(restart.x, restart.y, restart.x + restart.w, restart.y + restart.h);
       restartGradient.addColorStop(0, '#10B981');
       restartGradient.addColorStop(1, '#059669');
       ctx.fillStyle = restartGradient;
@@ -578,63 +609,66 @@ class PuzzleGame extends BasePage {
       ctx.fillStyle = '#fff';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('重新开始', restartX + buttonWidth / 2, buttonY + 32);
+      ctx.fillText('重新开始', restart.centerX, restart.centerY + 6);
 
-      if (this.gameStatus === 'completed') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, this.width, this.height);
-        
-        const dialogWidth = 300;
-        const dialogHeight = 280;
-        const dialogX = (this.width - dialogWidth) / 2;
-        const dialogY = (this.height - dialogHeight) / 2;
-        
-        drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        ctx.fillStyle = '#fff';
-        ctx.font = '28px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('拼图完成！', this.width / 2, dialogY + 60);
-        
-        ctx.font = '20px Arial';
-        ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, dialogY + 100);
-
-        drawRoundedRect(ctx, dialogX + 30, dialogY + 140, dialogWidth - 60, 50, 25);
-        const replayGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 140, dialogX + dialogWidth - 30, dialogY + 190);
-        replayGradient.addColorStop(0, '#4CAF50');
-        replayGradient.addColorStop(1, '#45a049');
-        ctx.fillStyle = replayGradient;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = '#fff';
-        ctx.font = '16px Arial';
-        ctx.fillText('再玩一次', this.width / 2, dialogY + 172);
-
-        drawRoundedRect(ctx, dialogX + 30, dialogY + 200, dialogWidth - 60, 50, 25);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = '#fff';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('返回首页', this.width / 2, dialogY + 232);
-      }
-
-      if (this.gameStatus === 'showing_difficulty') {
-        this.renderDifficultyDialog(ctx);
-      }
+      // State overlays
+      const overlays = {
+        [this.STATES.COMPLETED]: () => this.renderCompletedOverlay(ctx),
+        [this.STATES.DIFFICULTY]: () => this.renderDifficultyDialog(ctx),
+      };
+      overlays[this.gameStatus]?.();
     } catch (error) {
       console.error('Render error:', error);
     }
+  }
+
+  renderCompletedOverlay(ctx) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, this.width, this.height);
+
+    const dialogWidth = 300;
+    const dialogHeight = 280;
+    const dialogX = (this.width - dialogWidth) / 2;
+    const dialogY = (this.height - dialogHeight) / 2;
+
+    drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '28px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('拼图完成！', this.width / 2, dialogY + 60);
+
+    ctx.font = '20px Arial';
+    ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, dialogY + 100);
+
+    drawRoundedRect(ctx, dialogX + 30, dialogY + 140, dialogWidth - 60, 50, 25);
+    const replayGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 140, dialogX + dialogWidth - 30, dialogY + 190);
+    replayGradient.addColorStop(0, '#4CAF50');
+    replayGradient.addColorStop(1, '#45a049');
+    ctx.fillStyle = replayGradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Arial';
+    ctx.fillText('再玩一次', this.width / 2, dialogY + 172);
+
+    drawRoundedRect(ctx, dialogX + 30, dialogY + 200, dialogWidth - 60, 50, 25);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('返回首页', this.width / 2, dialogY + 232);
   }
 
   handleTouchStart(e) {
@@ -645,55 +679,39 @@ class PuzzleGame extends BasePage {
     this.touchStartX = x;
     this.touchStartY = y;
 
-    if (this.gameStatus === 'showing_difficulty') {
+    // State-specific handlers first
+    if (this.gameStatus === this.STATES.DIFFICULTY) {
       this.handleDifficultyDialogClick(x, y);
       return;
     }
 
-    const buttonHeight = 50;
-    const buttonWidth = 100;
-    const buttonSpacing = 20;
-    const totalButtonWidth = (buttonWidth * 3) + (buttonSpacing * 2);
-    const buttonStartX = (this.width - totalButtonWidth) / 2;
-    const buttonY = this.height - buttonHeight - 20;
-    const buttonAreaTop = buttonY;
-    const buttonAreaBottom = buttonY + buttonHeight;
-
-    if (y >= buttonAreaTop && y <= buttonAreaBottom) {
-      if (x >= buttonStartX && x <= buttonStartX + buttonWidth) {
-        GameGlobal.app.showPage('home');
-        return;
-      }
-
-      const difficultyX = buttonStartX + buttonWidth + buttonSpacing;
-      if (x >= difficultyX && x <= difficultyX + buttonWidth) {
-        this.showDifficultyDialog();
-        return;
-      }
-
-      const restartX = difficultyX + buttonWidth + buttonSpacing;
-      if (x >= restartX && x <= restartX + buttonWidth) {
+    if (this.gameStatus === this.STATES.COMPLETED) {
+      if (this.completedButtons.replay.contains(x, y)) {
         this.initPuzzle();
-        return;
       }
+      if (this.completedButtons.home.contains(x, y)) {
+        this.navigateTo('home');
+      }
+      return;
     }
 
-    const size = this.getPuzzleSize();
-    const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
-    const startX = (this.width - pieceSize * size) / 2;
-    const startY = 130;
+    // Buttons available in all active states
+    if (this.buttons.back.contains(x, y)) {
+      this.navigateTo('home');
+      return;
+    }
+    if (this.buttons.difficulty.contains(x, y)) {
+      this.showDifficultyDialog();
+      return;
+    }
+    if (this.buttons.restart.contains(x, y)) {
+      this.initPuzzle();
+      return;
+    }
 
-    if (x >= startX && x <= startX + pieceSize * size && y >= startY && y <= startY + pieceSize * size) {
+    // Board click (only in playing state)
+    if (this.gameStatus === this.STATES.PLAYING && this.boardRect.contains(x, y)) {
       this.handlePieceClick(x, y);
-    }
-
-    if (this.gameStatus === 'completed') {
-      if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= this.height / 2 + 60 && y <= this.height / 2 + 110) {
-        this.initPuzzle();
-      }
-      if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= this.height / 2 + 120 && y <= this.height / 2 + 170) {
-        GameGlobal.app.showPage('home');
-      }
     }
   }
 

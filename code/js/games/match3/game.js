@@ -28,13 +28,18 @@ class Match3Game extends BasePage {
   constructor() {
     super();
 
+    this.STATES = Object.freeze({
+      PLAYING: 'playing',
+      GAME_OVER: 'gameOver',
+    });
+
     this.level = 1;
     this.score = 0;
     this.moves = 0;
     this.time = INITIAL_TIME;
     this.board = [];
     this.selectedCell = null;
-    this.gameStatus = 'playing';
+    this.gameStatus = this.STATES.PLAYING;
     this.lastUpdateTime = Date.now();
     this.touchStart = null;
     this.touchEnd = null;
@@ -379,7 +384,7 @@ class Match3Game extends BasePage {
   }
 
   handleCellClick(row, col) {
-    if (this.gameStatus !== 'playing' || this.anim.isAnimating) return;
+    if (this.gameStatus !== this.STATES.PLAYING || this.anim.isAnimating) return;
 
     const size = this.board.length;
     if (row < 0 || row >= size || col < 0 || col >= size) return;
@@ -399,7 +404,7 @@ class Match3Game extends BasePage {
   }
 
   handleCellSwap(row1, col1, row2, col2) {
-    if (this.gameStatus !== 'playing' || this.anim.isAnimating) return;
+    if (this.gameStatus !== this.STATES.PLAYING || this.anim.isAnimating) return;
 
     const size = this.board.length;
     if (row1 < 0 || row1 >= size || col1 < 0 || col1 >= size || row2 < 0 || row2 >= size || col2 < 0 || col2 >= size) return;
@@ -493,7 +498,7 @@ class Match3Game extends BasePage {
   }
 
   update() {
-    if (this.gameStatus === 'playing') {
+    if (this.gameStatus === this.STATES.PLAYING) {
       const now = Date.now();
       const deltaTime = (now - this.lastUpdateTime) / 1000;
       this.lastUpdateTime = now;
@@ -505,15 +510,15 @@ class Match3Game extends BasePage {
       this.time -= clampedDeltaTime;
       if (this.time <= 0) {
         this.time = 0;
-        this.gameStatus = 'gameOver';
+        this.gameStatus = this.STATES.GAME_OVER;
         this.saveGameScore();
       }
     }
   }
 
   saveGameScore() {
-    if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.databus) {
-      GameGlobal.app.databus.recordMatch3Score(this.score, this.level);
+    if (this.databus) {
+      this.databus.recordMatch3Score(this.score, this.level);
     }
   }
 
@@ -571,7 +576,7 @@ class Match3Game extends BasePage {
 
       this.renderer.drawBottomButtons(ctx);
 
-      if (this.gameStatus === 'gameOver') {
+      if (this.gameStatus === this.STATES.GAME_OVER) {
         this.renderer.drawGameOver(ctx);
       }
 
@@ -595,18 +600,28 @@ class Match3Game extends BasePage {
     if (!pos) return;
     const { x, y } = pos;
 
-    if (x >= 40 && x <= 140 && y >= this.height - 60 && y <= this.height - 20) {
-      if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.showPage) {
-        GameGlobal.app.showPage('home');
-      }
+    const btns = this.renderer.getButtonRects();
+    if (btns.back.contains(x, y)) {
+      this.navigateTo('home');
       return;
     }
-
-    if (x >= this.width - 140 && x <= this.width - 40 && y >= this.height - 60 && y <= this.height - 20) {
+    if (btns.restart.contains(x, y)) {
       this.reset();
       return;
     }
 
+    if (this.gameStatus === this.STATES.GAME_OVER) {
+      const goBtns = this.renderer.getGameOverRects();
+      if (goBtns.restart.contains(x, y)) {
+        this.reset();
+      }
+      if (goBtns.home.contains(x, y)) {
+        this.navigateTo('home');
+      }
+      return;
+    }
+
+    // Board click (only in playing state)
     const size = this.board.length;
     const cellSize = this.cellSize;
     const startX = this.startX;
@@ -617,17 +632,6 @@ class Match3Game extends BasePage {
       const row = Math.floor((y - startY) / cellSize);
       this.touchStart = { row, col, x, y };
       this.handleCellClick(row, col);
-    }
-
-    if (this.gameStatus === 'gameOver') {
-      if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= this.height / 2 + 60 && y <= this.height / 2 + 110) {
-        this.reset();
-      }
-      if (x >= this.width / 2 - 100 && x <= this.width / 2 + 100 && y >= this.height / 2 + 120 && y <= this.height / 2 + 170) {
-        if (typeof GameGlobal !== 'undefined' && GameGlobal.app && GameGlobal.app.showPage) {
-          GameGlobal.app.showPage('home');
-        }
-      }
     }
   }
 
@@ -696,7 +700,7 @@ class Match3Game extends BasePage {
     this.moves = 0;
     this.time = INITIAL_TIME;
     this.selectedCell = null;
-    this.gameStatus = 'playing';
+    this.gameStatus = this.STATES.PLAYING;
     this.lastUpdateTime = Date.now();
 
     this.anim.clear();
