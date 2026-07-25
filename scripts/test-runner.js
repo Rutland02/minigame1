@@ -19,8 +19,10 @@ const path = require('path');
 
 const PORT = 19830;
 const REPORT_PATH = path.resolve(__dirname, '..', 'test-report.json');
+const ERROR_REPORT_PATH = path.resolve(__dirname, '..', 'error-report.json');
 const GAME_JS = path.resolve(__dirname, '..', 'code', 'game.js');
 const TIMEOUT = 60000; // 60 秒
+const ERROR_WAIT = 3000; // 测试结果到达后再等 3 秒收集错误
 
 async function main() {
   console.log('========================================');
@@ -28,6 +30,7 @@ async function main() {
   console.log('========================================\n');
 
   // 1. 启动 HTTP 服务器
+  const collectedErrors = [];
   let resolveReport;
   const reportPromise = new Promise((resolve, reject) => {
     resolveReport = resolve;
@@ -46,6 +49,19 @@ async function main() {
         } catch (e) {
           resolveReport({ error: 'Invalid JSON', raw: body });
         }
+      });
+    } else if (req.method === 'POST' && req.url === '/errors') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{"ok":true}');
+        try {
+          const data = JSON.parse(body);
+          if (data.errors && Array.isArray(data.errors)) {
+            collectedErrors.push(...data.errors);
+          }
+        } catch (_) {}
       });
     } else {
       res.writeHead(404);
@@ -83,6 +99,8 @@ async function main() {
     process.exit(1);
   }
 
+  // 等待错误报告到达
+  await new Promise(resolve => setTimeout(resolve, ERROR_WAIT));
   server.close();
 
   // 4. 保存报告
@@ -101,10 +119,40 @@ async function main() {
       console.log(`    - ${t.name}: ${t.error}`);
     }
   }
+
+  // 5. 保存运行时错误报告
+  if (collectedErrors.length > 0) {
+    fs.writeFileSync(ERROR_REPORT_PATH, JSON.stringify({
+      count: collectedErrors.length,
+      errors: collectedErrors,
+      timestamp: new Date().toISOString()
+    }, null, 2), 'utf8');
+    console.log(`\n  运行时错误: ${collectedErrors.length} 个`);
+    const byType = {};
+    for (const e of collectedErrors) {
+      byType[e.type] = (byType[e.type] || 0) + 1;
+    }
+    for (const [type, count] of Object.entries(byType)) {
+      console.log(`    - ${type}: ${count}`);
+    }
+    // 打印前 5 条错误详情
+    const preview = collectedErrors.slice(0, 5);
+    for (const e of preview) {
+      const msg = e.message.length > 120 ? e.message.substring(0, 120) + '...' : e.message;
+      console.log(`    [${e.type}] ${msg}`);
+    }
+    if (collectedErrors.length > 5) {
+      console.log(`    ... 还有 ${collectedErrors.length - 5} 条，详见 ${ERROR_REPORT_PATH}`);
+    }
+  } else {
+    console.log('\n  运行时错误: 0 个');
+  }
+
   console.log(`\n  报告已保存: ${REPORT_PATH}`);
   console.log('========================================');
 
-  process.exit(report.failed > 0 ? 1 : 0);
+  const hasErrors = report.failed > 0 || collectedErrors.length > 0;
+  process.exit(hasErrors ? 1 : 0);
 }
 
 main().catch(e => {

@@ -904,6 +904,14 @@ async function runAllTests() {
     console.error('[TEST] Failed to send report:', e.message);
   }
 
+  // 发送捕获的运行时错误
+  const errorCapture = require('./utils/errorCapture');
+  const captured = errorCapture.getErrors();
+  if (captured.length > 0) {
+    console.log('[TEST] ' + captured.length + ' runtime error(s) captured, sending...');
+  }
+  errorCapture.flushTo('http://127.0.0.1:19830/errors');
+
   return summary;
 }
 

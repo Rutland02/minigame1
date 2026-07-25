@@ -1,4 +1,7 @@
 const App = require('./js/common/app');
+const errorCapture = require('./js/utils/errorCapture');
+
+errorCapture.init();
 
 wx.onShow(function() {
   if (!GameGlobal.app) {
