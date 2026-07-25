@@ -50,7 +50,7 @@ function drawButton(ctx, x, y, width, height, radius, colorStart, colorEnd, text
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.fillStyle = opts.textColor || '#ffffff';
-  ctx.font = opts.font || '14px Arial, "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.font = opts.font || '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x + width / 2, y + height / 2);

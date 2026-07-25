@@ -120,7 +120,7 @@ class HomePage extends BasePage {
     const boxH = maxR * 2 + pad * 2 + this.scaleSize(30);
 
     ctx.save();
-    ctx.shadowColor = this.colors.shadow;
+    ctx.shadowColor = 'rgba(100, 150, 220, 0.18)';
     ctx.shadowBlur = 8;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 2;
@@ -132,7 +132,7 @@ class HomePage extends BasePage {
     ctx.imageSmoothingEnabled = false;
     btns.forEach(btn => {
       ctx.save();
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+      ctx.shadowColor = 'rgba(100, 150, 220, 0.12)';
       ctx.shadowBlur = 4;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 2;
@@ -340,7 +340,7 @@ class HomePage extends BasePage {
 
     // 背景卡片
     ctx.save();
-    ctx.shadowColor = this.colors.shadow;
+    ctx.shadowColor = 'rgba(100, 150, 220, 0.15)';
     ctx.shadowBlur = 6;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 2;
@@ -362,7 +362,7 @@ class HomePage extends BasePage {
     ctx.fillStyle = '#3B82F6';
     ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.font = `bold ${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `bold ${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(userInfo ? (userInfo.nickName ? userInfo.nickName[0] : '用') : '用', avatarX, avatarY);
@@ -371,13 +371,13 @@ class HomePage extends BasePage {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = this.colors.primaryText;
-    ctx.font = `bold ${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `bold ${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     const displayName = userInfo ? (userInfo.nickName || '用户') : '用户';
     ctx.fillText(displayName, region.x + this.scaleSize(60), region.y + region.h * 0.38);
 
     // 总积分
     ctx.fillStyle = this.colors.subText;
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillText('积分: ' + totalScore, region.x + this.scaleSize(60), region.y + region.h * 0.7);
   }
 
@@ -385,14 +385,14 @@ class HomePage extends BasePage {
   _drawLeaderboardButton(ctx) {
     const btn = this.leaderboardButton;
     const gradient = ctx.createLinearGradient(btn.x, btn.y, btn.x + btn.w, btn.y + btn.h);
-    gradient.addColorStop(0, '#8B5CF6');
-    gradient.addColorStop(1, '#7C3AED');
+    gradient.addColorStop(0, '#0D9488');
+    gradient.addColorStop(1, '#0F766E');
     drawRoundedRect(ctx, btn.x, btn.y, btn.w, btn.h, this.scaleSize(22));
     ctx.fillStyle = gradient;
     ctx.fill();
 
     ctx.fillStyle = '#fff';
-    ctx.font = `bold ${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `bold ${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('排行榜', btn.centerX, btn.centerY);
@@ -417,7 +417,7 @@ class HomePage extends BasePage {
 
     // 标题
     ctx.fillStyle = this.colors.primaryText;
-    ctx.font = `bold ${this.scaleSize(22)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `bold ${this.scaleSize(22)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('选择难度', this.width / 2, dlgY + dlgH * 0.14);
@@ -442,7 +442,7 @@ class HomePage extends BasePage {
       ctx.fill();
 
       ctx.fillStyle = '#fff';
-      ctx.font = `bold ${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `bold ${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText(lv.label, btn.centerX, btn.centerY);
     });
@@ -469,7 +469,7 @@ class HomePage extends BasePage {
 
     // 标题
     ctx.fillStyle = this.colors.primaryText;
-    ctx.font = `bold ${this.scaleSize(22)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `bold ${this.scaleSize(22)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('排行榜', this.width / 2, dlgY + dlgH * 0.12);
@@ -507,19 +507,19 @@ class HomePage extends BasePage {
       // 标签
       ctx.textAlign = 'left';
       ctx.fillStyle = this.colors.subText;
-      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillText(item.label, itemX + this.scaleSize(16), itemY + itemH * 0.38);
 
       // 值
       ctx.fillStyle = this.colors.primaryText;
-      ctx.font = `bold ${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `bold ${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillText(item.value, itemX + this.scaleSize(16), itemY + itemH * 0.75);
     });
 
     // 提示关闭
     ctx.textAlign = 'center';
     ctx.fillStyle = this.colors.subText;
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillText('点击任意位置关闭', this.width / 2, dlgY + dlgH - this.scaleSize(20));
 
     ctx.textBaseline = 'alphabetic';

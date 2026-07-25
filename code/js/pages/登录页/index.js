@@ -61,10 +61,10 @@ class LoginPage extends BasePage {
       ctx.fillRect(0, 0, this.width, this.height);
       const errBtnW = this.scaleSize(240);
       const errBtnH = this.scaleSize(50);
-      ctx.fillStyle = '#C41E3A';
+      ctx.fillStyle = '#0D9488';
       ctx.fillRect((this.width - errBtnW) / 2, this.height * 0.75, errBtnW, errBtnH);
       ctx.fillStyle = '#fff';
-      ctx.font = `${this.scaleSize(18)}px Arial`;
+      ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('立即登录', this.width / 2, this.height * 0.75 + errBtnH / 2);
     }
@@ -95,8 +95,8 @@ class LoginPage extends BasePage {
       const buttonHeight = this.scaleSize(45);
       const buttonX = (this.width - buttonWidth) / 2;
       const buttonY = this.height * 0.8;
-      drawButton(ctx, buttonX, buttonY, buttonWidth, buttonHeight, this.scaleSize(20), '#C41E3A', '#C41E3A', '立即登录', {
-        font: `${this.scaleSize(16)}px Inter, Arial`,
+      drawButton(ctx, buttonX, buttonY, buttonWidth, buttonHeight, this.scaleSize(20), '#0D9488', '#0F766E', '立即登录', {
+        font: `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`,
         strokeColor: 'rgba(255, 255, 255, 0.3)'
       });
       this.loginButtonRect = { x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight };
@@ -121,8 +121,8 @@ class LoginPage extends BasePage {
     ctx.fill();
     ctx.stroke();
     
-    ctx.fillStyle = '#2563EB';
-    ctx.font = `${this.scaleSize(16)}px Inter, Arial`;
+    ctx.fillStyle = '#0D9488';
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('登录中...', this.width / 2, this.height / 2 + this.scaleSize(5));
   }

@@ -30,8 +30,6 @@ class PuzzleGame extends BasePage {
     this.celebrationStartTime = 0;
     this.puzzleImages = [
       'images/puzzle/he.jpg',
-      'images/puzzle/lotus.jpg',
-      'images/puzzle/village.jpg',
     ];
     this.currentImageIndex = Math.floor(Math.random() * this.puzzleImages.length);
     this.initPuzzle();
@@ -416,7 +414,7 @@ class PuzzleGame extends BasePage {
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(24)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('选择难度', this.width / 2, dialogY + dialogHeight * 0.18);
 
@@ -429,7 +427,7 @@ class PuzzleGame extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('简单 (3×3)', easy.centerX, easy.centerY + 6);
 
@@ -445,7 +443,7 @@ class PuzzleGame extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('中等 (4×4)', medium.centerX, medium.centerY + 6);
 
@@ -461,7 +459,7 @@ class PuzzleGame extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('困难 (5×5)', hard.centerX, hard.centerY + 6);
   }
@@ -504,14 +502,14 @@ class PuzzleGame extends BasePage {
       const infoX = (this.width - infoWidth) / 2;
       const infoY = this.buttons.back.y - infoHeight - this.scaleSize(15);
       drawRoundedRect(ctx, infoX, infoY, infoWidth, infoHeight, this.scaleSize(15));
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
-      ctx.fillStyle = '#ffffff';
+      ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.fillStyle = '#333333';
       ctx.textAlign = 'center';
       const difficultyText = `难度: ${this.getPuzzleSize()}×${this.getPuzzleSize()}`;
       const timeText = `时间: ${this.getElapsedTime()}s`;
@@ -632,7 +630,7 @@ class PuzzleGame extends BasePage {
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('返回', back.centerX, back.centerY + 6);
 
@@ -648,7 +646,7 @@ class PuzzleGame extends BasePage {
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('难度设置', difficulty.centerX, difficulty.centerY + 6);
 
@@ -664,7 +662,7 @@ class PuzzleGame extends BasePage {
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.fillStyle = '#fff';
-      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText('重新开始', restart.centerX, restart.centerY + 6);
 
@@ -701,15 +699,15 @@ class PuzzleGame extends BasePage {
     ctx.stroke();
 
     ctx.fillStyle = '#fff';
-    ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(28)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('拼图完成！', this.width / 2, dialogY + dialogHeight * 0.18);
 
-    ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(20)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, dialogY + dialogHeight * 0.3);
 
     if (this.earnedScore > 0) {
-      ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(20)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#FFD700';
       ctx.fillText(`积分: +${this.earnedScore}`, this.width / 2, dialogY + dialogHeight * 0.4);
       ctx.fillStyle = '#fff';
@@ -718,8 +716,8 @@ class PuzzleGame extends BasePage {
     const replay = this.completedButtons.replay;
     drawRoundedRect(ctx, replay.x, replay.y, replay.w, replay.h, this.scaleSize(25));
     const replayGradient = ctx.createLinearGradient(replay.x, replay.y, replay.x + replay.w, replay.y + replay.h);
-    replayGradient.addColorStop(0, '#4CAF50');
-    replayGradient.addColorStop(1, '#45a049');
+    replayGradient.addColorStop(0, '#10B981');
+    replayGradient.addColorStop(1, '#059669');
     ctx.fillStyle = replayGradient;
     ctx.fill();
     if (this.pressedId === 'replay') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
@@ -727,7 +725,7 @@ class PuzzleGame extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#fff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillText('再玩一次', replay.centerX, replay.centerY + 6);
 
     const home = this.completedButtons.home;
@@ -739,7 +737,7 @@ class PuzzleGame extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#fff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回首页', home.centerX, home.centerY + 6);
   }

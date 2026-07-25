@@ -40,7 +40,7 @@ class QuizPage extends BasePage {
     const { vm } = this;
 
     if (!vm.questions || vm.questions.length === 0) {
-      ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#FF0000';
       ctx.textAlign = 'center';
       ctx.fillText('题库加载失败，请检查 content/ 目录', this.width / 2, this.height / 2);
@@ -93,7 +93,7 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.fillText(`第${vm.progress}题`, 20 + pad, headerTextY);
@@ -107,7 +107,7 @@ class QuizPage extends BasePage {
       const blink = Math.sin(this.animationFrame * 0.3) > 0;
       timerColor = blink ? '#EF4444' : '#DC2626';
     }
-    ctx.font = `bold ${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `bold ${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = timerColor;
     ctx.textAlign = 'right';
     ctx.fillText(`剩余时间: ${vm.timeLeft}s`, this.width - 20 - badgeW - this.scaleSize(10), headerTextY);
@@ -119,7 +119,7 @@ class QuizPage extends BasePage {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.font = `${this.scaleSize(12)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(12)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
     ctx.fillText(question.type, this.width - 20 - badgeW / 2, headerTextY);
@@ -128,6 +128,7 @@ class QuizPage extends BasePage {
   _drawQuestionCard(ctx) {
     const { vm } = this;
     const question = vm.currentQuestion;
+    if (!question) return;
     const cardX = 20;
     const cardY = Math.round(this.height * 0.12);
     const cardW = this.width - 40;
@@ -142,7 +143,7 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.font = `${this.scaleSize(17)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(17)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -153,33 +154,41 @@ class QuizPage extends BasePage {
   _drawOptions(ctx) {
     const { vm } = this;
     const question = vm.currentQuestion;
+    if (!question) return;
     const optionYStart = Math.round(this.height * 0.35);
     const optionHeight = this.scaleSize(56) + this.scaleSize(10);
 
-    question.options.forEach((option, index) => {
-      let fillColor = 'rgba(255, 255, 255, 0.15)';
-      let strokeColor = '#ffffff';
+    const options = question.options || [];
+    options.forEach((option, index) => {
+      let fillColor = 'rgba(255, 255, 255, 0.95)';
+      let strokeColor = '#E2E8F0';
+      let textColor = '#333333';
       if (vm.isAnswered) {
         if (index === question.correctAnswer) {
-          fillColor = 'rgba(76, 175, 80, 0.3)';
-          strokeColor = '#ffffff';
+          fillColor = 'rgba(76, 175, 80, 0.35)';
+          strokeColor = '#4CAF50';
+          textColor = '#2E7D32';
         } else if (index === vm.selectedOption) {
-          fillColor = 'rgba(244, 67, 54, 0.3)';
-          strokeColor = '#ffffff';
+          fillColor = 'rgba(244, 67, 54, 0.35)';
+          strokeColor = '#EF5350';
+          textColor = '#C62828';
         }
       } else if (index === vm.selectedOption) {
-        fillColor = 'rgba(33, 150, 243, 0.15)';
-        strokeColor = '#ffffff';
+        fillColor = 'rgba(16, 185, 129, 0.2)';
+        strokeColor = '#10B981';
+        textColor = '#065F46';
       }
 
       if (this.hintAnimating && !vm.isAnswered && index !== vm.selectedOption) {
         fillColor = 'rgba(156, 163, 175, 0.3)';
         strokeColor = 'rgba(156, 163, 175, 0.5)';
+        textColor = '#9CA3AF';
       }
       if (this.hintAnimating && !vm.isAnswered && index === vm.selectedOption) {
         const pulse = 0.3 + Math.sin(this.hintFrame * 0.15) * 0.15;
         fillColor = `rgba(76, 175, 80, ${pulse})`;
         strokeColor = '#4CAF50';
+        textColor = '#2E7D32';
       }
 
       let scale = 1;
@@ -201,23 +210,15 @@ class QuizPage extends BasePage {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      let textColor = '#000000';
-      if (vm.isAnswered) {
-        if (index === question.correctAnswer) textColor = '#059669';
-        else if (index === vm.selectedOption) textColor = '#DC2626';
-      }
-      if (this.hintAnimating && !vm.isAnswered && index !== vm.selectedOption) {
-        textColor = 'rgba(0, 0, 0, 0.3)';
-      }
       ctx.fillStyle = textColor;
-      ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${String.fromCharCode(65 + index)}. ${option}`, 40, optionYStart + index * optionHeight + optBaseline);
 
       if (vm.isAnswered && index === question.correctAnswer) {
         ctx.fillStyle = '#059669';
-        ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+        ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         ctx.fillText('✓', this.width - 35, optionYStart + index * optionHeight + optBaseline);
@@ -232,7 +233,7 @@ class QuizPage extends BasePage {
         ctx.lineTo(this.width - 40, textY);
         ctx.stroke();
         ctx.fillStyle = '#DC2626';
-        ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+        ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         ctx.fillText('✗', this.width - 35, textY);
@@ -273,13 +274,13 @@ class QuizPage extends BasePage {
     ctx.stroke();
 
     const titleY = resultCardY + Math.round(resultCardH * 0.15) + 6;
-    ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(24)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = vm.isCorrect ? '#4CAF50' : '#F44336';
     ctx.textAlign = 'center';
     ctx.fillText(vm.isCorrect ? '回答正确！' : '回答错误！', resultCardCX, titleY);
 
     const labelY = resultCardY + Math.round(resultCardH * 0.3) + 6;
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.fillText('解析：', resultCardX + pad + this.scaleSize(5), labelY);
@@ -300,7 +301,7 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#000000';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(btnText, this.resultButtonRect.centerX, this.resultButtonRect.centerY + 6);
 
@@ -326,7 +327,7 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回', btns.back.centerX, btns.back.centerY + 6);
 
@@ -341,7 +342,7 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(`提示 (${vm.hintCount})`, btns.hint.centerX, btns.hint.centerY + 6);
 
@@ -362,7 +363,7 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.4)';
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('确定', btns.submit.centerX, btns.submit.centerY + 6);
   }
@@ -392,7 +393,7 @@ class QuizPage extends BasePage {
     ctx.stroke();
 
     const titleY = cardY + Math.round(cardH * 0.12) + 6;
-    ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(28)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#10B981';
     ctx.textAlign = 'center';
     ctx.fillText('答题完成！', cardCX, titleY);
@@ -404,7 +405,7 @@ class QuizPage extends BasePage {
       `最高连击: ${vm.maxConsecutiveCorrect}`,
     ];
 
-    ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#333333';
     const statsBaseY = cardY + Math.round(cardH * 0.25);
     const statsLineH = Math.round(this.scaleSize(18) * 1.8);
@@ -428,7 +429,7 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillText('再来一轮', replay.centerX, replay.centerY + 6);
 
     const home = this.gameOverButtons.home;
@@ -443,11 +444,12 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillText('返回首页', home.centerX, home.centerY + 6);
   }
 
   _drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+    if (!text) return y;
     let line = '';
     let currentY = y;
     for (let i = 0; i < text.length; i++) {
@@ -502,6 +504,7 @@ class QuizPage extends BasePage {
     const optionHeight = this.scaleSize(56) + this.scaleSize(10);
     const optH = this.scaleSize(56);
     const question = vm.currentQuestion;
+    if (!question || !question.options) return;
     for (let i = 0; i < question.options.length; i++) {
       if (x >= 20 && x <= this.width - 20 &&
           y >= optionYStart + i * optionHeight &&

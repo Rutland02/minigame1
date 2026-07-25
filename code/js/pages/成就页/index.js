@@ -70,7 +70,7 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.fillRect(0, 0, this.width, this.height);
 
-    ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(28)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
     ctx.fillText('成就系统', this.width / 2, this.height * 0.1);
@@ -128,17 +128,17 @@ class AchievementPage extends BasePage {
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(24)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillStyle = isUnlocked ? '#000000' : 'rgba(0, 0, 0, 0.4)';
       ctx.fillText(achievement.icon || '🏆', iconX, y + itemHeight * 0.44);
 
-      ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'left';
       ctx.fillText(achievement.title, contentX, y + itemHeight * 0.35);
 
-      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
       ctx.fillText(achievement.description, contentX, y + itemHeight * 0.60);
 
@@ -146,7 +146,7 @@ class AchievementPage extends BasePage {
       drawRoundedRect(ctx, contentX, y + itemHeight * 0.69, typeBadgeW, typeBadgeH, this.scaleSize(10));
       ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
       ctx.fill();
-      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'center';
       ctx.fillText(achievement.type, contentX + typeBadgeW / 2, y + itemHeight * 0.85);
@@ -159,7 +159,7 @@ class AchievementPage extends BasePage {
       ctx.strokeStyle = isUnlocked ? '#4CAF50' : 'rgba(0, 0, 0, 0.3)';
       ctx.lineWidth = 2;
       ctx.stroke();
-      ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = isUnlocked ? '#4CAF50' : 'rgba(0, 0, 0, 0.8)';
       ctx.textAlign = 'center';
       ctx.fillText(isUnlocked ? '已解锁' : '未解锁', statusX + statusBadgeW / 2, y + itemHeight * 0.50);
@@ -170,7 +170,7 @@ class AchievementPage extends BasePage {
     const unlockedCount = achievementsWithStatus.filter(a => a.isUnlocked).length;
     const totalCount = achievementsWithStatus.length;
     
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
     ctx.fillText(`已解锁: ${unlockedCount}/${totalCount}`, this.width / 2, this.height - this.scaleSize(100));
@@ -212,7 +212,7 @@ class AchievementPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回', back.centerX, back.centerY + textBaselineOffset);
 
@@ -227,7 +227,7 @@ class AchievementPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('查看证书', cert.centerX, cert.centerY + textBaselineOffset);
   }
@@ -244,7 +244,7 @@ class AchievementPage extends BasePage {
     const card = this.detailCardRect;
     const cardRadius = this.scaleSize(20);
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowColor = 'rgba(75, 85, 99, 0.3)';
     ctx.shadowBlur = 20;
     ctx.shadowOffsetY = 4;
     drawRoundedRect(ctx, card.x, card.y, card.w, card.h, cardRadius);
@@ -262,33 +262,33 @@ class AchievementPage extends BasePage {
     const cardH = card.h;
     const iconY = card.y + cardH * 0.14;
     if (isUnlocked) {
-      ctx.font = `${this.scaleSize(48)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(48)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillStyle = '#000000';
       ctx.fillText(achievement.icon || '🏆', this.width / 2, iconY);
     } else {
       ctx.save();
       ctx.globalAlpha = 0.3;
-      ctx.font = `${this.scaleSize(48)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(48)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillStyle = '#000000';
       ctx.fillText(achievement.icon || '🏆', this.width / 2, iconY);
       ctx.restore();
 
-      ctx.font = `${this.scaleSize(36)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(36)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
       ctx.fillText('🔒', this.width / 2, iconY);
     }
 
     const titleY = card.y + cardH * 0.29;
-    ctx.font = `bold ${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `bold ${this.scaleSize(20)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillStyle = isUnlocked ? '#000000' : 'rgba(0, 0, 0, 0.4)';
     ctx.fillText(achievement.title, this.width / 2, titleY);
 
     const descY = card.y + cardH * 0.39;
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.35)';
     ctx.fillText(achievement.description, this.width / 2, descY);
 
@@ -297,7 +297,7 @@ class AchievementPage extends BasePage {
     drawRoundedRect(ctx, this.width / 2 - typeBadgeW / 2, typeY - this.scaleSize(12), typeBadgeW, this.scaleSize(24), this.scaleSize(12));
     ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.08)';
     ctx.fill();
-    ctx.font = `${this.scaleSize(12)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(12)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.3)';
     ctx.textAlign = 'center';
     ctx.fillText(achievement.type, this.width / 2, typeY + this.scaleSize(4));
@@ -320,13 +320,13 @@ class AchievementPage extends BasePage {
       ctx.stroke();
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     }
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(isUnlocked ? '已解锁' : '未解锁', this.width / 2, statusY + this.scaleSize(4));
 
     if (!isUnlocked) {
       const hintY = card.y + cardH * 0.77;
-      ctx.font = `${this.scaleSize(13)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `${this.scaleSize(13)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.textAlign = 'center';
       ctx.fillText('完成更多挑战来解锁此成就', this.width / 2, hintY);
@@ -343,7 +343,7 @@ class AchievementPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('关闭', closeBtn.centerX, closeBtn.centerY + this.scaleSize(6));
   }
@@ -379,7 +379,7 @@ class AchievementPage extends BasePage {
     ctx.lineWidth = 4;
     ctx.stroke();
 
-    ctx.font = `${this.scaleSize(32)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(32)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#4a6fa5';
     ctx.textAlign = 'center';
     ctx.fillText('数字体验证书', this.width / 2, certCardY + certCardH * 0.12);
@@ -390,7 +390,7 @@ class AchievementPage extends BasePage {
     const achievements = databus.scoreManager.getUnlockedAchievements();
     const scores = databus.getAllScores();
 
-    ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
     ctx.fillText(`兹证明 ${userInfo ? userInfo.nickName : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, certCardY + certCardH * 0.25);
@@ -403,7 +403,7 @@ class AchievementPage extends BasePage {
     ctx.strokeStyle = 'rgba(74, 111, 165, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#4a6fa5';
     ctx.textAlign = 'center';
     ctx.fillText(`总积分: ${totalScore}`, this.width / 2, certCardY + certCardH * 0.40);
@@ -417,13 +417,13 @@ class AchievementPage extends BasePage {
     ctx.arc(this.width / 2, certCardY + certCardH * 0.65, sealR, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(20)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('海澄村', this.width / 2, certCardY + certCardH * 0.63);
     ctx.fillText('数字赋能', this.width / 2, certCardY + certCardH * 0.68);
 
     const date = new Date().toLocaleDateString();
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'center';
     ctx.fillText(`颁发日期: ${date}`, this.width / 2, certCardY + certCardH * 0.82);
@@ -443,15 +443,15 @@ class AchievementPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('分享证书', share.centerX, share.centerY + certTextOffset);
 
     const save = this.certSaveBtn;
     drawRoundedRect(ctx, save.x, save.y, save.w, save.h, certBtnRadius);
     const saveGradient = ctx.createLinearGradient(save.x, save.y, save.x + save.w, save.y + save.h);
-    saveGradient.addColorStop(0, '#3B82F6');
-    saveGradient.addColorStop(1, '#2563EB');
+    saveGradient.addColorStop(0, '#0D9488');
+    saveGradient.addColorStop(1, '#0F766E');
     ctx.fillStyle = saveGradient;
     ctx.fill();
     if (this.pressedId === 'certSave') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
@@ -459,7 +459,7 @@ class AchievementPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('保存到相册', save.centerX, save.centerY + certTextOffset);
 
@@ -475,7 +475,7 @@ class AchievementPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回', backBtn.centerX, backBtn.centerY + certTextOffset);
   }
@@ -522,16 +522,8 @@ class AchievementPage extends BasePage {
         return;
       }
 
-      if (y >= this.listStartY && y <= this.height - this.scaleSize(130)) {
-        const index = Math.floor((y - this.listStartY + this.scrollY) / this.listItemHeight);
-        const achievements = this.databus.getAllAchievementsWithStatus();
-        if (index >= 0 && index < achievements.length) {
-          this.selectedAchievement = achievements[index];
-          return;
-        }
-      }
-
       this.isDragging = true;
+      this.hasMoved = false;
       this.startY = y;
       this.startScrollY = this.scrollY;
     }
@@ -544,17 +536,37 @@ class AchievementPage extends BasePage {
     if (!coords) return;
     const { y } = coords;
     const deltaY = y - this.startY;
-    
+
+    if (Math.abs(deltaY) > 5) {
+      this.hasMoved = true;
+    }
+
     let newScrollY = this.startScrollY - deltaY;
-    
+
     newScrollY = Math.max(0, Math.min(newScrollY, this.maxScrollY));
-    
+
     this.scrollY = newScrollY;
   }
 
   handleTouchEnd(e) {
     this.pressedId = null;
+
+    if (this.isDragging && !this.hasMoved && !this.showCertificate && !this.selectedAchievement) {
+      const coords = getTouchCoords(e.touches, e.changedTouches);
+      if (coords) {
+        const { y } = coords;
+        if (y >= this.listStartY && y <= this.height - this.scaleSize(130)) {
+          const index = Math.floor((y - this.listStartY + this.scrollY) / this.listItemHeight);
+          const achievements = this.databus.getAllAchievementsWithStatus();
+          if (index >= 0 && index < achievements.length) {
+            this.selectedAchievement = achievements[index];
+          }
+        }
+      }
+    }
+
     this.isDragging = false;
+    this.hasMoved = false;
   }
 
   generateCertificate() {
