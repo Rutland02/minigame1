@@ -193,7 +193,8 @@ class ScoreManager {
   checkQuizAchievements(correctCount, totalQuestions) {
     this.unlockAchievement('first_game');
 
-    if (quiz.accuracy >= 80) {
+    const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+    if (accuracy >= 80) {
       this.unlockAchievement('quiz_master');
     }
 
