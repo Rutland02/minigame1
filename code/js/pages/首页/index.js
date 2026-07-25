@@ -64,7 +64,6 @@ class HomePage extends BasePage {
 
   render(ctx) {
     this.drawBackground(ctx);
-    this.drawUserInfo(ctx);
     this.drawGameCards(ctx);
     this.drawCircleActions(ctx);
   }
@@ -73,39 +72,45 @@ class HomePage extends BasePage {
     super.drawBackground(ctx, '#E1F5FE', '#E1F5FE');
   }
 
-  drawUserInfo(ctx) {
-  }
-
   drawGameCards(ctx) {
+    ctx.imageSmoothingEnabled = false;
     this.regions.gameButtons.forEach(game => {
       if (this.assets[game.iconId]) {
-        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(this.assets[game.iconId], game.x, game.y, game.w, game.h);
-        ctx.imageSmoothingEnabled = true;
       }
     });
+    ctx.imageSmoothingEnabled = true;
   }
 
   drawCircleActions(ctx) {
+    const btns = this.regions.actionButtons;
+    const pad = 10;
+    const maxR = Math.max(...btns.map(b => b.r));
+    const boxX = btns[0].x - maxR - pad;
+    const boxY = btns[0].y - maxR - pad;
+    const boxW = btns[btns.length - 1].x - btns[0].x + (maxR + pad) * 2;
+    const boxH = maxR * 2 + pad * 2 + 30;
+
     ctx.save();
     ctx.shadowColor = this.colors.shadow;
     ctx.shadowBlur = 8;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 2;
     ctx.fillStyle = this.colors.white;
-    drawRoundedRect(ctx, 25, 610, this.width - 50, 120, 20);
+    drawRoundedRect(ctx, boxX, boxY, boxW, boxH, 20);
     ctx.fill();
     ctx.restore();
 
-    this.regions.actionButtons.forEach(btn => {
+    ctx.imageSmoothingEnabled = false;
+    btns.forEach(btn => {
       ctx.save();
       ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
       ctx.shadowBlur = 4;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 2;
-      
+
       ctx.beginPath();
-      ctx.arc(btn.x, btn.y, 35, 0, Math.PI * 2);
+      ctx.arc(btn.x, btn.y, btn.r, 0, Math.PI * 2);
       ctx.fillStyle = this.colors.white;
       ctx.fill();
       ctx.strokeStyle = this.colors.cardBorder;
@@ -114,9 +119,9 @@ class HomePage extends BasePage {
       ctx.restore();
 
       if (this.assets[btn.iconId]) {
-        ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(this.assets[btn.iconId], btn.x - 30, btn.y - 30, 60, 60);
-        ctx.imageSmoothingEnabled = true;
+        const imgSize = btn.r * 2 - 10;
+        const imgOffset = imgSize / 2;
+        ctx.drawImage(this.assets[btn.iconId], btn.x - imgOffset, btn.y - imgOffset, imgSize, imgSize);
       }
 
       ctx.textAlign = 'center';
@@ -124,6 +129,7 @@ class HomePage extends BasePage {
       ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.fillText(btn.text, btn.x, btn.y + 50);
     });
+    ctx.imageSmoothingEnabled = true;
   }
 
   handleTouchStart(e) {
@@ -136,7 +142,7 @@ class HomePage extends BasePage {
     });
     this.regions.actionButtons.forEach(btn => {
       const dist = Math.sqrt((x - btn.x) ** 2 + (y - btn.y) ** 2);
-      if (dist < 40) this.selectedId = btn.id;
+      if (dist < btn.r + 5) this.selectedId = btn.id;
     });
   }
 
