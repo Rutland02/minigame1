@@ -65,9 +65,10 @@ class Match3Game extends BasePage {
 
   calculateLayout() {
     const size = this.board.length;
-    this.cellSize = Math.min((this.width - 40) / size, (this.height - 200) / size);
+    const margin = this.width * 0.05;
+    this.cellSize = Math.min((this.width - margin) / size, (this.height * 0.7) / size);
     this.startX = (this.width - this.cellSize * size) / 2;
-    this.startY = 120;
+    this.startY = this.height * 0.1;
   }
 
   initBoard() {

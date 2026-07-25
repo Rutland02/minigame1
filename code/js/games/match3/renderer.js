@@ -73,15 +73,12 @@ class Match3Renderer {
 
   drawGameInfo(ctx) {
     const game = this.game;
-    const size = game.board.length;
-    const boardHeight = game.cellSize * size;
-    const boardBottomY = game.startY + boardHeight + 20;
 
-    const x = 20;
-    const y = boardBottomY;
-    const width = game.width - 40;
-    const height = 80;
-    const radius = 15;
+    const x = game.width * 0.03;
+    const y = game.height * 0.02;
+    const width = game.width * 0.94;
+    const height = game.height * 0.06;
+    const radius = this.scaleSize(15);
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
@@ -98,19 +95,22 @@ class Match3Renderer {
     ctx.lineWidth = 1;
     ctx.stroke();
 
+    const textY1 = y + height * 0.35;
+    const textY2 = y + height * 0.7;
+    const colWidth = width / 3;
+
     ctx.font = `bold ${this.scaleSize(17)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#1E293B';
     ctx.textAlign = 'center';
-    const colWidth = width / 3;
-    ctx.fillText(`得分: ${game.score}`, x + colWidth * 0.5, boardBottomY + 22);
-    ctx.fillText(`等级: ${game.level}`, x + colWidth * 1.5, boardBottomY + 22);
-    ctx.fillText(`时间: ${Math.ceil(game.time)}s`, x + colWidth * 2.5, boardBottomY + 22);
+    ctx.fillText(`得分: ${game.score}`, x + colWidth * 0.5, textY1);
+    ctx.fillText(`等级: ${game.level}`, x + colWidth * 1.5, textY1);
+    ctx.fillText(`时间: ${Math.ceil(game.time)}s`, x + colWidth * 2.5, textY1);
 
     ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#64748B';
-    ctx.fillText('SCORE', x + colWidth * 0.5, boardBottomY + 42);
-    ctx.fillText('LEVEL', x + colWidth * 1.5, boardBottomY + 42);
-    ctx.fillText('TIME', x + colWidth * 2.5, boardBottomY + 42);
+    ctx.fillText('SCORE', x + colWidth * 0.5, textY2);
+    ctx.fillText('LEVEL', x + colWidth * 1.5, textY2);
+    ctx.fillText('TIME', x + colWidth * 2.5, textY2);
   }
 
   _buildAnimatingCellsSet() {
@@ -132,10 +132,12 @@ class Match3Renderer {
 
   _drawSpecialIndicator(ctx, piece, cx, cy, cellSize) {
     ctx.fillStyle = '#fff';
+    const barHalf = this.scaleSize(5);
+    const barFull = this.scaleSize(10);
     if (piece.specialType === 'row_clear') {
-      ctx.fillRect(cx - cellSize / 4, cy - 5, cellSize / 2, 10);
+      ctx.fillRect(cx - cellSize / 4, cy - barHalf, cellSize / 2, barFull);
     } else if (piece.specialType === 'column_clear') {
-      ctx.fillRect(cx - 5, cy - cellSize / 4, 10, cellSize / 2);
+      ctx.fillRect(cx - barHalf, cy - cellSize / 4, barFull, cellSize / 2);
     }
   }
 
@@ -329,12 +331,13 @@ class Match3Renderer {
       ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2) * scale, 0, Math.PI * 2);
       ctx.fill();
     }
+    const ringOffset = this.scaleSize(10);
     for (let r = 0; r < 3; r++) {
       ctx.strokeStyle = color || '#ffffff';
       ctx.lineWidth = 2;
       ctx.globalAlpha = opacity * (1 - r * 0.3);
       ctx.beginPath();
-      ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2 + r * 10) * scale, 0, Math.PI * 2);
+      ctx.arc(x + cellSize / 2, y + cellSize / 2, (cellSize / 2 + r * ringOffset) * scale, 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
@@ -352,13 +355,14 @@ class Match3Renderer {
     // 棋盘背景
     const boardWidth = cellSize * size;
     const boardHeight = cellSize * size;
+    const pad = this.scaleSize(10);
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
     ctx.shadowBlur = 12;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 4;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    drawRoundedRect(ctx, startX - 10, startY - 10, boardWidth + 20, boardHeight + 20, 20);
+    drawRoundedRect(ctx, startX - pad, startY - pad, boardWidth + pad * 2, boardHeight + pad * 2, this.scaleSize(20));
     ctx.fill();
     ctx.restore();
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
@@ -434,9 +438,12 @@ class Match3Renderer {
   getButtonRects() {
     const game = this.game;
     if (!this._buttonRects) {
+      const btnW = this.scaleSize(100);
+      const btnH = this.scaleSize(40);
+      const btnY = game.height - this.scaleSize(60);
       this._buttonRects = {
-        back:    new LayoutRect(40, game.height - 60, 100, 40),
-        restart: new LayoutRect(game.width - 140, game.height - 60, 100, 40),
+        back:    new LayoutRect(this.scaleSize(40), btnY, btnW, btnH),
+        restart: new LayoutRect(game.width - this.scaleSize(40) - btnW, btnY, btnW, btnH),
       };
     }
     return this._buttonRects;
@@ -445,9 +452,16 @@ class Match3Renderer {
   getGameOverRects() {
     const game = this.game;
     if (!this._gameOverRects) {
+      const cardW = game.width * 0.8;
+      const cardH = this.scaleSize(300);
+      const cardY = (game.height - cardH) / 2;
+      const cardBottom = cardY + cardH;
+      const btnW = this.scaleSize(200);
+      const btnH = this.scaleSize(50);
+      const btnX = game.width / 2 - btnW / 2;
       this._gameOverRects = {
-        restart: new LayoutRect(game.width / 2 - 100, game.height / 2 + 60, 200, 50),
-        home:    new LayoutRect(game.width / 2 - 100, game.height / 2 + 120, 200, 50),
+        restart: new LayoutRect(btnX, cardBottom + this.scaleSize(15), btnW, btnH),
+        home:    new LayoutRect(btnX, cardBottom + this.scaleSize(75), btnW, btnH),
       };
     }
     return this._gameOverRects;
@@ -458,7 +472,7 @@ class Match3Renderer {
     const btns = this.getButtonRects();
     const back = btns.back;
     const restart = btns.restart;
-    const radius = 20;
+    const radius = this.scaleSize(20);
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
@@ -520,8 +534,8 @@ class Match3Renderer {
     ctx.fillRect(0, 0, game.width, game.height);
 
     const cardScale = easeOutElastic(progress);
-    const cardWidth = 300;
-    const cardHeight = 250;
+    const cardWidth = game.width * 0.8;
+    const cardHeight = this.scaleSize(300);
     const cardX = (game.width - cardWidth) / 2;
     const cardY = (game.height - cardHeight) / 2;
     const cardCenterX = cardX + cardWidth / 2;
@@ -536,7 +550,7 @@ class Match3Renderer {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 1;
 
-    drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, 20);
+    drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, this.scaleSize(20));
     ctx.fill();
     ctx.stroke();
 
@@ -546,15 +560,15 @@ class Match3Renderer {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
-    ctx.fillText('游戏结束', game.width / 2, game.height / 2 - 40);
+    ctx.fillText('游戏结束', game.width / 2, cardCenterY - this.scaleSize(40));
 
     ctx.font = `${this.scaleSize(20)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#1E293B';
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.shadowOffsetY = 0;
-    ctx.fillText(`最终得分: ${game.score}`, game.width / 2, game.height / 2);
-    ctx.fillText(`等级: ${game.level}`, game.width / 2, game.height / 2 + 30);
+    ctx.fillText(`最终得分: ${game.score}`, game.width / 2, cardCenterY);
+    ctx.fillText(`等级: ${game.level}`, game.width / 2, cardCenterY + this.scaleSize(30));
 
     ctx.restore();
 
@@ -574,7 +588,9 @@ class Match3Renderer {
     ctx.fillStyle = restartGradient;
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
 
-    drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, 25);
+    const goBtnRadius = this.scaleSize(25);
+
+    drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, goBtnRadius);
     ctx.fill();
     if (game.pressedId === 'go_restart') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.stroke();
@@ -596,7 +612,7 @@ class Match3Renderer {
     ctx.fillStyle = homeGradient;
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
 
-    drawRoundedRect(ctx, home.x, home.y, home.w, home.h, 25);
+    drawRoundedRect(ctx, home.x, home.y, home.w, home.h, goBtnRadius);
     ctx.fill();
     if (game.pressedId === 'go_home') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
     ctx.stroke();
@@ -620,7 +636,7 @@ class Match3Renderer {
     ctx.save();
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.beginPath();
-    ctx.arc(50, 50, 20, 0, Math.PI * 2);
+    ctx.arc(game.width * 0.13, game.height * 0.075, this.scaleSize(20), 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
@@ -628,8 +644,8 @@ class Match3Renderer {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, game.height - 80);
-    ctx.quadraticCurveTo(game.width / 2, game.height - 120, game.width, game.height - 80);
+    ctx.moveTo(0, game.height - this.scaleSize(80));
+    ctx.quadraticCurveTo(game.width / 2, game.height - this.scaleSize(120), game.width, game.height - this.scaleSize(80));
     ctx.stroke();
     ctx.restore();
   }

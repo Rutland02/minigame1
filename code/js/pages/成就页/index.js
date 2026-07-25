@@ -43,6 +43,16 @@ class AchievementPage extends BasePage {
     const closeBtnW = this.scaleSize(100), closeBtnH = this.scaleSize(40);
     this.detailCloseBtn = new LayoutRect(this.width / 2 - closeBtnW / 2, cardY + cardH - this.scaleSize(60), closeBtnW, closeBtnH);
     this.detailCardRect = { x: cardX, y: cardY, w: cardW, h: cardH };
+
+    // Certificate card rect (for export)
+    const certCardW = this.width * 0.85;
+    const certCardH = this.height * 0.7;
+    this.certCardRect = {
+      x: (this.width - certCardW) / 2,
+      y: (this.height - certCardH) / 2,
+      w: certCardW,
+      h: certCardH,
+    };
   }
   
   getAllAchievements() {
@@ -80,6 +90,8 @@ class AchievementPage extends BasePage {
     const startY = this.height * 0.12;
     const itemHeight = this.scaleSize(80);
     const endY = this.height - this.scaleSize(130);
+    this.listStartY = startY;
+    this.listItemHeight = itemHeight;
     const viewportHeight = endY - startY;
     
     const totalHeight = achievementsWithStatus.length * itemHeight;
@@ -169,15 +181,16 @@ class AchievementPage extends BasePage {
   }
 
   drawScrollBar(ctx, startY, viewportHeight) {
-    const scrollBarWidth = 6;
+    const scrollBarWidth = this.scaleSize(6);
     const scrollBarHeight = (viewportHeight / (viewportHeight + this.maxScrollY)) * viewportHeight;
     const scrollBarY = startY + (this.scrollY / this.maxScrollY) * (viewportHeight - scrollBarHeight);
-    
-    drawRoundedRect(ctx, this.width - 15, startY, scrollBarWidth, viewportHeight, 3);
+    const scrollBarX = this.width - this.scaleSize(15);
+
+    drawRoundedRect(ctx, scrollBarX, startY, scrollBarWidth, viewportHeight, this.scaleSize(3));
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.fill();
-    
-    drawRoundedRect(ctx, this.width - 15, scrollBarY, scrollBarWidth, scrollBarHeight, 3);
+
+    drawRoundedRect(ctx, scrollBarX, scrollBarY, scrollBarWidth, scrollBarHeight, this.scaleSize(3));
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fill();
   }
@@ -351,31 +364,37 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.fillRect(0, 0, this.width, this.height);
     
-    drawRoundedRect(ctx, 30, 30, this.width - 60, this.height - 60, 20);
+    const certCardW = this.width * 0.85;
+    const certCardH = this.height * 0.7;
+    const certCardX = (this.width - certCardW) / 2;
+    const certCardY = (this.height - certCardH) / 2;
+
+    drawRoundedRect(ctx, certCardX, certCardY, certCardW, certCardH, this.scaleSize(20));
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fill();
     ctx.strokeStyle = '#4a6fa5';
     ctx.lineWidth = 4;
     ctx.stroke();
-    
+
     ctx.font = `${this.scaleSize(32)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#4a6fa5';
     ctx.textAlign = 'center';
-    ctx.fillText('数字体验证书', this.width / 2, 120);
-    
+    ctx.fillText('数字体验证书', this.width / 2, certCardY + certCardH * 0.12);
+
     const databus = this.databus;
     const userInfo = databus.getUserInfo();
     const totalScore = databus.getTotalScore();
     const achievements = databus.scoreManager.getUnlockedAchievements();
     const scores = databus.getAllScores();
-    
+
     ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
-    ctx.fillText(`兹证明 ${userInfo ? userInfo.nickName : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, 200);
-    ctx.fillText('积极参与，表现优异，特此颁发此证。', this.width / 2, 240);
-    
-    drawRoundedRect(ctx, this.width / 2 - 140, 280, 280, 120, 15);
+    ctx.fillText(`兹证明 ${userInfo ? userInfo.nickName : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, certCardY + certCardH * 0.25);
+    ctx.fillText('积极参与，表现优异，特此颁发此证。', this.width / 2, certCardY + certCardH * 0.31);
+
+    const statsBoxW = this.scaleSize(280), statsBoxH = this.scaleSize(120);
+    drawRoundedRect(ctx, this.width / 2 - statsBoxW / 2, certCardY + certCardH * 0.36, statsBoxW, statsBoxH, this.scaleSize(15));
     ctx.fillStyle = 'rgba(74, 111, 165, 0.1)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(74, 111, 165, 0.3)';
@@ -384,26 +403,27 @@ class AchievementPage extends BasePage {
     ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#4a6fa5';
     ctx.textAlign = 'center';
-    ctx.fillText(`总积分: ${totalScore}`, this.width / 2, 310);
-    ctx.fillText(`解锁成就: ${achievements.length}/${this.allAchievements.length}`, this.width / 2, 335);
-    ctx.fillText(`游戏次数: ${scores.overall.totalGamesPlayed || 0}`, this.width / 2, 360);
-    ctx.fillText(`答题正确率: ${scores.quiz.accuracy || 0}%`, this.width / 2, 385);
-    
+    ctx.fillText(`总积分: ${totalScore}`, this.width / 2, certCardY + certCardH * 0.40);
+    ctx.fillText(`解锁成就: ${achievements.length}/${this.allAchievements.length}`, this.width / 2, certCardY + certCardH * 0.45);
+    ctx.fillText(`游戏次数: ${scores.overall.totalGamesPlayed || 0}`, this.width / 2, certCardY + certCardH * 0.50);
+    ctx.fillText(`答题正确率: ${scores.quiz.accuracy || 0}%`, this.width / 2, certCardY + certCardH * 0.55);
+
+    const sealR = this.scaleSize(70);
     ctx.fillStyle = 'rgba(244, 67, 54, 0.6)';
     ctx.beginPath();
-    ctx.arc(this.width / 2, 450, 70, 0, Math.PI * 2);
+    ctx.arc(this.width / 2, certCardY + certCardH * 0.65, sealR, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('海澄村', this.width / 2, 440);
-    ctx.fillText('数字赋能', this.width / 2, 470);
-    
+    ctx.fillText('海澄村', this.width / 2, certCardY + certCardH * 0.63);
+    ctx.fillText('数字赋能', this.width / 2, certCardY + certCardH * 0.68);
+
     const date = new Date().toLocaleDateString();
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#666666';
     ctx.textAlign = 'center';
-    ctx.fillText(`颁发日期: ${date}`, this.width / 2, 550);
+    ctx.fillText(`颁发日期: ${date}`, this.width / 2, certCardY + certCardH * 0.82);
     
     const share = this.certShareBtn;
     drawRoundedRect(ctx, share.x, share.y, share.w, share.h, 25);
@@ -496,8 +516,8 @@ class AchievementPage extends BasePage {
         return;
       }
 
-      if (y >= 180 && y <= this.height - 130) {
-        const index = Math.floor((y - 180 + this.scrollY) / 80);
+      if (y >= this.listStartY && y <= this.height - this.scaleSize(130)) {
+        const index = Math.floor((y - this.listStartY + this.scrollY) / this.listItemHeight);
         const achievements = this.databus.getAllAchievementsWithStatus();
         if (index >= 0 && index < achievements.length) {
           this.selectedAchievement = achievements[index];
@@ -536,11 +556,12 @@ class AchievementPage extends BasePage {
   }
 
   _exportCertificate(successCallback, failCallback) {
+    const cert = this.certCardRect;
     wx.canvasToTempFilePath({
-      x: 30,
-      y: 30,
-      width: this.width - 60,
-      height: this.height - 60,
+      x: cert.x,
+      y: cert.y,
+      width: cert.w,
+      height: cert.h,
       success: (res) => {
         successCallback(res.tempFilePath);
       },

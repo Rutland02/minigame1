@@ -373,9 +373,15 @@ class QuizPage extends BasePage {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, this.width, this.height);
 
-    const cardW = this.width - 80;
-    const cardH = 380;
-    const cardX = 40;
+    const cardW = Math.round(this.width * 0.85);
+    const cardPadX = Math.round((this.width - cardW) / 2);
+    const cardCX = this.width / 2;
+    const goBtnH = this.scaleSize(46);
+    const goBtnGap = this.scaleSize(14);
+    const goBtnW = cardW - this.scaleSize(50);
+    const goBtnX = cardPadX + Math.round((cardW - goBtnW) / 2);
+    const cardH = Math.round(this.height * 0.55);
+    const cardX = cardPadX;
     const cardY = (this.height - cardH) / 2;
 
     drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 20);
@@ -385,10 +391,11 @@ class QuizPage extends BasePage {
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    const titleY = cardY + Math.round(cardH * 0.12) + 6;
     ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#10B981';
     ctx.textAlign = 'center';
-    ctx.fillText('答题完成！', this.width / 2, cardY + 50);
+    ctx.fillText('答题完成！', cardCX, titleY);
 
     const stats = [
       `答对题数: ${vm.correctCount} / ${vm.questions.length}`,
@@ -399,19 +406,18 @@ class QuizPage extends BasePage {
 
     ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#333333';
+    const statsBaseY = cardY + Math.round(cardH * 0.25);
+    const statsLineH = Math.round(this.scaleSize(18) * 1.8);
     stats.forEach((text, i) => {
-      ctx.fillText(text, this.width / 2, cardY + 100 + i * 36);
+      ctx.fillText(text, cardCX, statsBaseY + i * statsLineH);
     });
 
-    const btnW = cardW - 60;
-    const btnH = 50;
-    const btnX = cardX + 30;
-
-    this.gameOverButtons.replay = new LayoutRect(btnX, cardY + 260, btnW, btnH);
-    this.gameOverButtons.home = new LayoutRect(btnX, cardY + 320, btnW, btnH);
+    const replayY = cardY + Math.round(cardH * 0.6);
+    this.gameOverButtons.replay = new LayoutRect(goBtnX, replayY, goBtnW, goBtnH);
+    this.gameOverButtons.home = new LayoutRect(goBtnX, replayY + goBtnH + goBtnGap, goBtnW, goBtnH);
 
     const replay = this.gameOverButtons.replay;
-    drawRoundedRect(ctx, replay.x, replay.y, replay.w, replay.h, 25);
+    drawRoundedRect(ctx, replay.x, replay.y, replay.w, replay.h, Math.round(goBtnH / 2));
     const replayGradient = ctx.createLinearGradient(replay.x, replay.y, replay.x + replay.w, replay.y + replay.h);
     replayGradient.addColorStop(0, '#10B981');
     replayGradient.addColorStop(1, '#059669');
@@ -426,7 +432,7 @@ class QuizPage extends BasePage {
     ctx.fillText('再来一轮', replay.centerX, replay.centerY + 6);
 
     const home = this.gameOverButtons.home;
-    drawRoundedRect(ctx, home.x, home.y, home.w, home.h, 25);
+    drawRoundedRect(ctx, home.x, home.y, home.w, home.h, Math.round(goBtnH / 2));
     const homeGradient = ctx.createLinearGradient(home.x, home.y, home.x + home.w, home.y + home.h);
     homeGradient.addColorStop(0, '#6B7280');
     homeGradient.addColorStop(1, '#4B5563');
@@ -492,13 +498,14 @@ class QuizPage extends BasePage {
       return;
     }
 
-    const optionYStart = 240;
-    const optionHeight = 60;
+    const optionYStart = Math.round(this.height * 0.35);
+    const optionHeight = this.scaleSize(56) + this.scaleSize(10);
+    const optH = this.scaleSize(56);
     const question = vm.currentQuestion;
     for (let i = 0; i < question.options.length; i++) {
       if (x >= 20 && x <= this.width - 20 &&
           y >= optionYStart + i * optionHeight &&
-          y <= optionYStart + i * optionHeight + 56) {
+          y <= optionYStart + i * optionHeight + optH) {
         vm.selectOption(i);
         break;
       }

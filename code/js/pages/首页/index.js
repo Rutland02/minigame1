@@ -252,7 +252,7 @@ class HomePage extends BasePage {
     });
     this.regions.actionButtons.forEach(btn => {
       const dist = Math.sqrt((x - btn.x) ** 2 + (y - btn.y) ** 2);
-      if (dist < btn.r + 10) this.selectedId = btn.id;
+      if (dist < btn.r + this.scaleSize(10)) this.selectedId = btn.id;
     });
 
     // A-5: 排行榜按钮触摸判定

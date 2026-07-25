@@ -503,7 +503,7 @@ class PuzzleGame extends BasePage {
       const infoHeight = this.scaleSize(50);
       const infoX = (this.width - infoWidth) / 2;
       const infoY = this.buttons.back.y - infoHeight - this.scaleSize(15);
-      drawRoundedRect(ctx, infoX, infoY, infoWidth, infoHeight, 15);
+      drawRoundedRect(ctx, infoX, infoY, infoWidth, infoHeight, this.scaleSize(15));
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -561,7 +561,7 @@ class PuzzleGame extends BasePage {
 
         if (!piece.isEmpty) {
           // 绘制拼图块 - 玻璃态效果
-          drawRoundedRect(ctx, x, y, pieceSize, pieceSize, 8);
+          drawRoundedRect(ctx, x, y, pieceSize, pieceSize, this.scaleSize(8));
           
           // 绘制拼图图片
           if (this.puzzleImage) {
@@ -621,7 +621,7 @@ class PuzzleGame extends BasePage {
       }
 
       const back = this.buttons.back;
-      drawRoundedRect(ctx, back.x, back.y, back.w, back.h, 25);
+      drawRoundedRect(ctx, back.x, back.y, back.w, back.h, this.scaleSize(25));
       const backGradient = ctx.createLinearGradient(back.x, back.y, back.x + back.w, back.y + back.h);
       backGradient.addColorStop(0, '#6B7280');
       backGradient.addColorStop(1, '#4B5563');
@@ -637,7 +637,7 @@ class PuzzleGame extends BasePage {
       ctx.fillText('返回', back.centerX, back.centerY + 6);
 
       const difficulty = this.buttons.difficulty;
-      drawRoundedRect(ctx, difficulty.x, difficulty.y, difficulty.w, difficulty.h, 25);
+      drawRoundedRect(ctx, difficulty.x, difficulty.y, difficulty.w, difficulty.h, this.scaleSize(25));
       const orangeGradient = ctx.createLinearGradient(difficulty.x, difficulty.y, difficulty.x + difficulty.w, difficulty.y + difficulty.h);
       orangeGradient.addColorStop(0, '#FF9800');
       orangeGradient.addColorStop(1, '#F57C00');
@@ -653,7 +653,7 @@ class PuzzleGame extends BasePage {
       ctx.fillText('难度设置', difficulty.centerX, difficulty.centerY + 6);
 
       const restart = this.buttons.restart;
-      drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, 25);
+      drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, this.scaleSize(25));
       const restartGradient = ctx.createLinearGradient(restart.x, restart.y, restart.x + restart.w, restart.y + restart.h);
       restartGradient.addColorStop(0, '#10B981');
       restartGradient.addColorStop(1, '#059669');
@@ -688,12 +688,12 @@ class PuzzleGame extends BasePage {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, this.width, this.height);
 
-    const dialogWidth = 300;
-    const dialogHeight = 310;
+    const dialogWidth = this.width * 0.8;
+    const dialogHeight = this.height * 0.45;
     const dialogX = (this.width - dialogWidth) / 2;
     const dialogY = (this.height - dialogHeight) / 2;
 
-    drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
+    drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, this.scaleSize(20));
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -703,20 +703,21 @@ class PuzzleGame extends BasePage {
     ctx.fillStyle = '#fff';
     ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('拼图完成！', this.width / 2, dialogY + 60);
+    ctx.fillText('拼图完成！', this.width / 2, dialogY + dialogHeight * 0.18);
 
     ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
-    ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, dialogY + 100);
+    ctx.fillText(`用时: ${this.getElapsedTime()}秒`, this.width / 2, dialogY + dialogHeight * 0.3);
 
     if (this.earnedScore > 0) {
       ctx.font = `${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#FFD700';
-      ctx.fillText(`积分: +${this.earnedScore}`, this.width / 2, dialogY + 130);
+      ctx.fillText(`积分: +${this.earnedScore}`, this.width / 2, dialogY + dialogHeight * 0.4);
       ctx.fillStyle = '#fff';
     }
 
-    drawRoundedRect(ctx, dialogX + 30, dialogY + 170, dialogWidth - 60, 50, 25);
-    const replayGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 170, dialogX + dialogWidth - 30, dialogY + 220);
+    const replay = this.completedButtons.replay;
+    drawRoundedRect(ctx, replay.x, replay.y, replay.w, replay.h, this.scaleSize(25));
+    const replayGradient = ctx.createLinearGradient(replay.x, replay.y, replay.x + replay.w, replay.y + replay.h);
     replayGradient.addColorStop(0, '#4CAF50');
     replayGradient.addColorStop(1, '#45a049');
     ctx.fillStyle = replayGradient;
@@ -727,9 +728,10 @@ class PuzzleGame extends BasePage {
     ctx.stroke();
     ctx.fillStyle = '#fff';
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
-    ctx.fillText('再玩一次', this.width / 2, dialogY + 202);
+    ctx.fillText('再玩一次', replay.centerX, replay.centerY + 6);
 
-    drawRoundedRect(ctx, dialogX + 30, dialogY + 230, dialogWidth - 60, 50, 25);
+    const home = this.completedButtons.home;
+    drawRoundedRect(ctx, home.x, home.y, home.w, home.h, this.scaleSize(25));
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
     if (this.pressedId === 'home') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
@@ -739,7 +741,7 @@ class PuzzleGame extends BasePage {
     ctx.fillStyle = '#fff';
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('返回首页', this.width / 2, dialogY + 262);
+    ctx.fillText('返回首页', home.centerX, home.centerY + 6);
   }
 
   handleTouchStart(e) {
