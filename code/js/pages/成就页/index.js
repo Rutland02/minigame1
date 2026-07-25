@@ -428,8 +428,11 @@ class AchievementPage extends BasePage {
     ctx.textAlign = 'center';
     ctx.fillText(`颁发日期: ${date}`, this.width / 2, certCardY + certCardH * 0.82);
     
+    const certBtnRadius = this.scaleSize(25);
+    const certTextOffset = this.scaleSize(6);
+
     const share = this.certShareBtn;
-    drawRoundedRect(ctx, share.x, share.y, share.w, share.h, 25);
+    drawRoundedRect(ctx, share.x, share.y, share.w, share.h, certBtnRadius);
     const shareGradient = ctx.createLinearGradient(share.x, share.y, share.x + share.w, share.y + share.h);
     shareGradient.addColorStop(0, '#10B981');
     shareGradient.addColorStop(1, '#059669');
@@ -442,10 +445,10 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('分享证书', share.centerX, share.centerY + 6);
+    ctx.fillText('分享证书', share.centerX, share.centerY + certTextOffset);
 
     const save = this.certSaveBtn;
-    drawRoundedRect(ctx, save.x, save.y, save.w, save.h, 25);
+    drawRoundedRect(ctx, save.x, save.y, save.w, save.h, certBtnRadius);
     const saveGradient = ctx.createLinearGradient(save.x, save.y, save.x + save.w, save.y + save.h);
     saveGradient.addColorStop(0, '#3B82F6');
     saveGradient.addColorStop(1, '#2563EB');
@@ -458,10 +461,10 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('保存到相册', save.centerX, save.centerY + 6);
+    ctx.fillText('保存到相册', save.centerX, save.centerY + certTextOffset);
 
     const backBtn = this.certBackBtn;
-    drawRoundedRect(ctx, backBtn.x, backBtn.y, backBtn.w, backBtn.h, 20);
+    drawRoundedRect(ctx, backBtn.x, backBtn.y, backBtn.w, backBtn.h, this.scaleSize(20));
     const backGradient = ctx.createLinearGradient(backBtn.x, backBtn.y, backBtn.x + backBtn.w, backBtn.y + backBtn.h);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
@@ -474,7 +477,7 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('返回', backBtn.centerX, backBtn.centerY + 6);
+    ctx.fillText('返回', backBtn.centerX, backBtn.centerY + certTextOffset);
   }
 
   handleTouchStart(e) {
