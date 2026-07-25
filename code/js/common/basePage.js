@@ -3,6 +3,12 @@ class BasePage {
     const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
     this.width = sys.windowWidth;
     this.height = sys.windowHeight;
+    this.dpr = sys.pixelRatio || 1;
+    this.designWidth = 375;
+    this.designHeight = 667;
+    this.scaleX = this.width / this.designWidth;
+    this.scaleY = this.height / this.designHeight;
+    this.scale = Math.min(this.scaleX, this.scaleY);
     this.app = GameGlobal.app;
     this.databus = GameGlobal.databus;
     this.resourceManager = GameGlobal.resourceManager;
@@ -41,6 +47,10 @@ class BasePage {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, this.width, this.height);
     }
+  }
+
+  scaleSize(base) {
+    return Math.max(Math.round(base * this.scale), 1);
   }
 
   navigateTo(pageName) {

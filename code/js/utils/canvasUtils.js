@@ -29,9 +29,10 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
  * @param {string} colorEnd - 渐变结束色
  * @param {string} text - 按钮文字
  * @param {object} [options] - 可选配置
- * @param {string} [options.font='14px Arial']
+ * @param {string} [options.font='14px Arial, "PingFang SC", "Microsoft YaHei", sans-serif']
  * @param {string} [options.textColor='#ffffff']
  * @param {string} [options.strokeColor='rgba(255,255,255,0.5)']
+ * @param {boolean} [options.pressed=false]
  */
 function drawButton(ctx, x, y, width, height, radius, colorStart, colorEnd, text, options) {
   const opts = options || {};
@@ -41,11 +42,15 @@ function drawButton(ctx, x, y, width, height, radius, colorStart, colorEnd, text
   ctx.fillStyle = gradient;
   drawRoundedRect(ctx, x, y, width, height, radius);
   ctx.fill();
+  if (opts.pressed) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.fill();
+  }
   ctx.strokeStyle = opts.strokeColor || 'rgba(255, 255, 255, 0.5)';
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.fillStyle = opts.textColor || '#ffffff';
-  ctx.font = opts.font || '14px Arial';
+  ctx.font = opts.font || '14px Arial, "PingFang SC", "Microsoft YaHei", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x + width / 2, y + height / 2);
@@ -68,8 +73,8 @@ function getTouchCoords(touches, changedTouches) {
   }
   if (!touch) return null;
   return {
-    x: touch.x || touch.clientX || touch.pageX || 0,
-    y: touch.y || touch.clientY || touch.pageY || 0
+    x: touch.clientX || touch.x || touch.pageX || 0,
+    y: touch.clientY || touch.y || touch.pageY || 0
   };
 }
 
