@@ -342,9 +342,9 @@ async function runMatch3Tests() {
   await runner.run('match3_get_level_target', async () => {
     const g = app.currentPage;
     g.level = 1;
-    runner.assertEqual(g.getLevelTarget(), 100, 'level=1 目标');
+    runner.assertEqual(g.getLevelTarget(), 50, 'level=1 目标');
     g.level = 5;
-    runner.assertEqual(g.getLevelTarget(), 500, 'level=5 目标');
+    runner.assertEqual(g.getLevelTarget(), 1250, 'level=5 目标');
     return 'getLevelTarget 计算正确';
   });
 

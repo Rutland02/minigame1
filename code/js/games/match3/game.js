@@ -1,5 +1,5 @@
 const BasePage = require('../../common/basePage');
-const { BOARD_SIZE, INITIAL_TIME, SCORE_PER_REMOVE, CHAIN_SCORE_MULTIPLIER, LEVEL_UP_TIME_BONUS, LEVEL_TARGET_MULTIPLIER, SWIPE_THRESHOLD, ColorType, COLORS } = require('./constants');
+const { BOARD_SIZE, INITIAL_TIME, SCORE_PER_REMOVE, CHAIN_SCORE_MULTIPLIER, LEVEL_UP_TIME_BONUS, LEVEL_TARGET_MULTIPLIER, LEVEL_TIME_DECAY, INVALID_SWAP_PENALTY, SWIPE_THRESHOLD, ColorType, COLORS } = require('./constants');
 const { ObjectPool, AnimationManager } = require('./animation');
 const Match3Renderer = require('./renderer');
 const { getTouchCoords } = require('../../utils/canvasUtils');
@@ -66,9 +66,14 @@ class Match3Game extends BasePage {
   calculateLayout() {
     const size = this.board.length;
     const margin = this.width * 0.05;
-    this.cellSize = Math.min((this.width - margin) / size, (this.height * 0.7) / size);
+    this.cellSize = Math.min((this.width - margin) / size, (this.height * 0.65) / size);
     this.startX = (this.width - this.cellSize * size) / 2;
-    this.startY = this.height * 0.1;
+    const boardH = this.cellSize * size;
+    const infoH = this.height * 0.06;
+    const gap = this.height * 0.02;
+    const totalH = infoH + gap + boardH;
+    this.startY = (this.height - totalH) / 2 + infoH + gap;
+    this._infoBarY = this.startY - gap - infoH;
   }
 
   initBoard() {
@@ -498,6 +503,8 @@ class Match3Game extends BasePage {
           this.levelUp();
         }
       } else {
+        this.time = Math.max(0, this.time - INVALID_SWAP_PENALTY);
+        try { wx.vibrateShort({ type: 'medium' }); } catch(_) {}
         this.anim.addAnimation('swap', { row1, col1, row2, col2, piece1, piece2 }, 0.3);
         this.anim.waitForAnimations(() => {
           this.board[row1][col1] = piece1;
@@ -508,12 +515,13 @@ class Match3Game extends BasePage {
   }
 
   getLevelTarget() {
-    return this.level * LEVEL_TARGET_MULTIPLIER;
+    return this.level * this.level * (LEVEL_TARGET_MULTIPLIER / 2);
   }
 
   levelUp() {
     this.level++;
-    this.time += LEVEL_UP_TIME_BONUS;
+    const bonus = Math.max(0, LEVEL_UP_TIME_BONUS - (this.level - 1) * LEVEL_TIME_DECAY);
+    this.time += bonus;
     this.lastUpdateTime = Date.now();
     this.anim.addAnimation('special', { row: 3, col: 3, specialType: 'level_up', color: '#FFD700' }, 1.0);
   }
@@ -529,6 +537,10 @@ class Match3Game extends BasePage {
       const newRemovedCount = this.removeMatches(newMatches);
       this.score += newRemovedCount * CHAIN_SCORE_MULTIPLIER;
       this._addFloatingScore(matchColors, newRemovedCount * CHAIN_SCORE_MULTIPLIER, true);
+
+      if (this.score >= this.getLevelTarget()) {
+        this.levelUp();
+      }
 
       this.anim.waitForAnimations(() => {
         const hasDropped = this.dropPieces();

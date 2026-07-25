@@ -75,13 +75,13 @@ class Match3Renderer {
     const game = this.game;
 
     const x = game.width * 0.03;
-    const y = game.height * 0.02;
+    const y = game._infoBarY !== undefined ? game._infoBarY : game.height * 0.02;
     const width = game.width * 0.94;
     const height = game.height * 0.06;
     const radius = this.scaleSize(15);
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+    ctx.shadowColor = 'rgba(75, 85, 99, 0.2)';
     ctx.shadowBlur = 10;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 4;
@@ -91,7 +91,7 @@ class Match3Renderer {
     ctx.fill();
     ctx.restore();
 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.strokeStyle = 'rgba(203, 213, 225, 0.5)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -303,7 +303,7 @@ class Match3Renderer {
       ctx.scale(textScale, textScale);
       ctx.globalAlpha = opacity;
       ctx.fillStyle = '#FFD700';
-      ctx.font = `bold ${this.scaleSize(42)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.font = `bold ${this.scaleSize(42)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
       ctx.shadowBlur = 10;
@@ -357,7 +357,7 @@ class Match3Renderer {
     const boardHeight = cellSize * size;
     const pad = this.scaleSize(10);
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowColor = 'rgba(75, 85, 99, 0.15)';
     ctx.shadowBlur = 12;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 4;
@@ -421,8 +421,8 @@ class Match3Renderer {
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.font = fs.isChain
-        ? `bold ${this.scaleSize(22)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`
-        : `bold ${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+        ? `bold ${this.scaleSize(22)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`
+        : `bold ${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillStyle = fs.isChain ? '#FFD700' : '#10B981';
       ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
@@ -475,7 +475,7 @@ class Match3Renderer {
     const radius = this.scaleSize(20);
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+    ctx.shadowColor = 'rgba(75, 85, 99, 0.2)';
     ctx.shadowBlur = 8;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 3;
@@ -500,7 +500,7 @@ class Match3Renderer {
     ctx.fillText('返回', back.centerX, back.centerY + 6);
 
     ctx.save();
-    ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
+    ctx.shadowColor = 'rgba(16, 185, 129, 0.35)';
     ctx.shadowBlur = 10;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 3;
@@ -554,15 +554,15 @@ class Match3Renderer {
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#2563EB';
-    ctx.font = `${this.scaleSize(28)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillStyle = '#0D9488';
+    ctx.font = `${this.scaleSize(28)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowColor = 'rgba(75, 85, 99, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
     ctx.fillText('游戏结束', game.width / 2, cardCenterY - this.scaleSize(40));
 
-    ctx.font = `${this.scaleSize(20)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(20)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#1E293B';
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
@@ -596,9 +596,9 @@ class Match3Renderer {
     ctx.stroke();
 
     ctx.fillStyle = '#fff';
-    ctx.font = `${this.scaleSize(18)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowColor = 'rgba(75, 85, 99, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
     ctx.fillText('重新开始', restart.centerX, restart.centerY + 6);
@@ -618,9 +618,9 @@ class Match3Renderer {
     ctx.stroke();
 
     ctx.fillStyle = '#fff';
-    ctx.font = `${this.scaleSize(18)}px Inter, Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowColor = 'rgba(75, 85, 99, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
     ctx.fillText('返回首页', home.centerX, home.centerY + 6);

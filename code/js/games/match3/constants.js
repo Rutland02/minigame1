@@ -1,10 +1,12 @@
 // 游戏配置常量
 const BOARD_SIZE = 8;
-const INITIAL_TIME = 60;
+const INITIAL_TIME = 45;
 const SCORE_PER_REMOVE = 10;
 const CHAIN_SCORE_MULTIPLIER = 15;
-const LEVEL_UP_TIME_BONUS = 10;
+const LEVEL_UP_TIME_BONUS = 5;
 const LEVEL_TARGET_MULTIPLIER = 100;
+const LEVEL_TIME_DECAY = 0.5;
+const INVALID_SWAP_PENALTY = 3;
 const SWIPE_THRESHOLD = 20;
 
 const ColorType = {
@@ -20,7 +22,7 @@ const ColorType = {
 const COLORS = [
     '#EF4444',
     '#F59E0B',
-    '#F8FAFC',
+    '#94A3B8',
     '#EC4899',
     '#3B82F6',
     '#10B981'
@@ -42,6 +44,8 @@ module.exports = {
   CHAIN_SCORE_MULTIPLIER,
   LEVEL_UP_TIME_BONUS,
   LEVEL_TARGET_MULTIPLIER,
+  LEVEL_TIME_DECAY,
+  INVALID_SWAP_PENALTY,
   SWIPE_THRESHOLD,
   ColorType,
   COLORS,
