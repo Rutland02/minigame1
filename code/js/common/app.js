@@ -132,8 +132,7 @@ class App {
         ctx.restore();
 
         if (t.progress >= t.duration) {
-          t.fromPage.destroy();
-          this.currentPage = t.toPage;
+          if (t.fromPage) t.fromPage.destroy();
           t.phase = 'fadeIn';
           t.progress = 0;
         }
@@ -285,19 +284,22 @@ class App {
 
     if (!newPage) return;
 
-    if (!this.currentPage) {
+    const oldPage = this.currentPage;
+
+    if (!oldPage) {
       this.currentPage = newPage;
       return;
     }
 
+    this.currentPage = newPage;
+
     this._transition = {
-      fromPage: this.currentPage,
+      fromPage: oldPage,
       toPage: newPage,
       progress: 0,
       duration: 0.15,
       phase: 'fadeOut'
     };
-    this.currentPage = null;
   }
 
   onTouchStart(e) {
