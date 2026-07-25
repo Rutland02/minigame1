@@ -70,7 +70,7 @@ class HomePage extends BasePage {
     };
 
     Object.keys(iconMap).forEach(key => {
-      const img = wx.createImage();
+      const img = (typeof wx !== 'undefined' && wx.createImage) ? wx.createImage() : new Image();
       img.onload = () => {
         this.assets[key] = img;
       };

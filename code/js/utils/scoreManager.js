@@ -177,6 +177,10 @@ class ScoreManager {
     return Math.max(base - penalty, min);
   }
 
+  calculatePuzzleScore(level, time) {
+    return this._calculatePuzzleScore(level, time, true);
+  }
+
   checkMatch3Achievements(score, level) {
     this.unlockAchievement('first_game');
 

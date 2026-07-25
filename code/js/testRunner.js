@@ -461,19 +461,15 @@ async function runAllTests() {
   });
 
   await runner.run('puzzle_calculate_score_formula', async () => {
-    const g = app.currentPage;
-    g.level = 1;
-    const score1 = g._calculatePuzzleScore(10);
+    const sm = databus.scoreManager;
+    const score1 = sm.calculatePuzzleScore(1, 10);
     runner.assertEqual(score1, 80, 'level1 10s: max(100-20,20)=80');
-    const score2 = g._calculatePuzzleScore(200);
+    const score2 = sm.calculatePuzzleScore(1, 200);
     runner.assertEqual(score2, 20, 'level1 200s: max(100-400,20)=20(min)');
-    g.level = 2;
-    const score3 = g._calculatePuzzleScore(30);
+    const score3 = sm.calculatePuzzleScore(2, 30);
     runner.assertEqual(score3, 140, 'level2 30s: max(200-60,40)=140');
-    g.level = 3;
-    const score4 = g._calculatePuzzleScore(50);
+    const score4 = sm.calculatePuzzleScore(3, 50);
     runner.assertEqual(score4, 200, 'level3 50s: max(300-100,60)=200');
-    g.level = 1;
     return 'Puzzle score formula OK';
   });
 
@@ -504,6 +500,69 @@ async function runAllTests() {
     runner.assert(!!sm, 'ScoreManager should exist');
     runner.assert(sm.achievements && Array.isArray(sm.achievements.unlocked), 'unlocked should be array');
     return 'Achievement page OK, ' + sm.achievements.unlocked.length + ' unlocked';
+  });
+
+  // === Achievement Certificate Tests ===
+  await runner.run('achievement_cert_btn_exists', async () => {
+    const p = app.currentPage;
+    runner.assert(!!p.buttons.certificate, 'certificate button should exist');
+    runner.assert(typeof p.buttons.certificate.contains === 'function', 'certificate button should have contains');
+    return 'Certificate button exists';
+  });
+
+  await runner.run('achievement_generate_certificate', async () => {
+    const p = app.currentPage;
+    p.showCertificate = false;
+    p.generateCertificate();
+    runner.assertEqual(p.showCertificate, true, 'showCertificate should be true');
+    runner.assert(!!p.certShareBtn, 'certShareBtn should exist');
+    runner.assert(!!p.certSaveBtn, 'certSaveBtn should exist');
+    runner.assert(!!p.certBackBtn, 'certBackBtn should exist');
+    return 'Certificate view opened';
+  });
+
+  await runner.run('achievement_cert_save_btn_exists', async () => {
+    const p = app.currentPage;
+    runner.assert(!!p.certSaveBtn, 'certSaveBtn should exist');
+    runner.assert(typeof p.certSaveBtn.contains === 'function', 'certSaveBtn should have contains');
+    return 'Save button exists';
+  });
+
+  await runner.run('achievement_save_certificate', async () => {
+    const p = app.currentPage;
+    p.showCertificate = true;
+    // Mock _exportCertificate 阻止真实 wx API 调用链
+    const origExport = p._exportCertificate;
+    let exportCalled = false;
+    let successCbReceived = false;
+    p._exportCertificate = (successCb, failCb) => {
+      exportCalled = true;
+      // 验证回调函数存在且可调用
+      runner.assert(typeof successCb === 'function', 'successCallback should be a function');
+      successCbReceived = true;
+      // 不调用 successCb，避免触发 doSave → wx.saveImageToPhotosAlbum
+    };
+    try {
+      p.saveCertificate();
+      runner.assert(exportCalled, '_exportCertificate should be called');
+      runner.assert(successCbReceived, 'success callback should be received');
+    } finally {
+      p._exportCertificate = origExport;
+    }
+    return 'Save certificate flow OK';
+  });
+
+  await runner.run('achievement_cert_back', async () => {
+    const p = app.currentPage;
+    p.showCertificate = true;
+    // Simulate clicking the back button
+    const btn = p.certBackBtn;
+    p.handleTouchStart({
+      touches: [{ x: btn.centerX, y: btn.centerY }],
+      changedTouches: [{ x: btn.centerX, y: btn.centerY }]
+    });
+    runner.assertEqual(p.showCertificate, false, 'showCertificate should be false after back');
+    return 'Certificate back button OK';
   });
 
   // === Error Monitoring ===
@@ -878,10 +937,32 @@ async function runAllTests() {
   });
 
   // === Generate Report ===
+  const errorCapture = require('./utils/errorCapture');
+  const captured = errorCapture.getErrors();
+
+  // 将运行时错误也计入失败
+  for (const err of captured) {
+    const msg = err.message.length > 200 ? err.message.substring(0, 200) + '...' : err.message;
+    runner.results.push({
+      name: 'runtime_error_' + err.type,
+      passed: false,
+      error: '[' + err.type + '] ' + msg
+    });
+  }
+
   const summary = runner.report();
+  summary.runtimeErrors = captured.length;
+  summary.runtimeErrorDetails = captured;
 
   console.log('[TEST] ========================================');
   console.log('[TEST] Tests: ' + summary.total + ' total, ' + summary.passed + ' passed, ' + summary.failed + ' failed');
+  if (captured.length > 0) {
+    console.log('[TEST] Runtime errors: ' + captured.length);
+    for (const e of captured) {
+      const msg = e.message.length > 120 ? e.message.substring(0, 120) + '...' : e.message;
+      console.log('[TEST]   [' + e.type + '] ' + msg);
+    }
+  }
   if (summary.failedTests.length > 0) {
     console.log('[TEST] Failed:');
     for (const t of summary.failedTests) {
@@ -890,7 +971,7 @@ async function runAllTests() {
   }
   console.log('[TEST] ========================================');
 
-  // 发送结果到本地测试服务器
+  // 发送结果到本地测试服务器（报告中已包含运行时错误）
   try {
     wx.request({
       url: 'http://127.0.0.1:19830/report',
@@ -903,14 +984,6 @@ async function runAllTests() {
   } catch (e) {
     console.error('[TEST] Failed to send report:', e.message);
   }
-
-  // 发送捕获的运行时错误
-  const errorCapture = require('./utils/errorCapture');
-  const captured = errorCapture.getErrors();
-  if (captured.length > 0) {
-    console.log('[TEST] ' + captured.length + ' runtime error(s) captured, sending...');
-  }
-  errorCapture.flushTo('http://127.0.0.1:19830/errors');
 
   return summary;
 }

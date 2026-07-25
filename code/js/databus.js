@@ -83,6 +83,10 @@ class DataBus {
     this.scoreManager.recordPuzzleScore(level, time, isCompleted);
   }
 
+  calculatePuzzleScore(level, time) {
+    return this.scoreManager.calculatePuzzleScore(level, time);
+  }
+
   recordQuizScore(correctCount, totalQuestions, score) {
     this.scoreManager.recordQuizScore(correctCount, totalQuestions, score);
   }

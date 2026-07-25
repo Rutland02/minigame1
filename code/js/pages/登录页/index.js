@@ -21,7 +21,7 @@ class LoginPage extends BasePage {
         this.logoImage = resourceManager.getImage('logo');
       }
       if (!this.logoImage) {
-        const img = wx.createImage();
+        const img = (typeof wx !== 'undefined' && wx.createImage) ? wx.createImage() : new Image();
         img.onload = () => { this.logoImage = img; };
         img.onerror = (err) => { console.error('Failed to load logo image:', err); };
         img.src = 'images/logo/icon_0000_logo.png';
@@ -34,7 +34,7 @@ class LoginPage extends BasePage {
         this.loginButtonImage = resourceManager.getImage('loginButton');
       }
       if (!this.loginButtonImage) {
-        const img = wx.createImage();
+        const img = (typeof wx !== 'undefined' && wx.createImage) ? wx.createImage() : new Image();
         img.onload = () => { this.loginButtonImage = img; };
         img.onerror = (err) => { console.error('Failed to load login button image:', err); };
         img.src = 'images/logo/icon_0001_log_in.png';

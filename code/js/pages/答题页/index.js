@@ -6,8 +6,7 @@ class QuizPage extends BasePage {
   constructor(difficulty) {
     super();
     this.vm = new QuizViewModel(difficulty);
-    this.vm.loadQuestions().then(questions => {
-      this.vm.questions = questions;
+    this.vm.loadQuestions().then(() => {
       this.vm._startTimer();
     });
 

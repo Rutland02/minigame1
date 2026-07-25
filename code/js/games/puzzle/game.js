@@ -295,19 +295,10 @@ class PuzzleGame extends BasePage {
 
   saveGameScore() {
     const time = this.getElapsedTime();
-    this.earnedScore = this._calculatePuzzleScore(time);
     if (this.databus) {
+      this.earnedScore = this.databus.calculatePuzzleScore(this.level, time);
       this.databus.recordPuzzleScore(this.level, time, true);
     }
-  }
-
-  _calculatePuzzleScore(time) {
-    const baseScores = { 1: 100, 2: 200, 3: 300 };
-    const base = baseScores[this.level] || 100;
-    const penalty = time * 2;
-    const minScores = { 1: 20, 2: 40, 3: 60 };
-    const min = minScores[this.level] || 20;
-    return Math.max(base - penalty, min);
   }
 
   checkCompletion() {
