@@ -13,10 +13,17 @@ class BasePage {
       this.backgroundImage = resourceManager.getImage('bg');
     }
     if (!this.backgroundImage) {
-      const img = wx.createImage();
-      img.onload = () => { this.backgroundImage = img; };
-      img.onerror = (err) => { console.error('Failed to load background image:', err); };
-      img.src = 'images/ui/bg2.jpg';
+      let img;
+      if (typeof wx !== 'undefined' && wx.createImage) {
+        img = wx.createImage();
+      } else if (typeof window !== 'undefined' && window.Image) {
+        img = new Image();
+      }
+      if (img) {
+        img.onload = () => { this.backgroundImage = img; };
+        img.onerror = (err) => { console.error('Failed to load background image:', err); };
+        img.src = 'images/ui/bg2.jpg';
+      }
     }
   }
 

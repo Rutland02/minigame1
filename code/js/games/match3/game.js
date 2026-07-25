@@ -265,6 +265,7 @@ class Match3Game extends BasePage {
     }
   }
 
+  // 原地修改棋子属性，无需回收到池（piecePool 仍用于普通棋子生命周期管理）
   _createSpecialPiece(piece, specialType) {
     piece.special = true;
     piece.specialType = specialType;

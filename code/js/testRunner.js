@@ -150,9 +150,9 @@ async function runAllTests() {
 
     await runner.run('quiz_button_no_overlap', async () => {
       const q = app.currentPage;
-      const w = q.width;
-      const submitLeft = w / 2 + 10;
-      const hintRight = w / 2 - 10;
+      const btns = q.getButtonRects();
+      const hintRight = btns.hint.x + btns.hint.w;
+      const submitLeft = btns.submit.x;
       runner.assert(submitLeft >= hintRight, 'Buttons should not overlap');
       return 'No overlap';
     });

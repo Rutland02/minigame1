@@ -16,12 +16,16 @@ class QuizPage extends BasePage {
 
     this.animationFrame = 0;
     this.resultAnimation = 0;
-    
+    this.resultButtonRect = null;
+
     this.setupDifficulty();
-    
-    this.questions = this.loadQuestions();
+
+    this.questions = [];
     this.timer = null;
-    this.startTimer();
+    this.loadQuestions().then(questions => {
+      this.questions = questions;
+      this.startTimer();
+    });
   }
   
   setupDifficulty() {
@@ -50,36 +54,47 @@ class QuizPage extends BasePage {
   }
 
   loadQuestions() {
-    let allQuestions = [];
-
     const categories = [
       { file: 'content/heritage/题库.json', type: '非遗', idOffset: 0 },
       { file: 'content/nature/题库.json', type: '自然', idOffset: 100 },
       { file: 'content/red/题库.json', type: '红色', idOffset: 200 }
     ];
 
-    categories.forEach(cat => {
-      try {
-        const fs = wx.getFileSystemManager();
-        const raw = fs.readFileSync(cat.file, 'utf8');
-        const data = JSON.parse(raw);
-        const questions = data.questions || data;
-        questions.forEach(q => {
-          allQuestions.push({
-            id: q.id + cat.idOffset,
-            type: cat.type,
-            question: q.question,
-            options: q.options,
-            correctAnswer: q.answer,
-            explanation: q.explanation
-          });
-        });
-      } catch (e) {
-        console.error(`加载题库失败: ${cat.file}`, e);
-      }
+    const fs = wx.getFileSystemManager();
+
+    const loadCategory = (cat) => new Promise((resolve) => {
+      fs.readFile({
+        filePath: cat.file,
+        encoding: 'utf8',
+        success(res) {
+          try {
+            const data = JSON.parse(res.data);
+            const questions = data.questions || data;
+            const mapped = questions.map(q => ({
+              id: q.id + cat.idOffset,
+              type: cat.type,
+              question: q.question,
+              options: q.options,
+              correctAnswer: q.answer,
+              explanation: q.explanation
+            }));
+            resolve(mapped);
+          } catch (e) {
+            console.error(`解析题库失败: ${cat.file}`, e);
+            resolve([]);
+          }
+        },
+        fail(e) {
+          console.error(`加载题库失败: ${cat.file}`, e);
+          resolve([]);
+        }
+      });
     });
 
-    return this.shuffleArray(allQuestions).slice(0, this.questionCount);
+    return Promise.all(categories.map(loadCategory)).then(results => {
+      const allQuestions = results.flat();
+      return this.shuffleArray(allQuestions).slice(0, this.questionCount);
+    });
   }
   
   shuffleArray(array) {
@@ -299,35 +314,25 @@ class QuizPage extends BasePage {
       ctx.textAlign = 'center';
       ctx.fillText(`提示 (${this.hintCount})`, btns.hint.x + btns.hint.w / 2, btns.hint.y + btns.hint.h / 2 + 6);
 
-      if (this.selectedOption !== null) {
-        drawRoundedRect(ctx, btns.submit.x, btns.submit.y, btns.submit.w, btns.submit.h, 20);
+      drawRoundedRect(ctx, btns.submit.x, btns.submit.y, btns.submit.w, btns.submit.h, 20);
+      const isSelected = this.selectedOption !== null;
+      if (isSelected) {
         const submitGradient = ctx.createLinearGradient(btns.submit.x, btns.submit.y, btns.submit.x + btns.submit.w, btns.submit.y + btns.submit.h);
         submitGradient.addColorStop(0, '#10B981');
         submitGradient.addColorStop(1, '#059669');
         ctx.fillStyle = submitGradient;
-        ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('提交答案', btns.submit.x + btns.submit.w / 2, btns.submit.y + btns.submit.h / 2 + 6);
+      } else {
+        ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
       }
-
-      drawRoundedRect(ctx, btns.skip.x, btns.skip.y, btns.skip.w, btns.skip.h, 20);
-      const skipGradient = ctx.createLinearGradient(btns.skip.x, btns.skip.y, btns.skip.x + btns.skip.w, btns.skip.y + btns.skip.h);
-      skipGradient.addColorStop(0, '#10B981');
-      skipGradient.addColorStop(1, '#059669');
-      ctx.fillStyle = skipGradient;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.lineWidth = 2;
       ctx.stroke();
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.4)';
       ctx.font = '14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('跳过', btns.skip.x + btns.skip.w / 2, btns.skip.y + btns.skip.h / 2 + 6);
+      ctx.fillText('确定', btns.submit.x + btns.submit.w / 2, btns.submit.y + btns.submit.h / 2 + 6);
     }
   }
 
@@ -336,9 +341,8 @@ class QuizPage extends BasePage {
     const w = this.width;
     return {
       back:    { x: 20,           y: h - 60, w: 80,  h: 40 },
-      hint:    { x: w / 2 - 110,  y: h - 60, w: 100, h: 40 },
-      submit:  { x: w / 2 + 10,   y: h - 60, w: 100, h: 40 },
-      skip:    { x: w - 120,      y: h - 60, w: 100, h: 40 },
+      hint:    { x: w / 2 - 50,   y: h - 60, w: 100, h: 40 },
+      submit:  { x: w - 120,      y: h - 60, w: 100, h: 40 },
     };
   }
 
@@ -394,12 +398,8 @@ class QuizPage extends BasePage {
         this.submitAnswer();
       }
 
-      if (!this.isAnswered && this.selectedOption === null && x >= btns.hint.x && x <= btns.hint.x + btns.hint.w && y >= btns.hint.y && y <= btns.hint.y + btns.hint.h) {
+      if (!this.isAnswered && x >= btns.hint.x && x <= btns.hint.x + btns.hint.w && y >= btns.hint.y && y <= btns.hint.y + btns.hint.h) {
         this.useHint();
-      }
-
-      if (x >= btns.skip.x && x <= btns.skip.x + btns.skip.w && y >= btns.skip.y && y <= btns.skip.y + btns.skip.h) {
-        this.skipQuestion();
       }
     } else {
       const rect = this.resultButtonRect;
