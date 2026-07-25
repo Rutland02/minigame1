@@ -209,7 +209,7 @@ class AchievementPage extends BasePage {
     const databus = this.getDatabus();
     const userInfo = databus.getUserInfo();
     const totalScore = databus.getTotalScore();
-    const achievements = databus.scoreManager.achievements.unlocked;
+    const achievements = databus.scoreManager.getUnlockedAchievements();
     const scores = databus.getAllScores();
     
     ctx.font = '18px Arial';
