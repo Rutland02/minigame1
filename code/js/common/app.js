@@ -60,13 +60,16 @@ class App {
   constructor() {
     GameGlobal.app = this;
     this.databus = GameGlobal.databus;
+    const sys = GameGlobal.systemInfo || {};
+    this.width = sys.windowWidth || 375;
+    this.height = sys.windowHeight || 667;
+    this.dpr = sys.pixelRatio || 1;
     this.currentPage = null;
     this._transition = null;
     this._lastLoopTime = 0;
     this._achievementQueue = [];
     this._achievementBanner = null;
     this._boundLoop = this.loop.bind(this);
-    this.dpr = GameGlobal.systemInfo ? GameGlobal.systemInfo.pixelRatio : 1;
     this.init();
   }
 
@@ -104,7 +107,13 @@ class App {
       console.error('添加触摸事件监听失败:', error);
     }
     
+    if (canvas.width !== this.width * this.dpr || canvas.height !== this.height * this.dpr) {
+      canvas.width = this.width * this.dpr;
+      canvas.height = this.height * this.dpr;
+      ctx = canvas.getContext('2d');
+    }
     ctx.scale(this.dpr, this.dpr);
+    console.log('[ADAPT] logical:', this.width, 'x', this.height, 'dpr:', this.dpr, 'canvas:', canvas.width, 'x', canvas.height);
 
     this.showPage('login');
 
