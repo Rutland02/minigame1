@@ -155,7 +155,7 @@ class HomePage extends BasePage {
   }
 
   navigateToPage(id) {
-    const app = GameGlobal.app;
+    const app = this.app;
     if (!app || !app.showPage) return;
     if (['match3', 'puzzle', 'quiz', 'achievement'].includes(id)) {
       app.showPage(id);
@@ -170,7 +170,7 @@ class HomePage extends BasePage {
             icon: 'success',
             duration: 1500
           });
-          GameGlobal.databus.unlockAchievement('check_in_master');
+          this.databus.unlockAchievement('check_in_master');
         },
         fail: (err) => {
           console.error('扫码失败:', err);

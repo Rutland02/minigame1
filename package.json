@@ -1,0 +1,14 @@
+{
+  "name": "minigame1-test",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "D:/APPs/微信web开发者工具/cli.bat auto --project E:/VS_Code_Program_File/wxmicorsoft/minigame1/code --trust-project --auto-port 9420",
+    "test": "node scripts/write-signal.js .test-runner-signal && node scripts/test-runner.js",
+    "test:ach": "node scripts/write-signal.js .ach-test-signal && node scripts/test-achievements.js",
+    "loop": "bash scripts/loop.sh"
+  },
+  "devDependencies": {
+    "miniprogram-automator": "^0.12.1"
+  }
+}

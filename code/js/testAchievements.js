@@ -2,8 +2,8 @@
  * 成就系统独立测试模块
  *
  * 两种运行方式：
- *   1. 自动：npm run test:ach → 写信号文件 → 触发重编译 → 本模块检测到信号自动运行
- *   手动：控制台执行 GameGlobal.runAchievementTests()
+ *   1. 自动：npm run test:ach → 写信号文件 → 触发重编译 → game.js 检测到信号后加载并触发
+ *   2. 手动：控制台执行 GameGlobal.runAchievementTests()
  *
  * 结果通过 console.log（带 [TEST-ACH] 前缀）输出，同时发送到测试服务器。
  */
@@ -172,23 +172,6 @@ async function runAchievementTests() {
   }
 
   return summary;
-}
-
-// Auto-run if signal file exists (written by npm run test:ach)
-// 信号文件放在项目 code/ 目录，Node.js 和小游戏均可访问
-try {
-  const fs = wx.getFileSystemManager();
-  fs.accessSync('.ach-test-signal');
-  // signal exists → auto-run and delete
-  try { fs.unlinkSync('.ach-test-signal'); } catch (_) {}
-  console.log('[TEST-ACH] Signal file detected, will run in 2 seconds...');
-  setTimeout(() => {
-    runAchievementTests().catch(e => {
-      console.error('[TEST-ACH] Test runner crashed:', e);
-    });
-  }, 2000);
-} catch (_) {
-  // no signal → manual mode only
 }
 
 module.exports = { runAchievementTests };

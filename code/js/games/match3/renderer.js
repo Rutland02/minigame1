@@ -1,4 +1,4 @@
-const { drawRoundedRect } = require('../../utils/canvasUtils');
+const { drawRoundedRect, LayoutRect } = require('../../utils/canvasUtils');
 const { COLORS, ICONS } = require('./constants');
 const { easeOutQuad, easeOutElastic, easeOutBounce } = require('./animation');
 
@@ -369,12 +369,33 @@ class Match3Renderer {
     }
   }
 
+  getButtonRects() {
+    const game = this.game;
+    if (!this._buttonRects) {
+      this._buttonRects = {
+        back:    new LayoutRect(40, game.height - 60, 100, 40),
+        restart: new LayoutRect(game.width - 140, game.height - 60, 100, 40),
+      };
+    }
+    return this._buttonRects;
+  }
+
+  getGameOverRects() {
+    const game = this.game;
+    if (!this._gameOverRects) {
+      this._gameOverRects = {
+        restart: new LayoutRect(game.width / 2 - 100, game.height / 2 + 60, 200, 50),
+        home:    new LayoutRect(game.width / 2 - 100, game.height / 2 + 120, 200, 50),
+      };
+    }
+    return this._gameOverRects;
+  }
+
   drawBottomButtons(ctx) {
     const game = this.game;
-    const x = 40;
-    const y = game.height - 60;
-    const width = 100;
-    const height = 40;
+    const btns = this.getButtonRects();
+    const back = btns.back;
+    const restart = btns.restart;
     const radius = 20;
 
     ctx.save();
@@ -383,12 +404,12 @@ class Match3Renderer {
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 3;
 
-    const backGradient = ctx.createLinearGradient(x, y, x + width, y);
+    const backGradient = ctx.createLinearGradient(back.x, back.y, back.x + back.w, back.y);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = backGradient;
 
-    drawRoundedRect(ctx, x, y, width, height, radius);
+    drawRoundedRect(ctx, back.x, back.y, back.w, back.h, radius);
     ctx.fill();
     ctx.restore();
 
@@ -399,13 +420,7 @@ class Match3Renderer {
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('返回', 90, game.height - 35);
-
-    const restartX = game.width - 140;
-    const restartY = game.height - 60;
-    const restartWidth = 100;
-    const restartHeight = 40;
-    const restartRadius = 20;
+    ctx.fillText('返回', back.centerX, back.centerY + 6);
 
     ctx.save();
     ctx.shadowColor = 'rgba(16, 185, 129, 0.4)';
@@ -413,12 +428,12 @@ class Match3Renderer {
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 3;
 
-    const restartGradient = ctx.createLinearGradient(restartX, restartY, restartX + restartWidth, restartY);
+    const restartGradient = ctx.createLinearGradient(restart.x, restart.y, restart.x + restart.w, restart.y);
     restartGradient.addColorStop(0, '#10B981');
     restartGradient.addColorStop(1, '#059669');
     ctx.fillStyle = restartGradient;
 
-    drawRoundedRect(ctx, restartX, restartY, restartWidth, restartHeight, restartRadius);
+    drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, radius);
     ctx.fill();
     ctx.restore();
 
@@ -429,7 +444,7 @@ class Match3Renderer {
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('重新开始', game.width - 90, game.height - 35);
+    ctx.fillText('重新开始', restart.centerX, restart.centerY + 6);
   }
 
   drawGameOver(ctx) {
@@ -446,18 +461,10 @@ class Match3Renderer {
     const cardX = (game.width - cardWidth) / 2;
     const cardY = (game.height - cardHeight) / 2;
 
-    const x = cardX;
-    const y = cardY;
-    const width = cardWidth;
-    const height = cardHeight;
-    const radius = 20;
-
-    drawRoundedRect(ctx, x, y, width, height, radius);
-
+    drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, 20);
     ctx.fill();
     ctx.stroke();
 
-    // 游戏结束文字
     ctx.fillStyle = '#2563EB';
     ctx.font = '28px Inter, Arial';
     ctx.textAlign = 'center';
@@ -466,7 +473,6 @@ class Match3Renderer {
     ctx.shadowOffsetY = 1;
     ctx.fillText('游戏结束', game.width / 2, game.height / 2 - 40);
 
-    // 得分和等级
     ctx.font = '20px Inter, Arial';
     ctx.fillStyle = '#1E293B';
     ctx.shadowBlur = 0;
@@ -475,21 +481,17 @@ class Match3Renderer {
     ctx.fillText(`最终得分: ${game.score}`, game.width / 2, game.height / 2);
     ctx.fillText(`等级: ${game.level}`, game.width / 2, game.height / 2 + 30);
 
-    // 重新开始按钮
-    const restartGradient = ctx.createLinearGradient(game.width / 2 - 100, game.height / 2 + 60, game.width / 2 + 100, game.height / 2 + 60);
+    const btns = this.getGameOverRects();
+    const restart = btns.restart;
+    const home = btns.home;
+
+    const restartGradient = ctx.createLinearGradient(restart.x, restart.y, restart.x + restart.w, restart.y);
     restartGradient.addColorStop(0, '#10B981');
     restartGradient.addColorStop(1, '#059669');
     ctx.fillStyle = restartGradient;
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
 
-    const restartX = game.width / 2 - 100;
-    const restartY = game.height / 2 + 60;
-    const restartWidth = 200;
-    const restartHeight = 50;
-    const restartRadius = 25;
-
-    drawRoundedRect(ctx, restartX, restartY, restartWidth, restartHeight, restartRadius);
-
+    drawRoundedRect(ctx, restart.x, restart.y, restart.w, restart.h, 25);
     ctx.fill();
     ctx.stroke();
 
@@ -499,25 +501,18 @@ class Match3Renderer {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
-    ctx.fillText('重新开始', game.width / 2, game.height / 2 + 90);
+    ctx.fillText('重新开始', restart.centerX, restart.centerY + 6);
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.shadowOffsetY = 0;
 
-    const homeGradient = ctx.createLinearGradient(game.width / 2 - 100, game.height / 2 + 120, game.width / 2 + 100, game.height / 2 + 120);
+    const homeGradient = ctx.createLinearGradient(home.x, home.y, home.x + home.w, home.y);
     homeGradient.addColorStop(0, '#6B7280');
     homeGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = homeGradient;
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
 
-    const homeX = game.width / 2 - 100;
-    const homeY = game.height / 2 + 120;
-    const homeWidth = 200;
-    const homeHeight = 50;
-    const homeRadius = 25;
-
-    drawRoundedRect(ctx, homeX, homeY, homeWidth, homeHeight, homeRadius);
-
+    drawRoundedRect(ctx, home.x, home.y, home.w, home.h, 25);
     ctx.fill();
     ctx.stroke();
 
@@ -527,7 +522,7 @@ class Match3Renderer {
     ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
     ctx.shadowBlur = 3;
     ctx.shadowOffsetY = 1;
-    ctx.fillText('返回首页', game.width / 2, game.height / 2 + 150);
+    ctx.fillText('返回首页', home.centerX, home.centerY + 6);
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
     ctx.shadowOffsetY = 0;

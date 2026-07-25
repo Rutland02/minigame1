@@ -6,6 +6,7 @@ const Match3Game = require('../games/match3/game');
 const PuzzleGame = require('../games/puzzle/game');
 const ResourceManager = require('../utils/resourceManager');
 const DataBus = require('../databus');
+const EventBus = require('../utils/eventBus');
 
 let canvas;
 let ctx;
@@ -53,6 +54,7 @@ GameGlobal.resourceManager = resourceManager;
 GameGlobal.systemInfo = wx.getSystemInfoSync();
 
 GameGlobal.databus = new DataBus();
+GameGlobal.eventBus = new EventBus();
 
 class App {
   constructor() {
@@ -75,6 +77,18 @@ class App {
       console.error('加载图片资源失败:', error);
     }
 
+    // 监听成就解锁事件
+    if (GameGlobal.eventBus) {
+      GameGlobal.eventBus.on('achievement:unlocked', ({ achievement }) => {
+        if (achievement) {
+          wx.showToast({
+            title: `解锁成就: ${achievement.title}`,
+            icon: 'success',
+            duration: 2000
+          });
+        }
+      });
+    }
 
     try {
       if (typeof wx !== 'undefined' && wx.onTouchStart) {

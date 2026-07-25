@@ -73,8 +73,21 @@ function getTouchCoords(touches, changedTouches) {
   };
 }
 
+class LayoutRect {
+  constructor(x, y, w, h) {
+    this.x = x; this.y = y; this.w = w; this.h = h;
+  }
+  contains(px, py) {
+    return px >= this.x && px <= this.x + this.w &&
+           py >= this.y && py <= this.y + this.h;
+  }
+  get centerX() { return this.x + this.w / 2; }
+  get centerY() { return this.y + this.h / 2; }
+}
+
 module.exports = {
   drawRoundedRect,
   drawButton,
-  getTouchCoords
+  getTouchCoords,
+  LayoutRect
 };

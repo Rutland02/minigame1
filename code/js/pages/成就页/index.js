@@ -1,4 +1,4 @@
-const { drawRoundedRect, getTouchCoords } = require('../../utils/canvasUtils');
+const { drawRoundedRect, getTouchCoords, LayoutRect } = require('../../utils/canvasUtils');
 const BasePage = require('../../common/basePage');
 
 class AchievementPage extends BasePage {
@@ -13,15 +13,22 @@ class AchievementPage extends BasePage {
     this.showCertificate = false;
 
     this.allAchievements = this.getAllAchievements();
-  }
-  
-  getDatabus() {
-    return GameGlobal.databus;
+    this.updateLayout();
   }
 
+  updateLayout() {
+    const btnH = 50, btnW = 100;
+    const btnY = this.height - btnH - 30;
+    this.buttons = {
+      back:        new LayoutRect(40, btnY, btnW, btnH),
+      certificate: new LayoutRect(this.width - 140, btnY, btnW, btnH),
+    };
+    this.certBackBtn = new LayoutRect(30, 30, 80, 40);
+    this.certShareBtn = new LayoutRect(this.width / 2 - 80, this.height - 90, 160, 50);
+  }
+  
   getAllAchievements() {
-    const databus = this.getDatabus();
-    return databus.scoreManager.getAllAchievementDefinitions();
+    return this.databus.scoreManager.getAllAchievementDefinitions();
   }
 
   render(ctx) {
@@ -40,7 +47,7 @@ class AchievementPage extends BasePage {
   }
 
   renderAchievementsList(ctx) {
-    const databus = this.getDatabus();
+    const databus = this.databus;
     const achievementsWithStatus = databus.getAllAchievementsWithStatus();
 
     const startY = 180;
@@ -142,12 +149,11 @@ class AchievementPage extends BasePage {
   }
 
   renderBottomButtons(ctx) {
-    const buttonHeight = 50;
-    const buttonWidth = 100;
-    const buttonY = this.height - buttonHeight - 30;
+    const back = this.buttons.back;
+    const cert = this.buttons.certificate;
 
-    drawRoundedRect(ctx, 40, buttonY, buttonWidth, buttonHeight, 25);
-    const backGradient = ctx.createLinearGradient(40, buttonY, 140, buttonY + buttonHeight);
+    drawRoundedRect(ctx, back.x, back.y, back.w, back.h, 25);
+    const backGradient = ctx.createLinearGradient(back.x, back.y, back.x + back.w, back.y + back.h);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = backGradient;
@@ -158,11 +164,10 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('返回', 90, buttonY + 28);
+    ctx.fillText('返回', back.centerX, back.centerY + 6);
 
-    const certX = this.width - 140;
-    drawRoundedRect(ctx, certX, buttonY, buttonWidth, buttonHeight, 25);
-    const certGradient = ctx.createLinearGradient(certX, buttonY, certX + buttonWidth, buttonY + buttonHeight);
+    drawRoundedRect(ctx, cert.x, cert.y, cert.w, cert.h, 25);
+    const certGradient = ctx.createLinearGradient(cert.x, cert.y, cert.x + cert.w, cert.y + cert.h);
     certGradient.addColorStop(0, '#10B981');
     certGradient.addColorStop(1, '#059669');
     ctx.fillStyle = certGradient;
@@ -173,7 +178,7 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('查看证书', certX + 50, buttonY + 28);
+    ctx.fillText('查看证书', cert.centerX, cert.centerY + 6);
   }
 
   renderCertificate(ctx) {
@@ -207,7 +212,7 @@ class AchievementPage extends BasePage {
     ctx.textAlign = 'center';
     ctx.fillText('数字体验证书', this.width / 2, 120);
     
-    const databus = this.getDatabus();
+    const databus = this.databus;
     const userInfo = databus.getUserInfo();
     const totalScore = databus.getTotalScore();
     const achievements = databus.scoreManager.getUnlockedAchievements();
@@ -249,8 +254,9 @@ class AchievementPage extends BasePage {
     ctx.textAlign = 'center';
     ctx.fillText(`颁发日期: ${date}`, this.width / 2, 550);
     
-    drawRoundedRect(ctx, this.width / 2 - 80, this.height - 90, 160, 50, 25);
-    const shareGradient = ctx.createLinearGradient(this.width / 2 - 80, this.height - 90, this.width / 2 + 80, this.height - 40);
+    const share = this.certShareBtn;
+    drawRoundedRect(ctx, share.x, share.y, share.w, share.h, 25);
+    const shareGradient = ctx.createLinearGradient(share.x, share.y, share.x + share.w, share.y + share.h);
     shareGradient.addColorStop(0, '#10B981');
     shareGradient.addColorStop(1, '#059669');
     ctx.fillStyle = shareGradient;
@@ -261,10 +267,11 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = '16px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('分享证书', this.width / 2, this.height - 63);
-    
-    drawRoundedRect(ctx, 30, 30, 80, 40, 20);
-    const backGradient = ctx.createLinearGradient(30, 30, 110, 70);
+    ctx.fillText('分享证书', share.centerX, share.centerY + 6);
+
+    const backBtn = this.certBackBtn;
+    drawRoundedRect(ctx, backBtn.x, backBtn.y, backBtn.w, backBtn.h, 20);
+    const backGradient = ctx.createLinearGradient(backBtn.x, backBtn.y, backBtn.x + backBtn.w, backBtn.y + backBtn.h);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = backGradient;
@@ -275,34 +282,32 @@ class AchievementPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('返回', 70, 52);
+    ctx.fillText('返回', backBtn.centerX, backBtn.centerY + 6);
   }
 
   handleTouchStart(e) {
     const coords = getTouchCoords(e.touches, e.changedTouches);
     if (!coords) return;
     const { x, y } = coords;
-    
+
     if (this.showCertificate) {
-      if (x >= 30 && x <= 110 && y >= 30 && y <= 70) {
+      if (this.certBackBtn.contains(x, y)) {
         this.showCertificate = false;
       }
-      if (x >= this.width / 2 - 80 && x <= this.width / 2 + 80 && y >= this.height - 90 && y <= this.height - 40) {
+      if (this.certShareBtn.contains(x, y)) {
         this.shareCertificate();
       }
     } else {
-      if (x >= 40 && x <= 140 && y >= this.height - 80 && y <= this.height - 30) {
-        if (GameGlobal.app && GameGlobal.app.showPage) {
-          GameGlobal.app.showPage('home');
-        }
+      if (this.buttons.back.contains(x, y)) {
+        this.navigateTo('home');
         return;
       }
 
-      if (x >= this.width - 140 && x <= this.width - 40 && y >= this.height - 80 && y <= this.height - 30) {
+      if (this.buttons.certificate.contains(x, y)) {
         this.generateCertificate();
         return;
       }
-      
+
       this.isDragging = true;
       this.startY = y;
       this.startScrollY = this.scrollY;

@@ -65,9 +65,9 @@ async function runAllTests() {
   let quizHasQuestions = false;
   await runner.run('quiz_questions_loaded', async () => {
     const q = app.currentPage;
-    quizHasQuestions = !!(q.questions && q.questions.length > 0);
-    runner.assert(quizHasQuestions, 'Should have questions, got ' + (q.questions ? q.questions.length : 0));
-    return q.questions.length + ' questions';
+    quizHasQuestions = !!(q.vm.questions && q.vm.questions.length > 0);
+    runner.assert(quizHasQuestions, 'Should have questions, got ' + (q.vm.questions ? q.vm.questions.length : 0));
+    return q.vm.questions.length + ' questions';
   });
 
   if (!quizHasQuestions) {
@@ -75,42 +75,42 @@ async function runAllTests() {
   } else {
     await runner.run('quiz_initial_state', async () => {
       const q = app.currentPage;
-      runner.assertEqual(q.selectedOption, null, 'selectedOption');
-      runner.assertEqual(q.isAnswered, false, 'isAnswered');
-      runner.assertEqual(q.currentQuestion, 0, 'currentQuestion');
+      runner.assertEqual(q.vm.selectedOption, null, 'selectedOption');
+      runner.assertEqual(q.vm.isAnswered, false, 'isAnswered');
+      runner.assertEqual(q.vm.currentIndex, 0, 'currentIndex');
       return 'Initial state correct';
     });
 
     await runner.run('quiz_select_and_submit', async () => {
       const q = app.currentPage;
-      q.selectedOption = 0;
-      q.submitAnswer();
-      runner.assertEqual(q.isAnswered, true, 'isAnswered after submit');
-      runner.assert(typeof q.isCorrect === 'boolean', 'isCorrect should be boolean');
-      return 'Submitted, correct=' + q.isCorrect + ', score=' + q.score;
+      q.vm.selectedOption = 0;
+      q.vm.submitAnswer(databus);
+      runner.assertEqual(q.vm.isAnswered, true, 'isAnswered after submit');
+      runner.assert(typeof q.vm.isCorrect === 'boolean', 'isCorrect should be boolean');
+      return 'Submitted, correct=' + q.vm.isCorrect + ', score=' + q.vm.score;
     });
 
     await runner.run('quiz_next_question', async () => {
       const q = app.currentPage;
-      const before = q.currentQuestion;
-      q.nextQuestion();
-      runner.assertEqual(q.currentQuestion, before + 1, 'currentQuestion incremented');
-      runner.assertEqual(q.selectedOption, null, 'selectedOption reset');
-      runner.assertEqual(q.isAnswered, false, 'isAnswered reset');
-      return 'Moved to question ' + q.currentQuestion;
+      const before = q.vm.currentIndex;
+      q.vm.nextQuestion();
+      runner.assertEqual(q.vm.currentIndex, before + 1, 'currentIndex incremented');
+      runner.assertEqual(q.vm.selectedOption, null, 'selectedOption reset');
+      runner.assertEqual(q.vm.isAnswered, false, 'isAnswered reset');
+      return 'Moved to question ' + q.vm.currentIndex;
     });
 
     await runner.run('quiz_hint', async () => {
       const q = app.currentPage;
-      q.isAnswered = false;
-      q.selectedOption = null;
-      const before = q.hintCount;
-      q.useHint();
+      q.vm.isAnswered = false;
+      q.vm.selectedOption = null;
+      const before = q.vm.hintCount;
+      q.vm.useHint();
       if (before > 0) {
-        runner.assertEqual(q.hintCount, before - 1, 'hint count decremented');
-        runner.assert(q.selectedOption !== null, 'option auto-selected');
+        runner.assertEqual(q.vm.hintCount, before - 1, 'hint count decremented');
+        runner.assert(q.vm.selectedOption !== null, 'option auto-selected');
       }
-      return 'Hint used (had ' + before + ', now ' + q.hintCount + ')';
+      return 'Hint used (had ' + before + ', now ' + q.vm.hintCount + ')';
     });
 
     await runner.run('quiz_button_no_overlap', async () => {

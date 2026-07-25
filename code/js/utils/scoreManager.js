@@ -226,27 +226,20 @@ class ScoreManager {
     if (!this.achievements.unlocked.includes(achievementId)) {
       this.achievements.unlocked.push(achievementId);
       this.achievements.unlockDates[achievementId] = Date.now();
-      
-      this.showAchievementUnlockNotification(achievementId);
-      
+
       this.checkCollectorAchievement();
-      
+
       this.save();
+
+      // 通过事件总线通知 UI 层
+      if (GameGlobal.eventBus) {
+        const achievement = this.getAchievementDefinition(achievementId);
+        GameGlobal.eventBus.emit('achievement:unlocked', { id: achievementId, achievement });
+      }
 
       return true;
     }
     return false;
-  }
-
-  showAchievementUnlockNotification(achievementId) {
-    const achievement = this.getAchievementDefinition(achievementId);
-    if (achievement) {
-      wx.showToast({
-        title: `解锁成就: ${achievement.title}`,
-        icon: 'success',
-        duration: 2000
-      });
-    }
   }
 
   getAllAchievementDefinitions() {

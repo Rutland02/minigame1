@@ -3,12 +3,16 @@ class BasePage {
     const sys = GameGlobal.systemInfo || wx.getSystemInfoSync();
     this.width = sys.windowWidth;
     this.height = sys.windowHeight;
+    this.app = GameGlobal.app;
+    this.databus = GameGlobal.databus;
+    this.resourceManager = GameGlobal.resourceManager;
+    this.eventBus = GameGlobal.eventBus;
     this.backgroundImage = null;
     this.loadBackgroundImage();
   }
 
   loadBackgroundImage() {
-    const resourceManager = GameGlobal.resourceManager;
+    const resourceManager = this.resourceManager;
     if (resourceManager) {
       this.backgroundImage = resourceManager.getImage('bg');
     }
@@ -36,6 +40,12 @@ class BasePage {
       gradient.addColorStop(1, fallbackColor2 || '#6e5b7b');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, this.width, this.height);
+    }
+  }
+
+  navigateTo(pageName) {
+    if (this.app && this.app.showPage) {
+      this.app.showPage(pageName);
     }
   }
 

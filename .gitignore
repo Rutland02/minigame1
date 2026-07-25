@@ -4,5 +4,10 @@
 # 只跟踪代码和项目配置
 !.gitignore
 !README.md
+!package.json
+!scripts/
+!scripts/**
 !code/
 !code/**
+code/.ach-test-signal
+code/.test-runner-signal

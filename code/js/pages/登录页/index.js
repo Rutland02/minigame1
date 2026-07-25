@@ -16,7 +16,7 @@ class LoginPage extends BasePage {
   
   loadImages() {
     const loadLogo = () => {
-      const resourceManager = GameGlobal.resourceManager;
+      const resourceManager = this.resourceManager;
       if (resourceManager) {
         this.logoImage = resourceManager.getImage('logo');
       }
@@ -29,7 +29,7 @@ class LoginPage extends BasePage {
     };
 
     const loadLoginButton = () => {
-      const resourceManager = GameGlobal.resourceManager;
+      const resourceManager = this.resourceManager;
       if (resourceManager) {
         this.loginButtonImage = resourceManager.getImage('loginButton');
       }
@@ -183,20 +183,16 @@ class LoginPage extends BasePage {
         sessionKey: 'session_key_123456'
       };
 
-      if (!GameGlobal.databus) {
+      if (!this.databus) {
         console.error('databus not initialized');
         this.isLoading = false;
         return;
       }
 
-      GameGlobal.databus.setUserInfo(userInfo);
+      this.databus.setUserInfo(userInfo);
       console.log('登录成功，获取到用户信息:', userInfo);
 
-      if (GameGlobal.app && typeof GameGlobal.app.showPage === 'function') {
-        GameGlobal.app.showPage('home');
-      } else {
-        console.error('GameGlobal.app 或 showPage 方法不存在');
-      }
+      this.navigateTo('home');
 
       this.isLoading = false;
     }, 1000);
