@@ -23,10 +23,15 @@ class QuizPage extends BasePage {
   getButtonRects() {
     const h = this.height;
     const w = this.width;
+    const btnH = this.scaleSize(50);
+    const btnY = h - this.scaleSize(70);
+    const backW = this.scaleSize(80);
+    const hintW = this.scaleSize(100);
+    const submitW = this.scaleSize(100);
     return {
-      back:    new LayoutRect(20, h - 60, 80, 40),
-      hint:    new LayoutRect(w / 2 - 50, h - 60, 100, 40),
-      submit:  new LayoutRect(w - 120, h - 60, 100, 40),
+      back:    new LayoutRect(20, btnY, backW, btnH),
+      hint:    new LayoutRect((w - hintW) / 2, btnY, hintW, btnH),
+      submit:  new LayoutRect(w - 20 - submitW, btnY, submitW, btnH),
     };
   }
 
@@ -72,7 +77,16 @@ class QuizPage extends BasePage {
 
   _drawHeader(ctx) {
     const { vm } = this;
-    drawRoundedRect(ctx, 20, 20, this.width - 40, 60, 15);
+    const headerY = Math.round(this.height * 0.01);
+    const headerH = Math.round(this.height * 0.08);
+    const pad = Math.round(this.height * 0.015);
+    const headerTextY = headerY + headerH / 2 + 6;
+    const badgeW = this.scaleSize(80);
+    const badgeH = this.scaleSize(26);
+    const badgeY = headerY + (headerH - badgeH) / 2;
+    const badgeR = Math.round(badgeH / 2);
+
+    drawRoundedRect(ctx, 20, headerY, this.width - 40, headerH, 15);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
@@ -82,7 +96,7 @@ class QuizPage extends BasePage {
     ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
-    ctx.fillText(`第${vm.progress}题`, 40, 50);
+    ctx.fillText(`第${vm.progress}题`, 20 + pad, headerTextY);
 
     let timerColor = '#000000';
     if (vm.timeLeft > 15) {
@@ -96,26 +110,32 @@ class QuizPage extends BasePage {
     ctx.font = `bold ${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = timerColor;
     ctx.textAlign = 'right';
-    ctx.fillText(`剩余时间: ${vm.timeLeft}s`, this.width - 140, 50);
+    ctx.fillText(`剩余时间: ${vm.timeLeft}s`, this.width - 20 - badgeW - this.scaleSize(10), headerTextY);
 
     const question = vm.currentQuestion;
-    drawRoundedRect(ctx, this.width - 120, 25, 100, 30, 15);
+    drawRoundedRect(ctx, this.width - 20 - badgeW, badgeY, badgeW, badgeH, badgeR);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.font = `${this.scaleSize(12)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
-    ctx.fillText(question.type, this.width - 70, 45);
+    ctx.fillText(question.type, this.width - 20 - badgeW / 2, headerTextY);
   }
 
   _drawQuestionCard(ctx) {
     const { vm } = this;
     const question = vm.currentQuestion;
+    const cardX = 20;
+    const cardY = Math.round(this.height * 0.12);
+    const cardW = this.width - 40;
+    const cardH = Math.round(this.height * 0.2);
+    const pad = this.scaleSize(18);
+    const textY = cardY + cardH / 3 + 6;
 
-    drawRoundedRect(ctx, 20, 100, this.width - 40, 120, 20);
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 20);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fill();
     ctx.strokeStyle = '#E2E8F0';
@@ -126,14 +146,15 @@ class QuizPage extends BasePage {
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(question.question, 40, 160);
+    const maxTextW = cardW - pad * 2;
+    this._drawWrappedText(ctx, question.question, cardX + pad, textY, maxTextW, Math.round(this.scaleSize(17) * 1.4));
   }
 
   _drawOptions(ctx) {
     const { vm } = this;
     const question = vm.currentQuestion;
-    const optionYStart = 240;
-    const optionHeight = 60;
+    const optionYStart = Math.round(this.height * 0.35);
+    const optionHeight = this.scaleSize(56) + this.scaleSize(10);
 
     question.options.forEach((option, index) => {
       let fillColor = 'rgba(255, 255, 255, 0.15)';
@@ -167,11 +188,13 @@ class QuizPage extends BasePage {
       }
 
       ctx.save();
-      ctx.translate(20 + (this.width - 40) / 2, optionYStart + index * optionHeight + 25);
+      const optBaseline = this.scaleSize(28);
+      ctx.translate(20 + (this.width - 40) / 2, optionYStart + index * optionHeight + optBaseline);
       ctx.scale(scale, scale);
-      ctx.translate(-(20 + (this.width - 40) / 2), -(optionYStart + index * optionHeight + 25));
+      ctx.translate(-(20 + (this.width - 40) / 2), -(optionYStart + index * optionHeight + optBaseline));
 
-      drawRoundedRect(ctx, 20, optionYStart + index * optionHeight, this.width - 40, 50, 15);
+      const optH = this.scaleSize(56);
+      drawRoundedRect(ctx, 20, optionYStart + index * optionHeight, this.width - 40, optH, 15);
       ctx.fillStyle = fillColor;
       ctx.fill();
       ctx.strokeStyle = strokeColor;
@@ -190,18 +213,18 @@ class QuizPage extends BasePage {
       ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${String.fromCharCode(65 + index)}. ${option}`, 40, optionYStart + index * optionHeight + 25);
+      ctx.fillText(`${String.fromCharCode(65 + index)}. ${option}`, 40, optionYStart + index * optionHeight + optBaseline);
 
       if (vm.isAnswered && index === question.correctAnswer) {
         ctx.fillStyle = '#059669';
         ctx.font = `${this.scaleSize(18)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        ctx.fillText('✓', this.width - 35, optionYStart + index * optionHeight + 25);
+        ctx.fillText('✓', this.width - 35, optionYStart + index * optionHeight + optBaseline);
       }
 
       if (vm.isAnswered && index === vm.selectedOption && !vm.isCorrect) {
-        const textY = optionYStart + index * optionHeight + 25;
+        const textY = optionYStart + index * optionHeight + optBaseline;
         ctx.strokeStyle = '#DC2626';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -232,33 +255,44 @@ class QuizPage extends BasePage {
     ctx.scale(scale, scale);
     ctx.translate(-this.width / 2, -this.height / 2);
 
-    drawRoundedRect(ctx, 40, this.height / 2 - 100, this.width - 80, 200, 20);
+    const pad = this.scaleSize(18);
+    const resultCardH = Math.round(this.height * 0.55);
+    const resultCardW = this.width - pad * 2;
+    const resultCardX = pad;
+    const resultCardY = (this.height - resultCardH) / 2;
+    const resultCardCX = this.width / 2;
+    const lineH = Math.round(this.scaleSize(17) * 1.4);
+    const btnH = this.scaleSize(46);
+    const btnW = Math.round(this.width * 0.55);
+
+    drawRoundedRect(ctx, resultCardX, resultCardY, resultCardW, resultCardH, 20);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    const titleY = resultCardY + Math.round(resultCardH * 0.15) + 6;
     ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = vm.isCorrect ? '#4CAF50' : '#F44336';
     ctx.textAlign = 'center';
-    ctx.fillText(vm.isCorrect ? '回答正确！' : '回答错误！', this.width / 2, this.height / 2 - 50);
+    ctx.fillText(vm.isCorrect ? '回答正确！' : '回答错误！', resultCardCX, titleY);
 
+    const labelY = resultCardY + Math.round(resultCardH * 0.3) + 6;
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'left';
-    ctx.fillText('解析：', 60, this.height / 2);
+    ctx.fillText('解析：', resultCardX + pad + this.scaleSize(5), labelY);
 
-    const maxWidth = this.width - 120;
-    const lineHeight = 25;
-    const startY = this.height / 2 + 30;
-    const endY = this._drawWrappedText(ctx, question.explanation, 60, startY, maxWidth, lineHeight);
+    const maxTextW = resultCardW - pad * 2 - this.scaleSize(10);
+    const startY = labelY + lineH;
+    const endY = this._drawWrappedText(ctx, question.explanation, resultCardX + pad + this.scaleSize(5), startY, maxTextW, lineH);
 
-    const buttonY = endY + 40;
-    this.resultButtonRect = new LayoutRect(this.width / 2 - 110, buttonY, 200, 50);
+    const buttonY = endY + this.scaleSize(25);
+    this.resultButtonRect = new LayoutRect((this.width - btnW) / 2, buttonY, btnW, btnH);
 
     const btnText = vm.currentIndex < vm.questions.length - 1 ? '下一题' : '查看成绩';
-    drawRoundedRect(ctx, this.resultButtonRect.x, this.resultButtonRect.y, this.resultButtonRect.w, this.resultButtonRect.h, 25);
+    drawRoundedRect(ctx, this.resultButtonRect.x, this.resultButtonRect.y, this.resultButtonRect.w, this.resultButtonRect.h, Math.round(btnH / 2));
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.fill();
     if (this.pressedId === 'result') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }

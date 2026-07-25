@@ -82,17 +82,19 @@ class PuzzleGame extends BasePage {
 
   updateLayout() {
     const size = this.getPuzzleSize();
-    const pieceSize = Math.min((this.width - 60) / size, (this.height - 220) / size);
+    const boardMarginH = this.width * 0.08;
+    const boardMarginV = this.height * 0.08;
+    const startY = this.height * 0.12;
+    const pieceSize = Math.min((this.width - boardMarginH) / size, (this.height - startY - boardMarginV) / size);
     const startX = (this.width - pieceSize * size) / 2;
-    const startY = 130;
 
     this.boardRect = new LayoutRect(startX, startY, pieceSize * size, pieceSize * size);
     this.pieceSize = pieceSize;
 
-    const btnW = 100, btnH = 50, btnGap = 20;
+    const btnW = this.scaleSize(90), btnH = this.scaleSize(50), btnGap = this.scaleSize(17);
     const totalW = btnW * 3 + btnGap * 2;
     const btnStartX = (this.width - totalW) / 2;
-    const btnY = this.height - btnH - 20;
+    const btnY = this.height - this.scaleSize(70);
     this.buttons = {
       back:       new LayoutRect(btnStartX, btnY, btnW, btnH),
       difficulty: new LayoutRect(btnStartX + btnW + btnGap, btnY, btnW, btnH),
@@ -100,22 +102,31 @@ class PuzzleGame extends BasePage {
     };
 
     // Completed dialog buttons
-    const dlgW = 300, dlgH = 310;
+    const dlgW = this.width * 0.8, dlgH = this.height * 0.45;
     const dlgX = (this.width - dlgW) / 2;
     const dlgY = (this.height - dlgH) / 2;
+    const dlgBtnMargin = dlgW * 0.1;
+    const dlgBtnW = dlgW - dlgBtnMargin * 2;
+    const dlgBtnH = this.scaleSize(50);
+    const dlgBtnGap = this.scaleSize(15);
     this.completedButtons = {
-      replay: new LayoutRect(dlgX + 30, dlgY + 170, dlgW - 60, 50),
-      home:   new LayoutRect(dlgX + 30, dlgY + 230, dlgW - 60, 50),
+      replay: new LayoutRect(dlgX + dlgBtnMargin, dlgY + dlgH * 0.55, dlgBtnW, dlgBtnH),
+      home:   new LayoutRect(dlgX + dlgBtnMargin, dlgY + dlgH * 0.55 + dlgBtnH + dlgBtnGap, dlgBtnW, dlgBtnH),
     };
 
     // Difficulty dialog buttons
-    const diffDlgW = 320, diffDlgH = 280;
+    const diffDlgW = this.width * 0.8, diffDlgH = this.height * 0.45;
     const diffDlgX = (this.width - diffDlgW) / 2;
     const diffDlgY = (this.height - diffDlgH) / 2;
+    const diffBtnMargin = diffDlgW * 0.1;
+    const diffBtnW = diffDlgW - diffBtnMargin * 2;
+    const diffBtnH = this.scaleSize(50);
+    const diffBtnGap = this.scaleSize(15);
+    const diffBtnStartY = diffDlgY + diffDlgH * 0.3;
     this.difficultyButtons = {
-      easy:   new LayoutRect(diffDlgX + 30, diffDlgY + 100, diffDlgW - 60, 50),
-      medium: new LayoutRect(diffDlgX + 30, diffDlgY + 160, diffDlgW - 60, 50),
-      hard:   new LayoutRect(diffDlgX + 30, diffDlgY + 220, diffDlgW - 60, 50),
+      easy:   new LayoutRect(diffDlgX + diffBtnMargin, diffBtnStartY, diffBtnW, diffBtnH),
+      medium: new LayoutRect(diffDlgX + diffBtnMargin, diffBtnStartY + diffBtnH + diffBtnGap, diffBtnW, diffBtnH),
+      hard:   new LayoutRect(diffDlgX + diffBtnMargin, diffBtnStartY + (diffBtnH + diffBtnGap) * 2, diffBtnW, diffBtnH),
     };
   }
 
@@ -389,15 +400,15 @@ class PuzzleGame extends BasePage {
   }
 
   renderDifficultyDialog(ctx) {
-    const dialogWidth = 320;
-    const dialogHeight = 280;
+    const dialogWidth = this.width * 0.8;
+    const dialogHeight = this.height * 0.45;
     const dialogX = (this.width - dialogWidth) / 2;
     const dialogY = (this.height - dialogHeight) / 2;
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, this.width, this.height);
 
-    drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 20);
+    drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, this.scaleSize(20));
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -407,9 +418,10 @@ class PuzzleGame extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('选择难度', this.width / 2, dialogY + 60);
+    ctx.fillText('选择难度', this.width / 2, dialogY + dialogHeight * 0.18);
 
-    drawRoundedRect(ctx, dialogX + 30, dialogY + 100, dialogWidth - 60, 50, 25);
+    const easy = this.difficultyButtons.easy;
+    drawRoundedRect(ctx, easy.x, easy.y, easy.w, easy.h, this.scaleSize(25));
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.fill();
     if (this.pressedId === 'easy') { ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; ctx.fill(); }
@@ -419,10 +431,11 @@ class PuzzleGame extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('简单 (3×3)', this.width / 2, dialogY + 132);
+    ctx.fillText('简单 (3×3)', easy.centerX, easy.centerY + 6);
 
-    drawRoundedRect(ctx, dialogX + 30, dialogY + 160, dialogWidth - 60, 50, 25);
-    const mediumGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 160, dialogX + dialogWidth - 30, dialogY + 210);
+    const medium = this.difficultyButtons.medium;
+    drawRoundedRect(ctx, medium.x, medium.y, medium.w, medium.h, this.scaleSize(25));
+    const mediumGradient = ctx.createLinearGradient(medium.x, medium.y, medium.x + medium.w, medium.y + medium.h);
     mediumGradient.addColorStop(0, '#4a6fa5');
     mediumGradient.addColorStop(1, '#6e5b7b');
     ctx.fillStyle = mediumGradient;
@@ -434,10 +447,11 @@ class PuzzleGame extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('中等 (4×4)', this.width / 2, dialogY + 192);
+    ctx.fillText('中等 (4×4)', medium.centerX, medium.centerY + 6);
 
-    drawRoundedRect(ctx, dialogX + 30, dialogY + 220, dialogWidth - 60, 50, 25);
-    const hardGradient = ctx.createLinearGradient(dialogX + 30, dialogY + 220, dialogX + dialogWidth - 30, dialogY + 270);
+    const hard = this.difficultyButtons.hard;
+    drawRoundedRect(ctx, hard.x, hard.y, hard.w, hard.h, this.scaleSize(25));
+    const hardGradient = ctx.createLinearGradient(hard.x, hard.y, hard.x + hard.w, hard.y + hard.h);
     hardGradient.addColorStop(0, '#F44336');
     hardGradient.addColorStop(1, '#D32F2F');
     ctx.fillStyle = hardGradient;
@@ -449,7 +463,7 @@ class PuzzleGame extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('困难 (5×5)', this.width / 2, dialogY + 252);
+    ctx.fillText('困难 (5×5)', hard.centerX, hard.centerY + 6);
   }
 
   handleDifficultyDialogClick(x, y) {
@@ -473,7 +487,7 @@ class PuzzleGame extends BasePage {
     }
 
     // Click outside dialog -> close
-    const diffDlgW = 320, diffDlgH = 280;
+    const diffDlgW = this.width * 0.8, diffDlgH = this.height * 0.45;
     const diffDlgX = (this.width - diffDlgW) / 2;
     const diffDlgY = (this.height - diffDlgH) / 2;
     if (x < diffDlgX || x > diffDlgX + diffDlgW || y < diffDlgY || y > diffDlgY + diffDlgH) {
@@ -485,10 +499,10 @@ class PuzzleGame extends BasePage {
     try {
       this.drawBackground(ctx);
 
-      const infoWidth = 300;
-      const infoHeight = 50;
+      const infoWidth = this.width * 0.8;
+      const infoHeight = this.scaleSize(50);
       const infoX = (this.width - infoWidth) / 2;
-      const infoY = this.height - 140;
+      const infoY = this.buttons.back.y - infoHeight - this.scaleSize(15);
       drawRoundedRect(ctx, infoX, infoY, infoWidth, infoHeight, 15);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.fill();
@@ -513,7 +527,8 @@ class PuzzleGame extends BasePage {
       const puzzleHeight = this.boardRect.h;
 
       // 绘制拼图容器
-      drawRoundedRect(ctx, startX - 10, startY - 10, puzzleWidth + 20, puzzleHeight + 20, 20);
+      const containerPad = this.scaleSize(10);
+      drawRoundedRect(ctx, startX - containerPad, startY - containerPad, puzzleWidth + containerPad * 2, puzzleHeight + containerPad * 2, this.scaleSize(20));
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.fill();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
@@ -589,12 +604,13 @@ class PuzzleGame extends BasePage {
       });
 
       if (this.puzzleImage) {
-        const hintWidth = 120;
+        const hintWidth = this.scaleSize(120);
         const hintHeight = hintWidth * (this.puzzleImage.height / this.puzzleImage.width);
         const hintX = (this.width - hintWidth) / 2;
-        const hintY = this.height - 300;
-        
-        drawRoundedRect(ctx, hintX - 5, hintY - 5, hintWidth + 10, hintHeight + 10, 10);
+        const hintY = this.boardRect.y + this.boardRect.h + (this.buttons.back.y - this.boardRect.y - this.boardRect.h) / 2 - hintHeight / 2;
+
+        const hintPad = this.scaleSize(5);
+        drawRoundedRect(ctx, hintX - hintPad, hintY - hintPad, hintWidth + hintPad * 2, hintHeight + hintPad * 2, this.scaleSize(10));
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';

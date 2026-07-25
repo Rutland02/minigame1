@@ -19,22 +19,29 @@ class AchievementPage extends BasePage {
   }
 
   updateLayout() {
-    const btnH = 50, btnW = 100;
-    const btnY = this.height - btnH - 30;
+    // Bottom buttons
+    const btnW = this.scaleSize(100), btnH = this.scaleSize(50);
+    const btnGap = this.scaleSize(10);
+    const btnY = this.height - this.scaleSize(70);
+    const btnStartX = (this.width - 2 * btnW - btnGap) / 2;
     this.buttons = {
-      back:        new LayoutRect(40, btnY, btnW, btnH),
-      certificate: new LayoutRect(this.width - 140, btnY, btnW, btnH),
+      back:        new LayoutRect(btnStartX, btnY, btnW, btnH),
+      certificate: new LayoutRect(btnStartX + btnW + btnGap, btnY, btnW, btnH),
     };
-    this.certBackBtn = new LayoutRect(30, 30, 80, 40);
-    const certBtnW = 140, certBtnGap = 20;
-    const certBtnY = this.height - 90;
-    this.certShareBtn = new LayoutRect(this.width / 2 - certBtnW - certBtnGap / 2, certBtnY, certBtnW, 50);
-    this.certSaveBtn = new LayoutRect(this.width / 2 + certBtnGap / 2, certBtnY, certBtnW, 50);
 
-    const cardW = 300, cardH = 350;
+    // Certificate view buttons
+    this.certBackBtn = new LayoutRect(this.scaleSize(30), this.scaleSize(30), this.scaleSize(80), this.scaleSize(40));
+    const certBtnW = this.scaleSize(140), certBtnGap = this.scaleSize(20), certBtnH = this.scaleSize(50);
+    const certBtnY = this.height - this.scaleSize(70);
+    this.certShareBtn = new LayoutRect(this.width / 2 - certBtnW - certBtnGap / 2, certBtnY, certBtnW, certBtnH);
+    this.certSaveBtn = new LayoutRect(this.width / 2 + certBtnGap / 2, certBtnY, certBtnW, certBtnH);
+
+    // Detail dialog
+    const cardW = this.width * 0.8, cardH = this.height * 0.6;
     const cardX = (this.width - cardW) / 2;
     const cardY = (this.height - cardH) / 2;
-    this.detailCloseBtn = new LayoutRect(this.width / 2 - 50, cardY + cardH - 60, 100, 40);
+    const closeBtnW = this.scaleSize(100), closeBtnH = this.scaleSize(40);
+    this.detailCloseBtn = new LayoutRect(this.width / 2 - closeBtnW / 2, cardY + cardH - this.scaleSize(60), closeBtnW, closeBtnH);
     this.detailCardRect = { x: cardX, y: cardY, w: cardW, h: cardH };
   }
   
@@ -56,7 +63,7 @@ class AchievementPage extends BasePage {
     ctx.font = `${this.scaleSize(28)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
-    ctx.fillText('成就系统', this.width / 2, 80);
+    ctx.fillText('成就系统', this.width / 2, this.height * 0.1);
 
     this.renderAchievementsList(ctx);
     this.renderBottomButtons(ctx);
@@ -70,9 +77,9 @@ class AchievementPage extends BasePage {
     const databus = this.databus;
     const achievementsWithStatus = databus.getAllAchievementsWithStatus();
 
-    const startY = 180;
-    const itemHeight = 80;
-    const endY = this.height - 130;
+    const startY = this.height * 0.12;
+    const itemHeight = this.scaleSize(80);
+    const endY = this.height - this.scaleSize(130);
     const viewportHeight = endY - startY;
     
     const totalHeight = achievementsWithStatus.length * itemHeight;
@@ -80,54 +87,61 @@ class AchievementPage extends BasePage {
     
     this.scrollY = Math.max(0, Math.min(this.scrollY, this.maxScrollY));
 
+    const listPad = this.scaleSize(20);
+    const iconX = listPad + this.scaleSize(30);
+    const contentX = listPad + this.scaleSize(70);
+
     achievementsWithStatus.forEach((achievement, index) => {
       const y = startY + index * itemHeight - this.scrollY;
-      
+
       if (y < startY - itemHeight * 2 || y > endY + itemHeight) return;
-      
+
       const isUnlocked = achievement.isUnlocked;
-      
+
       let opacity = 1;
       if (y < startY) {
         opacity = Math.max(0, (y - (startY - itemHeight)) / itemHeight);
       } else if (y > endY - itemHeight) {
         opacity = Math.max(0, (endY - y) / itemHeight);
       }
-      
+
       ctx.save();
-      
+
       ctx.globalAlpha = opacity;
-      
-      drawRoundedRect(ctx, 20, y, this.width - 40, itemHeight - 10, 15);
+
+      drawRoundedRect(ctx, listPad, y, this.width - listPad * 2, itemHeight - this.scaleSize(10), this.scaleSize(15));
       ctx.fillStyle = isUnlocked ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 255, 255, 0.15)';
       ctx.fill();
       ctx.strokeStyle = isUnlocked ? '#4CAF50' : 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 2;
       ctx.stroke();
-      
+
       ctx.font = `${this.scaleSize(24)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillStyle = isUnlocked ? '#000000' : 'rgba(0, 0, 0, 0.4)';
-      ctx.fillText(achievement.icon || '🏆', 50, y + 35);
-      
+      ctx.fillText(achievement.icon || '🏆', iconX, y + itemHeight * 0.44);
+
       ctx.font = `${this.scaleSize(16)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'left';
-      ctx.fillText(achievement.title, 90, y + 28);
-      
+      ctx.fillText(achievement.title, contentX, y + itemHeight * 0.35);
+
       ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      ctx.fillText(achievement.description, 90, y + 48);
-      
-      drawRoundedRect(ctx, 90, y + 55, 60, 20, 10);
+      ctx.fillText(achievement.description, contentX, y + itemHeight * 0.60);
+
+      const typeBadgeW = this.scaleSize(60), typeBadgeH = this.scaleSize(20);
+      drawRoundedRect(ctx, contentX, y + itemHeight * 0.69, typeBadgeW, typeBadgeH, this.scaleSize(10));
       ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
       ctx.fill();
       ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = '#000000';
       ctx.textAlign = 'center';
-      ctx.fillText(achievement.type, 120, y + 68);
-      
-      drawRoundedRect(ctx, this.width - 90, y + 20, 70, 30, 15);
+      ctx.fillText(achievement.type, contentX + typeBadgeW / 2, y + itemHeight * 0.85);
+
+      const statusBadgeW = this.scaleSize(70), statusBadgeH = this.scaleSize(30);
+      const statusX = this.width - listPad - statusBadgeW;
+      drawRoundedRect(ctx, statusX, y + itemHeight * 0.25, statusBadgeW, statusBadgeH, this.scaleSize(15));
       ctx.fillStyle = isUnlocked ? 'rgba(76, 175, 80, 0.3)' : 'rgba(0, 0, 0, 0.1)';
       ctx.fill();
       ctx.strokeStyle = isUnlocked ? '#4CAF50' : 'rgba(0, 0, 0, 0.3)';
@@ -136,8 +150,8 @@ class AchievementPage extends BasePage {
       ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = isUnlocked ? '#4CAF50' : 'rgba(0, 0, 0, 0.8)';
       ctx.textAlign = 'center';
-      ctx.fillText(isUnlocked ? '已解锁' : '未解锁', this.width - 55, y + 40);
-      
+      ctx.fillText(isUnlocked ? '已解锁' : '未解锁', statusX + statusBadgeW / 2, y + itemHeight * 0.50);
+
       ctx.restore();
     });
 
@@ -147,7 +161,7 @@ class AchievementPage extends BasePage {
     ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
-    ctx.fillText(`已解锁: ${unlockedCount}/${totalCount}`, this.width / 2, this.height - 100);
+    ctx.fillText(`已解锁: ${unlockedCount}/${totalCount}`, this.width / 2, this.height - this.scaleSize(100));
     
     if (this.maxScrollY > 0) {
       this.drawScrollBar(ctx, startY, viewportHeight);
@@ -229,7 +243,8 @@ class AchievementPage extends BasePage {
     ctx.stroke();
     ctx.restore();
 
-    const iconY = card.y + 50;
+    const cardH = card.h;
+    const iconY = card.y + cardH * 0.14;
     if (isUnlocked) {
       ctx.font = `${this.scaleSize(48)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.textAlign = 'center';
@@ -250,30 +265,30 @@ class AchievementPage extends BasePage {
       ctx.fillText('🔒', this.width / 2, iconY);
     }
 
-    const titleY = card.y + 100;
+    const titleY = card.y + cardH * 0.29;
     ctx.font = `bold ${this.scaleSize(20)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillStyle = isUnlocked ? '#000000' : 'rgba(0, 0, 0, 0.4)';
     ctx.fillText(achievement.title, this.width / 2, titleY);
 
-    const descY = card.y + 135;
+    const descY = card.y + cardH * 0.39;
     ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.35)';
     ctx.fillText(achievement.description, this.width / 2, descY);
 
-    const typeY = card.y + 170;
-    const typeBadgeW = 70;
-    drawRoundedRect(ctx, this.width / 2 - typeBadgeW / 2, typeY - 12, typeBadgeW, 24, 12);
+    const typeY = card.y + cardH * 0.49;
+    const typeBadgeW = this.scaleSize(70);
+    drawRoundedRect(ctx, this.width / 2 - typeBadgeW / 2, typeY - this.scaleSize(12), typeBadgeW, this.scaleSize(24), this.scaleSize(12));
     ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.08)';
     ctx.fill();
     ctx.font = `${this.scaleSize(12)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.fillStyle = isUnlocked ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.3)';
     ctx.textAlign = 'center';
-    ctx.fillText(achievement.type, this.width / 2, typeY + 4);
+    ctx.fillText(achievement.type, this.width / 2, typeY + this.scaleSize(4));
 
-    const statusY = card.y + 220;
-    const statusW = 90, statusH = 30;
-    drawRoundedRect(ctx, this.width / 2 - statusW / 2, statusY - 14, statusW, statusH, 15);
+    const statusY = card.y + cardH * 0.63;
+    const statusW = this.scaleSize(90), statusH = this.scaleSize(30);
+    drawRoundedRect(ctx, this.width / 2 - statusW / 2, statusY - this.scaleSize(14), statusW, statusH, this.scaleSize(15));
     if (isUnlocked) {
       ctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
       ctx.fill();
@@ -291,10 +306,10 @@ class AchievementPage extends BasePage {
     }
     ctx.font = `${this.scaleSize(14)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(isUnlocked ? '已解锁' : '未解锁', this.width / 2, statusY + 4);
+    ctx.fillText(isUnlocked ? '已解锁' : '未解锁', this.width / 2, statusY + this.scaleSize(4));
 
     if (!isUnlocked) {
-      const hintY = card.y + 270;
+      const hintY = card.y + cardH * 0.77;
       ctx.font = `${this.scaleSize(13)}px Arial, "PingFang SC", "Microsoft YaHei", sans-serif`;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.textAlign = 'center';

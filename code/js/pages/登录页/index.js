@@ -59,12 +59,14 @@ class LoginPage extends BasePage {
       console.error('Login page render error:', error);
       ctx.fillStyle = '#f0f0f0';
       ctx.fillRect(0, 0, this.width, this.height);
+      const errBtnW = this.scaleSize(240);
+      const errBtnH = this.scaleSize(50);
       ctx.fillStyle = '#C41E3A';
-      ctx.fillRect(this.width / 2 - 120, this.height * 0.75, 240, 50);
+      ctx.fillRect((this.width - errBtnW) / 2, this.height * 0.75, errBtnW, errBtnH);
       ctx.fillStyle = '#fff';
       ctx.font = `${this.scaleSize(18)}px Arial`;
       ctx.textAlign = 'center';
-      ctx.fillText('立即登录', this.width / 2, this.height * 0.75 + 25);
+      ctx.fillText('立即登录', this.width / 2, this.height * 0.75 + errBtnH / 2);
     }
   }
 
@@ -89,11 +91,11 @@ class LoginPage extends BasePage {
       ctx.drawImage(this.loginButtonImage, buttonX, buttonY, buttonWidth, buttonHeight);
       this.loginButtonRect = { x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight };
     } else {
-      const buttonWidth = 200;
-      const buttonHeight = 45;
-      const buttonX = this.width / 2 - 100;
+      const buttonWidth = this.scaleSize(200);
+      const buttonHeight = this.scaleSize(45);
+      const buttonX = (this.width - buttonWidth) / 2;
       const buttonY = this.height * 0.8;
-      drawButton(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 20, '#C41E3A', '#C41E3A', '立即登录', {
+      drawButton(ctx, buttonX, buttonY, buttonWidth, buttonHeight, this.scaleSize(20), '#C41E3A', '#C41E3A', '立即登录', {
         font: `${this.scaleSize(16)}px Inter, Arial`,
         strokeColor: 'rgba(255, 255, 255, 0.3)'
       });
@@ -109,11 +111,11 @@ class LoginPage extends BasePage {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 1;
     
-    const x = this.width / 2 - 100;
-    const y = this.height / 2 - 50;
-    const width = 200;
-    const height = 100;
-    const radius = 15;
+    const width = this.scaleSize(200);
+    const height = this.scaleSize(100);
+    const x = (this.width - width) / 2;
+    const y = (this.height - height) / 2;
+    const radius = this.scaleSize(15);
 
     drawRoundedRect(ctx, x, y, width, height, radius);
     ctx.fill();
@@ -122,7 +124,7 @@ class LoginPage extends BasePage {
     ctx.fillStyle = '#2563EB';
     ctx.font = `${this.scaleSize(16)}px Inter, Arial`;
     ctx.textAlign = 'center';
-    ctx.fillText('登录中...', this.width / 2, this.height / 2 + 5);
+    ctx.fillText('登录中...', this.width / 2, this.height / 2 + this.scaleSize(5));
   }
 
   handleTouchStart(e) {
