@@ -9,5 +9,7 @@
 !scripts/**
 !code/
 !code/**
+!test/
+!test/**
 code/.ach-test-signal
 code/.test-runner-signal
