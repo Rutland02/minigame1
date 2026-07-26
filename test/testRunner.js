@@ -7,7 +7,7 @@
  * 仅在开发环境（__DEV__ 或 URL 含 debug=1）下加载。
  */
 
-const TestRunner = require('./utils/testRunnerBase');
+const TestRunner = require('./testRunnerBase');
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
@@ -565,6 +565,32 @@ async function runAllTests() {
     return 'Certificate back button OK';
   });
 
+  // === Home Page Tour Button Test ===
+  app.showPage('home');
+  await sleep(400);
+
+  await runner.run('home_tour_btn_exists', async () => {
+    const p = app.currentPage;
+    const btn = p.regions.actionButtons.find(b => b.id === 'tour');
+    runner.assert(!!btn, 'tour button should exist in actionButtons');
+    runner.assert(typeof btn.x === 'number', 'tour button should have x coordinate');
+    runner.assert(typeof btn.y === 'number', 'tour button should have y coordinate');
+    runner.assert(typeof btn.r === 'number', 'tour button should have radius');
+    return 'Tour button exists';
+  });
+
+  await runner.run('home_tour_btn_touch_select', async () => {
+    const p = app.currentPage;
+    const btn = p.regions.actionButtons.find(b => b.id === 'tour');
+    p.handleTouchStart({
+      touches: [{ x: btn.x, y: btn.y }],
+      changedTouches: [{ x: btn.x, y: btn.y }]
+    });
+    runner.assertEqual(p.selectedId, 'tour', 'selectedId should be tour after touch');
+    p.selectedId = null;
+    return 'Tour button touch select OK';
+  });
+
   // === Error Monitoring ===
   await runner.run('navigation_no_errors', async () => {
     for (const name of pages) {
@@ -593,7 +619,7 @@ async function runAllTests() {
   }
 
   // === Utility Function Tests ===
-  const { LayoutRect, getTouchCoords, drawRoundedRect } = require('./utils/canvasUtils');
+  const { LayoutRect, getTouchCoords, drawRoundedRect } = require('../code/js/utils/canvasUtils');
 
   await runner.run('layout_rect_contains_inside', async () => {
     const rect = new LayoutRect(10, 20, 100, 50);
@@ -728,8 +754,8 @@ async function runAllTests() {
   });
 
   // === EventBus & ResourceManager Tests (B-11) ===
-  const EventBus = require('./utils/eventBus');
-  const ResourceManager = require('./utils/resourceManager');
+  const EventBus = require('../code/js/utils/eventBus');
+  const ResourceManager = require('../code/js/utils/resourceManager');
 
   await runner.run('eventbus_on_emit', async () => {
     const bus = new EventBus();
@@ -785,7 +811,7 @@ async function runAllTests() {
   });
 
   // === AnimationManager & Easing Tests (B-12) ===
-  const { ObjectPool, AnimationManager, easeOutQuad, easeOutElastic, easeOutBounce, easeInQuad, easeInOutQuad, easeInBack, easeOutBack, easeInOutBack, easeInCubic, easeOutCubic, easeInOutCubic } = require('./games/match3/animation');
+  const { ObjectPool, AnimationManager, easeOutQuad, easeOutElastic, easeOutBounce, easeInQuad, easeInOutQuad, easeInBack, easeOutBack, easeInOutBack, easeInCubic, easeOutCubic, easeInOutCubic } = require('../code/js/games/match3/animation');
 
   await runner.run('objectpool_recycle_reuse', async () => {
     const pool = new ObjectPool();
@@ -937,7 +963,7 @@ async function runAllTests() {
   });
 
   // === Generate Report ===
-  const errorCapture = require('./utils/errorCapture');
+  const errorCapture = require('../code/js/utils/errorCapture');
   const captured = errorCapture.getErrors();
 
   // 将运行时错误也计入失败

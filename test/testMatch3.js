@@ -1,5 +1,5 @@
-const TestRunner = require('./utils/testRunnerBase');
-const { COLORS, SCORE_PER_REMOVE, CHAIN_SCORE_MULTIPLIER, LEVEL_UP_TIME_BONUS } = require('./games/match3/constants');
+const TestRunner = require('./testRunnerBase');
+const { COLORS, SCORE_PER_REMOVE, CHAIN_SCORE_MULTIPLIER, LEVEL_UP_TIME_BONUS } = require('../code/js/games/match3/constants');
 
 function makePiece(color, row, col, special, specialType) {
   return { type: 'normal', color, special: !!special, specialType: specialType || null, row, col };

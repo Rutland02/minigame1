@@ -2,7 +2,7 @@
  * 成就系统独立测试模块
  *
  * 两种运行方式：
- *   1. 自动：npm run test:ach → 写信号文件 → 触发重编译 → game.js 检测到信号后加载并触发
+ *   1. 自动：npm run test:ach → 写信号文件 → 触发重编译 → game.test.js 检测到信号后加载并触发
  *   2. 手动：控制台执行 GameGlobal.runAchievementTests()
  *
  * 结果通过 console.log（带 [TEST-ACH] 前缀）输出，同时发送到测试服务器。
@@ -10,7 +10,7 @@
 
 const REPORT_URL = 'http://127.0.0.1:19831/report';
 
-const TestRunner = require('./utils/testRunnerBase');
+const TestRunner = require('./testRunnerBase');
 
 async function runAchievementTests() {
   const runner = new TestRunner();

@@ -1,4 +1,4 @@
-const TestRunner = require('./utils/testRunnerBase');
+const TestRunner = require('./testRunnerBase');
 
 async function runScoreManagerTests() {
   const runner = new TestRunner();
