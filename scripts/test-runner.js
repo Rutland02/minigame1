@@ -8,11 +8,11 @@
  *
  * 流程：
  *   1. 启动 HTTP 服务器监听测试结果
- *   2. 备份 game.js，复制 test/game.test.js → game.js
+ *   2. 备份 game.js，复制 test 文件到 code/
  *   3. 触发游戏重新编译（修改 game.js 时间戳）
  *   4. 游戏加载 → 测试运行 → wx.request() 发送结果
  *   5. 服务器接收结果，保存报告，输出结果
- *   6. 恢复原始 game.js
+ *   6. 恢复原始 game.js，清理临时测试文件
  */
 
 const http = require('http');
@@ -24,7 +24,25 @@ const REPORT_PATH = path.resolve(__dirname, '..', 'test-report.json');
 const ERROR_REPORT_PATH = path.resolve(__dirname, '..', 'error-report.json');
 const GAME_JS = path.resolve(__dirname, '..', 'code', 'game.js');
 const GAME_TEST = path.resolve(__dirname, '..', 'test', 'game.test.js');
+const TEST_DIR = path.resolve(__dirname, '..', 'test');
+const CODE_JS_DIR = path.resolve(__dirname, '..', 'code', 'js');
 const TIMEOUT = 60000; // 60 秒
+
+// 需要从 test/ 复制到 code/js/ 的测试文件
+const TEST_FILES = [
+  'testRunner.js',
+  'testMatch3.js',
+  'testScoreManager.js',
+  'testAchievements.js',
+  'testRunnerBase.js',
+];
+
+function cleanupTestFiles() {
+  for (const name of TEST_FILES) {
+    const target = path.join(CODE_JS_DIR, name);
+    try { fs.unlinkSync(target); } catch (_) {}
+  }
+}
 
 async function main() {
   console.log('========================================');
@@ -72,18 +90,28 @@ async function main() {
   });
 
   server.listen(PORT, '127.0.0.1', () => {
-    console.log(`[1/4] 测试服务器已启动 (port ${PORT})`);
+    console.log(`[1/5] 测试服务器已启动 (port ${PORT})`);
   });
 
-  // 2. 备份 game.js，复制 test/game.test.js → code/game.js
+  // 2. 备份 game.js，复制测试文件到 code/
   let originalGameJs = null;
   try {
     originalGameJs = fs.readFileSync(GAME_JS, 'utf8');
     const testEntry = fs.readFileSync(GAME_TEST, 'utf8');
     fs.writeFileSync(GAME_JS, testEntry, 'utf8');
-    console.log('[2/4] 已切换到测试模式入口');
+
+    // 复制测试文件到 code/js/
+    for (const name of TEST_FILES) {
+      const src = path.join(TEST_DIR, name);
+      const dest = path.join(CODE_JS_DIR, name);
+      fs.copyFileSync(src, dest);
+    }
+
+    console.log('[2/5] 已切换到测试模式，测试文件已就位');
   } catch (e) {
-    console.error('[2/4] 切换测试入口失败:', e.message);
+    console.error('[2/5] 切换测试入口失败:', e.message);
+    cleanupTestFiles();
+    if (originalGameJs !== null) fs.writeFileSync(GAME_JS, originalGameJs, 'utf8');
     server.close();
     process.exit(1);
   }
@@ -92,14 +120,14 @@ async function main() {
   try {
     const content = fs.readFileSync(GAME_JS, 'utf8');
     fs.writeFileSync(GAME_JS, content, 'utf8');
-    console.log('[3/4] 已触发游戏重新编译');
+    console.log('[3/5] 已触发游戏重新编译');
   } catch (e) {
-    console.error('[3/4] 触发重新编译失败:', e.message);
+    console.error('[3/5] 触发重新编译失败:', e.message);
     console.error('    请手动在开发者工具中重新编译游戏');
   }
 
   // 4. 等待测试结果
-  console.log('[4/4] 等待测试结果...\n');
+  console.log('[4/5] 等待测试结果...\n');
 
   let report;
   try {
@@ -110,18 +138,17 @@ async function main() {
     console.error('  1. 确认微信开发者工具已打开且项目已加载');
     console.error('  2. 确认游戏控制台有 [TEST] 输出');
     console.error('  3. 确认网络请求能到达 127.0.0.1:' + PORT);
-    // 恢复原始 game.js
-    if (originalGameJs !== null) {
-      fs.writeFileSync(GAME_JS, originalGameJs, 'utf8');
-      console.log('\n已恢复原始 game.js');
-    }
+    cleanupTestFiles();
+    if (originalGameJs !== null) fs.writeFileSync(GAME_JS, originalGameJs, 'utf8');
+    console.log('\n已恢复原始 game.js');
     server.close();
     process.exit(1);
   }
 
   server.close();
 
-  // 5. 恢复原始 game.js
+  // 5. 恢复原始 game.js，清理临时测试文件
+  cleanupTestFiles();
   if (originalGameJs !== null) {
     fs.writeFileSync(GAME_JS, originalGameJs, 'utf8');
     console.log('已恢复原始 game.js\n');

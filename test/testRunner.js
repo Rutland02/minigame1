@@ -619,7 +619,7 @@ async function runAllTests() {
   }
 
   // === Utility Function Tests ===
-  const { LayoutRect, getTouchCoords, drawRoundedRect } = require('../code/js/utils/canvasUtils');
+  const { LayoutRect, getTouchCoords, drawRoundedRect } = require('./utils/canvasUtils');
 
   await runner.run('layout_rect_contains_inside', async () => {
     const rect = new LayoutRect(10, 20, 100, 50);
@@ -754,8 +754,8 @@ async function runAllTests() {
   });
 
   // === EventBus & ResourceManager Tests (B-11) ===
-  const EventBus = require('../code/js/utils/eventBus');
-  const ResourceManager = require('../code/js/utils/resourceManager');
+  const EventBus = require('./utils/eventBus');
+  const ResourceManager = require('./utils/resourceManager');
 
   await runner.run('eventbus_on_emit', async () => {
     const bus = new EventBus();
@@ -811,7 +811,7 @@ async function runAllTests() {
   });
 
   // === AnimationManager & Easing Tests (B-12) ===
-  const { ObjectPool, AnimationManager, easeOutQuad, easeOutElastic, easeOutBounce, easeInQuad, easeInOutQuad, easeInBack, easeOutBack, easeInOutBack, easeInCubic, easeOutCubic, easeInOutCubic } = require('../code/js/games/match3/animation');
+  const { ObjectPool, AnimationManager, easeOutQuad, easeOutElastic, easeOutBounce, easeInQuad, easeInOutQuad, easeInBack, easeOutBack, easeInOutBack, easeInCubic, easeOutCubic, easeInOutCubic } = require('./games/match3/animation');
 
   await runner.run('objectpool_recycle_reuse', async () => {
     const pool = new ObjectPool();
@@ -963,7 +963,7 @@ async function runAllTests() {
   });
 
   // === Generate Report ===
-  const errorCapture = require('../code/js/utils/errorCapture');
+  const errorCapture = require('./utils/errorCapture');
   const captured = errorCapture.getErrors();
 
   // 将运行时错误也计入失败

@@ -1,14 +1,13 @@
 /**
  * 测试模式入口文件
  *
- * 用于开发测试环境，检测信号文件并加载对应测试模块。
- * 生产环境应使用 code/game.js（不含测试逻辑）。
- *
- * 用法：将此文件内容复制到 code/game.js 或通过信号机制触发
+ * 此文件会被复制到 code/game.js 运行。
+ * 测试脚本会先将 test/ 下的测试文件复制到 code/js/，
+ * 测试完成后自动清理。
  */
 
-const App = require('../code/js/common/app');
-const errorCapture = require('../code/js/utils/errorCapture');
+const App = require('./js/common/app');
+const errorCapture = require('./js/utils/errorCapture');
 
 errorCapture.init();
 GameGlobal.errorCapture = errorCapture;
@@ -30,10 +29,9 @@ try {
   // 成就测试信号
   try {
     fs.accessSync('.ach-test-signal');
-    const { runAchievementTests } = require('./testAchievements');
+    const { runAchievementTests } = require('./js/testAchievements');
     GameGlobal.runAchievementTests = runAchievementTests;
     try { fs.unlinkSync('.ach-test-signal'); } catch (_) {}
-    // 触发自动运行
     setTimeout(() => {
       runAchievementTests().catch(e => {
         console.error('[TEST-ACH] Test runner crashed:', e);
@@ -44,7 +42,7 @@ try {
   // 常规测试信号
   try {
     fs.accessSync('.test-runner-signal');
-    require('./testRunner');
+    require('./js/testRunner');
     try { fs.unlinkSync('.test-runner-signal'); } catch (_) {}
   } catch (_) {}
 } catch (_) {
