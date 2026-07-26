@@ -64,6 +64,7 @@ class App {
     this.width = sys.windowWidth || 375;
     this.height = sys.windowHeight || 667;
     this.dpr = sys.pixelRatio || 1;
+    this.canvas = canvas;
     this.currentPage = null;
     this._transition = null;
     this._lastLoopTime = 0;
