@@ -6,9 +6,12 @@
  */
 
 const REPORT_URL = 'http://127.0.0.1:19830/errors';
+const AUTO_FLUSH_INTERVAL = 5000; // 5 秒
 
 const _errors = [];
 let _installed = false;
+let _autoFlushTimer = null;
+let _flushing = false;
 
 function _addEntry(type, message, stack, source) {
   _errors.push({
@@ -24,14 +27,16 @@ function init() {
   if (_installed) return;
   _installed = true;
 
-  // Hook console.error
+  // Hook console.error（跳过 flushTo 自身的错误，避免递归）
   const origError = console.error;
   console.error = function () {
-    try {
-      const args = Array.prototype.slice.call(arguments);
-      const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
-      _addEntry('console.error', msg, '', '');
-    } catch (_) {}
+    if (!_flushing) {
+      try {
+        const args = Array.prototype.slice.call(arguments);
+        const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+        _addEntry('console.error', msg, '', '');
+      } catch (_) {}
+    }
     return origError.apply(console, arguments);
   };
 
@@ -60,6 +65,22 @@ function init() {
       _addEntry('wx.onPageNotFound', res && res.path ? res.path : 'unknown', '', '');
     });
   }
+
+  // 自动定时 flush（每 5 秒），仅在有错误时发送
+  _autoFlushTimer = setInterval(function () {
+    if (_errors.length > 0) {
+      flushTo();
+    }
+  }, AUTO_FLUSH_INTERVAL);
+
+  // 切后台时立即 flush
+  if (typeof wx !== 'undefined' && wx.onHide) {
+    wx.onHide(function () {
+      if (_errors.length > 0) {
+        flushTo();
+      }
+    });
+  }
 }
 
 function getErrors() {
@@ -70,9 +91,29 @@ function clear() {
   _errors.length = 0;
 }
 
+function stop() {
+  if (_autoFlushTimer) {
+    clearInterval(_autoFlushTimer);
+    _autoFlushTimer = null;
+  }
+}
+
+function dump() {
+  if (_errors.length === 0) {
+    console.log('[ERROR-CAPTURE] 无已捕获的错误');
+    return;
+  }
+  console.log('[ERROR-CAPTURE] 已捕获 ' + _errors.length + ' 条错误:');
+  for (let i = 0; i < _errors.length; i++) {
+    const e = _errors[i];
+    console.log('  [' + e.type + '] ' + e.message);
+  }
+}
+
 function flushTo(url) {
   if (_errors.length === 0) return;
   const payload = _errors.slice();
+  _flushing = true;
   try {
     wx.request({
       url: url || REPORT_URL,
@@ -82,12 +123,13 @@ function flushTo(url) {
       success: function () {
         console.log('[ERROR-CAPTURE] ' + payload.length + ' error(s) sent');
       },
-      fail: function (e) {
-        console.error('[ERROR-CAPTURE] Send failed:', e.errMsg);
+      fail: function () {
+        // 静默失败，不调用 console.error 避免递归
       }
     });
   } catch (_) {}
+  _flushing = false;
   _errors.length = 0;
 }
 
-module.exports = { init, getErrors, clear, flushTo };
+module.exports = { init, getErrors, clear, flushTo, stop, dump };
