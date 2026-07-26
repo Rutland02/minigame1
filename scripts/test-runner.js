@@ -8,9 +8,11 @@
  *
  * 流程：
  *   1. 启动 HTTP 服务器监听测试结果
- *   2. 触发游戏重新编译（修改 game.js 时间戳）
- *   3. 游戏加载 → 测试运行 → wx.request() 发送结果
- *   4. 服务器接收结果，保存报告，输出结果
+ *   2. 备份 game.js，复制 test/game.test.js → game.js
+ *   3. 触发游戏重新编译（修改 game.js 时间戳）
+ *   4. 游戏加载 → 测试运行 → wx.request() 发送结果
+ *   5. 服务器接收结果，保存报告，输出结果
+ *   6. 恢复原始 game.js
  */
 
 const http = require('http');
@@ -21,8 +23,8 @@ const PORT = 19830;
 const REPORT_PATH = path.resolve(__dirname, '..', 'test-report.json');
 const ERROR_REPORT_PATH = path.resolve(__dirname, '..', 'error-report.json');
 const GAME_JS = path.resolve(__dirname, '..', 'code', 'game.js');
+const GAME_TEST = path.resolve(__dirname, '..', 'test', 'game.test.js');
 const TIMEOUT = 60000; // 60 秒
-const ERROR_WAIT = 3000; // 测试结果到达后再等 3 秒收集错误
 
 async function main() {
   console.log('========================================');
@@ -70,21 +72,34 @@ async function main() {
   });
 
   server.listen(PORT, '127.0.0.1', () => {
-    console.log(`[1/3] 测试服务器已启动 (port ${PORT})`);
+    console.log(`[1/4] 测试服务器已启动 (port ${PORT})`);
   });
 
-  // 2. 触发游戏重新加载（修改 game.js 时间戳）
+  // 2. 备份 game.js，复制 test/game.test.js → code/game.js
+  let originalGameJs = null;
+  try {
+    originalGameJs = fs.readFileSync(GAME_JS, 'utf8');
+    const testEntry = fs.readFileSync(GAME_TEST, 'utf8');
+    fs.writeFileSync(GAME_JS, testEntry, 'utf8');
+    console.log('[2/4] 已切换到测试模式入口');
+  } catch (e) {
+    console.error('[2/4] 切换测试入口失败:', e.message);
+    server.close();
+    process.exit(1);
+  }
+
+  // 3. 触发游戏重新加载（修改 game.js 时间戳）
   try {
     const content = fs.readFileSync(GAME_JS, 'utf8');
     fs.writeFileSync(GAME_JS, content, 'utf8');
-    console.log('[2/3] 已触发游戏重新编译');
+    console.log('[3/4] 已触发游戏重新编译');
   } catch (e) {
-    console.error('[2/3] 触发重新编译失败:', e.message);
+    console.error('[3/4] 触发重新编译失败:', e.message);
     console.error('    请手动在开发者工具中重新编译游戏');
   }
 
-  // 3. 等待测试结果
-  console.log('[3/3] 等待测试结果...\n');
+  // 4. 等待测试结果
+  console.log('[4/4] 等待测试结果...\n');
 
   let report;
   try {
@@ -95,19 +110,32 @@ async function main() {
     console.error('  1. 确认微信开发者工具已打开且项目已加载');
     console.error('  2. 确认游戏控制台有 [TEST] 输出');
     console.error('  3. 确认网络请求能到达 127.0.0.1:' + PORT);
+    // 恢复原始 game.js
+    if (originalGameJs !== null) {
+      fs.writeFileSync(GAME_JS, originalGameJs, 'utf8');
+      console.log('\n已恢复原始 game.js');
+    }
     server.close();
     process.exit(1);
   }
 
-  // 等待错误报告到达
-  await new Promise(resolve => setTimeout(resolve, ERROR_WAIT));
   server.close();
 
-  // 4. 保存报告
+  // 5. 恢复原始 game.js
+  if (originalGameJs !== null) {
+    fs.writeFileSync(GAME_JS, originalGameJs, 'utf8');
+    console.log('已恢复原始 game.js\n');
+  }
+
+  // 6. 保存报告
   if (report.error) {
     console.error('测试结果格式错误:', report.error);
     process.exit(1);
   }
+
+  // 合并报告中的运行时错误与服务器收到的错误
+  const reportErrors = report.runtimeErrorDetails || [];
+  const allErrors = [...reportErrors, ...collectedErrors];
 
   fs.writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2), 'utf8');
 
@@ -120,29 +148,29 @@ async function main() {
     }
   }
 
-  // 5. 保存运行时错误报告
-  if (collectedErrors.length > 0) {
+  // 7. 保存运行时错误报告
+  if (allErrors.length > 0) {
     fs.writeFileSync(ERROR_REPORT_PATH, JSON.stringify({
-      count: collectedErrors.length,
-      errors: collectedErrors,
+      count: allErrors.length,
+      errors: allErrors,
       timestamp: new Date().toISOString()
     }, null, 2), 'utf8');
-    console.log(`\n  运行时错误: ${collectedErrors.length} 个`);
+    console.log(`\n  运行时错误: ${allErrors.length} 个`);
     const byType = {};
-    for (const e of collectedErrors) {
+    for (const e of allErrors) {
       byType[e.type] = (byType[e.type] || 0) + 1;
     }
     for (const [type, count] of Object.entries(byType)) {
       console.log(`    - ${type}: ${count}`);
     }
     // 打印前 5 条错误详情
-    const preview = collectedErrors.slice(0, 5);
+    const preview = allErrors.slice(0, 5);
     for (const e of preview) {
       const msg = e.message.length > 120 ? e.message.substring(0, 120) + '...' : e.message;
       console.log(`    [${e.type}] ${msg}`);
     }
-    if (collectedErrors.length > 5) {
-      console.log(`    ... 还有 ${collectedErrors.length - 5} 条，详见 ${ERROR_REPORT_PATH}`);
+    if (allErrors.length > 5) {
+      console.log(`    ... 还有 ${allErrors.length - 5} 条，详见 ${ERROR_REPORT_PATH}`);
     }
   } else {
     console.log('\n  运行时错误: 0 个');
@@ -151,7 +179,7 @@ async function main() {
   console.log(`\n  报告已保存: ${REPORT_PATH}`);
   console.log('========================================');
 
-  const hasErrors = report.failed > 0 || collectedErrors.length > 0;
+  const hasErrors = report.failed > 0 || allErrors.length > 0;
   process.exit(hasErrors ? 1 : 0);
 }
 
