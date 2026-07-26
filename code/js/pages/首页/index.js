@@ -306,16 +306,28 @@ class HomePage extends BasePage {
     } else if (id === 'tour') {
       // A-11: 复制 URL 到剪贴板
       const url = 'https://www.kuleiman.com/tv/183553/index.html';
-      wx.setClipboardData({
-        data: url,
-        success: () => {
-          wx.showToast({
-            title: '链接已复制，请在浏览器中打开',
-            icon: 'none',
-            duration: 3000
-          });
-        }
-      });
+      const doCopy = () => {
+        wx.setClipboardData({
+          data: url,
+          success: () => {
+            wx.showToast({ title: '链接已复制，请在浏览器中打开', icon: 'none', duration: 3000 });
+          },
+          fail: (err) => {
+            console.error('复制链接失败:', err);
+            wx.showToast({ title: '复制失败，请手动访问', icon: 'none', duration: 3000 });
+          }
+        });
+      };
+      if (wx.requirePrivacyAuthorize) {
+        wx.requirePrivacyAuthorize({
+          success: doCopy,
+          fail: () => {
+            wx.showToast({ title: '需要隐私授权才能复制', icon: 'none' });
+          }
+        });
+      } else {
+        doCopy();
+      }
     }
   }
 

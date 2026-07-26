@@ -575,7 +575,13 @@ class AchievementPage extends BasePage {
 
   _exportCertificate(successCallback, failCallback) {
     const cert = this.certCardRect;
-    wx.canvasToTempFilePath({
+    const cvs = this.app.canvas;
+    if (!cvs || !cvs.toTempFilePath) {
+      wx.showToast({ title: '当前环境不支持导出', icon: 'none' });
+      if (failCallback) failCallback(new Error('canvas.toTempFilePath not available'));
+      return;
+    }
+    cvs.toTempFilePath({
       x: cert.x,
       y: cert.y,
       width: cert.w,
@@ -607,20 +613,33 @@ class AchievementPage extends BasePage {
 
   saveCertificate() {
     this._exportCertificate((tempFilePath) => {
-      wx.saveImageToPhotosAlbum({
-        filePath: tempFilePath,
-        success: () => {
-          wx.showToast({ title: '已保存到相册', icon: 'success' });
-        },
-        fail: (err) => {
-          console.error('保存到相册失败:', err);
-          if (err.errMsg && err.errMsg.indexOf('auth deny') !== -1) {
-            wx.showToast({ title: '请授权相册权限', icon: 'none' });
-          } else {
-            wx.showToast({ title: '保存失败', icon: 'none' });
+      const doSave = () => {
+        wx.saveImageToPhotosAlbum({
+          filePath: tempFilePath,
+          success: () => {
+            wx.showToast({ title: '已保存到相册', icon: 'success' });
+          },
+          fail: (err) => {
+            console.error('保存到相册失败:', err);
+            if (err.errMsg && err.errMsg.indexOf('auth deny') !== -1) {
+              wx.showToast({ title: '请授权相册权限', icon: 'none' });
+            } else {
+              wx.showToast({ title: '保存失败', icon: 'none' });
+            }
           }
-        }
-      });
+        });
+      };
+
+      if (wx.requirePrivacyAuthorize) {
+        wx.requirePrivacyAuthorize({
+          success: doSave,
+          fail: () => {
+            wx.showToast({ title: '需要隐私授权才能保存', icon: 'none' });
+          }
+        });
+      } else {
+        doSave();
+      }
     });
   }
 
