@@ -304,30 +304,18 @@ class HomePage extends BasePage {
         }
       });
     } else if (id === 'tour') {
-      // A-11: 复制 URL 到剪贴板
+      // A-11: 复制 URL 到剪贴板（隐私授权由全局 onNeedPrivacyAuthorization 处理）
       const url = 'https://www.kuleiman.com/tv/183553/index.html';
-      const doCopy = () => {
-        wx.setClipboardData({
-          data: url,
-          success: () => {
-            wx.showToast({ title: '链接已复制，请在浏览器中打开', icon: 'none', duration: 3000 });
-          },
-          fail: (err) => {
-            console.error('复制链接失败:', err);
-            wx.showToast({ title: '复制失败，请手动访问', icon: 'none', duration: 3000 });
-          }
-        });
-      };
-      if (wx.requirePrivacyAuthorize) {
-        wx.requirePrivacyAuthorize({
-          success: doCopy,
-          fail: () => {
-            wx.showToast({ title: '需要隐私授权才能复制', icon: 'none' });
-          }
-        });
-      } else {
-        doCopy();
-      }
+      wx.setClipboardData({
+        data: url,
+        success: () => {
+          wx.showToast({ title: '链接已复制，请在浏览器中打开', icon: 'none', duration: 3000 });
+        },
+        fail: (err) => {
+          console.error('复制链接失败:', err);
+          wx.showToast({ title: '复制失败，请手动访问', icon: 'none', duration: 3000 });
+        }
+      });
     }
   }
 
@@ -407,7 +395,7 @@ class HomePage extends BasePage {
     ctx.font = `bold ${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('排行榜', btn.centerX, btn.centerY);
+    ctx.fillText('挑战记录', btn.centerX, btn.centerY);
     ctx.textBaseline = 'alphabetic';
   }
 
@@ -484,7 +472,7 @@ class HomePage extends BasePage {
     ctx.font = `bold ${this.scaleSize(22)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('排行榜', this.width / 2, dlgY + dlgH * 0.12);
+    ctx.fillText('挑战记录', this.width / 2, dlgY + dlgH * 0.12);
 
     // 获取成绩数据
     const match3Scores = this.databus.getMatch3Scores();

@@ -581,11 +581,12 @@ class AchievementPage extends BasePage {
       if (failCallback) failCallback(new Error('canvas.toTempFilePath not available'));
       return;
     }
+    const dpr = this.dpr || 1;
     cvs.toTempFilePath({
-      x: cert.x,
-      y: cert.y,
-      width: cert.w,
-      height: cert.h,
+      x: cert.x * dpr,
+      y: cert.y * dpr,
+      width: cert.w * dpr,
+      height: cert.h * dpr,
       success: (res) => {
         successCallback(res.tempFilePath);
       },
@@ -613,33 +614,27 @@ class AchievementPage extends BasePage {
 
   saveCertificate() {
     this._exportCertificate((tempFilePath) => {
-      const doSave = () => {
-        wx.saveImageToPhotosAlbum({
-          filePath: tempFilePath,
-          success: () => {
-            wx.showToast({ title: '已保存到相册', icon: 'success' });
-          },
-          fail: (err) => {
-            console.error('保存到相册失败:', err);
-            if (err.errMsg && err.errMsg.indexOf('auth deny') !== -1) {
-              wx.showToast({ title: '请授权相册权限', icon: 'none' });
-            } else {
-              wx.showToast({ title: '保存失败', icon: 'none' });
-            }
+      wx.saveImageToPhotosAlbum({
+        filePath: tempFilePath,
+        success: () => {
+          wx.showToast({ title: '已保存到相册', icon: 'success' });
+        },
+        fail: (err) => {
+          console.error('保存到相册失败:', err);
+          if (err && err.errMsg && err.errMsg.indexOf('auth deny') !== -1) {
+            wx.showModal({
+              title: '需要授权',
+              content: '保存照片需要相册权限，请在设置中开启',
+              confirmText: '去设置',
+              success: (res) => {
+                if (res.confirm) wx.openSetting();
+              }
+            });
+          } else {
+            wx.showToast({ title: '保存失败', icon: 'none' });
           }
-        });
-      };
-
-      if (wx.requirePrivacyAuthorize) {
-        wx.requirePrivacyAuthorize({
-          success: doSave,
-          fail: () => {
-            wx.showToast({ title: '需要隐私授权才能保存', icon: 'none' });
-          }
-        });
-      } else {
-        doSave();
-      }
+        }
+      });
     });
   }
 
