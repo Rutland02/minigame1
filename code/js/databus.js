@@ -61,6 +61,7 @@ class DataBus {
     if (isCorrect) {
       this.quizData.correct++;
     }
+    this.saveToStorage();
   }
 
   updateResource(type, amount) {

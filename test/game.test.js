@@ -6,6 +6,7 @@
  * 测试完成后自动清理。
  */
 
+GameGlobal.__TEST_MODE__ = true;
 const App = require('./js/common/app');
 const errorCapture = require('./js/utils/errorCapture');
 

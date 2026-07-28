@@ -75,6 +75,50 @@ class App {
   }
 
   async init() {
+    // 初始化云开发环境，测试模式跳过
+    const isTestMode = typeof GameGlobal !== 'undefined' && GameGlobal.__TEST_MODE__;
+    if (!isTestMode && typeof wx !== 'undefined' && wx.cloud) {
+      try {
+        wx.cloud.init({ env: 'cloud1-d3guab055bf129a97', traceUser: true });
+        console.log('云开发初始化成功');
+      } catch (e) {
+        console.error('云开发初始化失败:', e);
+      }
+    }
+
+    // 注册全局隐私授权监听器
+    // - 不能调用 requirePrivacyAuthorize（隐私 API，会无限递归）
+    // - 不能直接同步调用 resolve（errno 104: click action before resolve is needed）
+    // - 必须在用户点击交互的上下文中调用 resolve（wx.showModal 满足此要求）
+    if (!isTestMode && typeof wx !== 'undefined' && wx.onNeedPrivacyAuthorization) {
+      let _privacyModalShowing = false;
+      let _pendingResolves = [];
+      wx.onNeedPrivacyAuthorization((resolve) => {
+        console.log('onNeedPrivacyAuthorization 触发');
+        _pendingResolves.push(resolve);
+        if (_privacyModalShowing) return;
+        _privacyModalShowing = true;
+        wx.showModal({
+          title: '隐私授权',
+          content: '此功能需要您同意隐私保护指引后才能使用。',
+          confirmText: '同意',
+          cancelText: '拒绝',
+          success: (res) => {
+            const event = res.confirm ? 'agree' : 'disagree';
+            _pendingResolves.forEach(fn => fn({ event }));
+            _pendingResolves = [];
+          },
+          fail: () => {
+            _pendingResolves.forEach(fn => fn({ event: 'disagree' }));
+            _pendingResolves = [];
+          },
+          complete: () => {
+            _privacyModalShowing = false;
+          }
+        });
+      });
+    }
+
     try {
       await resourceManager.loadImages([
         { key: 'bg', src: 'images/ui/bg2.jpg' },
@@ -116,7 +160,19 @@ class App {
     ctx.scale(this.dpr, this.dpr);
     console.log('[ADAPT] logical:', this.width, 'x', this.height, 'dpr:', this.dpr, 'canvas:', canvas.width, 'x', canvas.height);
 
-    this.showPage('login');
+    // 自动登录：已有真实用户信息则跳过登录页
+    const savedUser = this.databus.getUserInfo();
+    const isRealLogin = savedUser && savedUser.openid && !savedUser.openid.startsWith('sim_') && savedUser.openid !== 'o1234567890';
+    if (isRealLogin) {
+      this.showPage('home');
+    } else {
+      // 清除旧的模拟登录数据
+      if (savedUser && !isRealLogin) {
+        this.databus.userInfo = null;
+        this.databus.saveToStorage();
+      }
+      this.showPage('login');
+    }
 
     this.loop();
   }

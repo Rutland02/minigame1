@@ -172,32 +172,59 @@ class LoginPage extends BasePage {
   sendCodeToServer(code) {
     console.log('发送code到服务器:', code);
 
+    // 优先使用云函数获取真实 openid
+    if (typeof wx !== 'undefined' && wx.cloud) {
+      wx.cloud.callFunction({
+        name: 'login',
+        success: (res) => {
+          console.log('云函数调用成功:', res);
+          const { openid } = res.result || {};
+          if (openid) {
+            this._onLoginSuccess(openid);
+          } else {
+            console.error('云函数返回数据异常:', res);
+            this._fallbackLogin(code);
+          }
+        },
+        fail: (err) => {
+          console.error('云函数调用失败:', err);
+          this._fallbackLogin(code);
+        }
+      });
+    } else {
+      this._fallbackLogin(code);
+    }
+  }
+
+  // 降级方案：云函数不可用时使用模拟登录
+  _fallbackLogin(code) {
+    console.warn('使用模拟登录（降级方案）');
     this._loginTimer = setTimeout(() => {
       this._loginTimer = null;
-      const userInfo = {
-        nickName: '微信用户',
-        avatarUrl: '',
-        gender: 1,
-        province: '广东',
-        city: '深圳',
-        country: '中国',
-        openid: 'o1234567890',
-        sessionKey: 'session_key_123456'
-      };
-
-      if (!this.databus) {
-        console.error('databus not initialized');
-        this.isLoading = false;
-        return;
-      }
-
-      this.databus.setUserInfo(userInfo);
-      console.log('登录成功，获取到用户信息:', userInfo);
-
-      this.navigateTo('home');
-
-      this.isLoading = false;
+      const openid = 'sim_' + (code || Date.now());
+      this._onLoginSuccess(openid);
     }, 1000);
+  }
+
+  _onLoginSuccess(openid) {
+    const userInfo = {
+      nickName: '微信用户',
+      avatarUrl: '',
+      gender: 0,
+      openid: openid
+    };
+
+    if (!this.databus) {
+      console.error('databus not initialized');
+      this.isLoading = false;
+      return;
+    }
+
+    this.databus.setUserInfo(userInfo);
+    console.log('登录成功，openid:', openid);
+
+    this.navigateTo('home');
+    this.isLoading = false;
   }
 
   destroy() {
