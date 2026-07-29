@@ -15,6 +15,22 @@ class AchievementPage extends BasePage {
     this.selectedAchievement = null;
 
     this.allAchievements = this.getAllAchievements();
+
+    this.certBgImage = null;
+    if (typeof wx !== 'undefined' && wx.createImage) {
+      const img = wx.createImage();
+      img.onload = () => { this.certBgImage = img; };
+      img.src = 'images/page/achievements/certificate.jpg';
+    }
+
+    this._certAvatarSrc = '';
+    this._certAvatarImg = null;
+    this._certAvatarReady = false;
+    this._certAvatarFailed = false;
+    this._certShareImagePath = null;
+    this._certExportAttempted = false;
+    this._certFramesRendered = 0;
+
     this.updateLayout();
   }
 
@@ -44,9 +60,14 @@ class AchievementPage extends BasePage {
     this.detailCloseBtn = new LayoutRect(this.width / 2 - closeBtnW / 2, cardY + cardH - this.scaleSize(60), closeBtnW, closeBtnH);
     this.detailCardRect = { x: cardX, y: cardY, w: cardW, h: cardH };
 
-    // Certificate card rect (for export)
+    // Certificate card rect (for export) — match image aspect ratio (1600x2848 ≈ 0.5618)
     const certCardW = this.width * 0.85;
-    const certCardH = this.height * 0.7;
+    const certImgRatio = 1600 / 2848;
+    const certMaxH = this.height - this.scaleSize(140);
+    let certCardH = certCardW / certImgRatio;
+    if (certCardH > certMaxH) {
+      certCardH = certMaxH;
+    }
     this.certCardRect = {
       x: (this.width - certCardW) / 2,
       y: (this.height - certCardH) / 2,
@@ -348,86 +369,136 @@ class AchievementPage extends BasePage {
     ctx.fillText('关闭', closeBtn.centerX, closeBtn.centerY + this.scaleSize(6));
   }
 
-  renderCertificate(ctx) {
-    if (this.backgroundImage) {
-      const scale = Math.max(this.width / this.backgroundImage.width, this.height / this.backgroundImage.height);
-      const scaledWidth = this.backgroundImage.width * scale;
-      const scaledHeight = this.backgroundImage.height * scale;
-      const offsetX = (this.width - scaledWidth) / 2;
-      const offsetY = (this.height - scaledHeight) / 2;
-      ctx.drawImage(this.backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+  // 头像加载：本地路径优先，失败回退 HTTP 下载；彻底失败则置失败标记停止重试
+  _loadCertAvatar(userInfo) {
+    this._certAvatarImg = null;
+    this._certAvatarReady = false;
+    this._certAvatarFailed = false;
+
+    const tryHttpDownload = () => {
+      if (typeof wx === 'undefined' || !wx.downloadFile || !userInfo.avatarUrl) {
+        this._certAvatarFailed = true;
+        return;
+      }
+      wx.downloadFile({
+        url: userInfo.avatarUrl,
+        success: (res) => {
+          if (res.statusCode === 200 && res.tempFilePath) {
+            const img = wx.createImage();
+            img.onload = () => {
+              this._certAvatarImg = img;
+              this._certAvatarReady = true;
+            };
+            img.onerror = () => { this._certAvatarFailed = true; };
+            img.src = res.tempFilePath;
+          } else {
+            this._certAvatarFailed = true;
+          }
+        },
+        fail: () => { this._certAvatarFailed = true; }
+      });
+    };
+
+    const localPath = userInfo.avatarLocalPath;
+    if (localPath && typeof wx !== 'undefined' && wx.createImage) {
+      const img = wx.createImage();
+      img.onload = () => {
+        this._certAvatarImg = img;
+        this._certAvatarReady = true;
+      };
+      img.onerror = () => { tryHttpDownload(); };
+      img.src = localPath;
     } else {
-      const gradient = ctx.createLinearGradient(0, 0, 0, this.height);
-      gradient.addColorStop(0, '#4a6fa5');
-      gradient.addColorStop(1, '#6e5b7b');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, this.width, this.height);
+      tryHttpDownload();
     }
+  }
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+  renderCertificate(ctx) {
+    const cert = this.certCardRect;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.fillRect(0, 0, this.width, this.height);
-    
-    const certCardW = this.width * 0.85;
-    const certCardH = this.height * 0.7;
-    const certCardX = (this.width - certCardW) / 2;
-    const certCardY = (this.height - certCardH) / 2;
 
-    drawRoundedRect(ctx, certCardX, certCardY, certCardW, certCardH, this.scaleSize(20));
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.fill();
-    ctx.strokeStyle = '#4a6fa5';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    ctx.font = `${this.scaleSize(32)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
-    ctx.fillStyle = '#4a6fa5';
-    ctx.textAlign = 'center';
-    ctx.fillText('数字体验证书', this.width / 2, certCardY + certCardH * 0.12);
+    if (this.certBgImage && this.certBgImage.width) {
+      const imgRatio = this.certBgImage.width / this.certBgImage.height;
+      let drawW, drawH;
+      if (cert.w / cert.h > imgRatio) {
+        drawH = cert.h;
+        drawW = drawH * imgRatio;
+      } else {
+        drawW = cert.w;
+        drawH = drawW / imgRatio;
+      }
+      const drawX = cert.x + (cert.w - drawW) / 2;
+      const drawY = cert.y + (cert.h - drawH) / 2;
+      ctx.drawImage(this.certBgImage, drawX, drawY, drawW, drawH);
+    } else {
+      ctx.fillStyle = '#f5f0e8';
+      ctx.fillRect(cert.x, cert.y, cert.w, cert.h);
+      ctx.strokeStyle = '#b8860b';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cert.x + 8, cert.y + 8, cert.w - 16, cert.h - 16);
+    }
 
     const databus = this.databus;
     const userInfo = databus.getUserInfo();
     const totalScore = databus.getTotalScore();
     const achievements = databus.scoreManager.getUnlockedAchievements();
     const scores = databus.getAllScores();
+    const textFont = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
 
-    ctx.font = `${this.scaleSize(18)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
-    ctx.fillStyle = '#333333';
+    // --- B区: 圆形头像 ---
+    const avatarCenterX = cert.x + cert.w * 0.5;
+    const avatarCenterY = cert.y + cert.h * 0.27 + this.scaleSize(5);
+    const avatarR = cert.w * 0.12;
+    const avatarKey = (userInfo && userInfo.avatarUrl) || '';
+    if (avatarKey && !this._certAvatarReady && !this._certAvatarFailed && this._certAvatarSrc !== avatarKey) {
+      this._certAvatarSrc = avatarKey;
+      this._loadCertAvatar(userInfo);
+    }
+    if (this._certAvatarReady && this._certAvatarImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarCenterX, avatarCenterY, avatarR, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(this._certAvatarImg, avatarCenterX - avatarR, avatarCenterY - avatarR, avatarR * 2, avatarR * 2);
+      ctx.restore();
+    }
+
+    // --- C区: 昵称 ---
+    ctx.font = `bold ${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    ctx.fillStyle = '#2c3e50';
     ctx.textAlign = 'center';
-    ctx.fillText(`兹证明 ${userInfo ? userInfo.nickName : '用户'} 在三色融澄·数字赋能活动中`, this.width / 2, certCardY + certCardH * 0.25);
-    ctx.fillText('积极参与，表现优异，特此颁发此证。', this.width / 2, certCardY + certCardH * 0.31);
+    ctx.fillText(userInfo ? userInfo.nickName : '用户', cert.x + cert.w * 0.5, cert.y + cert.h * 0.40 + 3);
 
-    const statsBoxW = this.scaleSize(280), statsBoxH = this.scaleSize(120);
-    drawRoundedRect(ctx, this.width / 2 - statsBoxW / 2, certCardY + certCardH * 0.36, statsBoxW, statsBoxH, this.scaleSize(15));
-    ctx.fillStyle = 'rgba(74, 111, 165, 0.1)';
+    // --- D区: 统计数据 ---
+    const statsX = cert.x + cert.w * 0.08;
+    const statsY = cert.y + cert.h * 0.52;
+    const statsW = cert.w * 0.84;
+    const statsH = cert.h * 0.30;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    drawRoundedRect(ctx, statsX, statsY, statsW, statsH, this.scaleSize(12));
     ctx.fill();
-    ctx.strokeStyle = 'rgba(74, 111, 165, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
-    ctx.fillStyle = '#4a6fa5';
-    ctx.textAlign = 'center';
-    ctx.fillText(`总积分: ${totalScore}`, this.width / 2, certCardY + certCardH * 0.40);
-    ctx.fillText(`解锁成就: ${achievements.length}/${this.allAchievements.length}`, this.width / 2, certCardY + certCardH * 0.45);
-    ctx.fillText(`游戏次数: ${scores.overall.totalGamesPlayed || 0}`, this.width / 2, certCardY + certCardH * 0.50);
-    ctx.fillText(`答题正确率: ${scores.quiz.accuracy || 0}%`, this.width / 2, certCardY + certCardH * 0.55);
 
-    const sealR = this.scaleSize(70);
-    ctx.fillStyle = 'rgba(244, 67, 54, 0.6)';
-    ctx.beginPath();
-    ctx.arc(this.width / 2, certCardY + certCardH * 0.65, sealR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `${this.scaleSize(20)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    const lineH = statsH / 5;
+    ctx.font = textFont;
+    ctx.fillStyle = '#34495e';
     ctx.textAlign = 'center';
-    ctx.fillText('海澄村', this.width / 2, certCardY + certCardH * 0.63);
-    ctx.fillText('数字赋能', this.width / 2, certCardY + certCardH * 0.68);
+    ctx.fillText(`总积分：${totalScore}`, cert.x + cert.w * 0.5, statsY + lineH * 1.2);
+    ctx.fillText(`解锁成就：${achievements.length}/${this.allAchievements.length}`, cert.x + cert.w * 0.5, statsY + lineH * 2.2);
+    ctx.fillText(`游戏次数：${scores.overall.totalGamesPlayed || 0}`, cert.x + cert.w * 0.5, statsY + lineH * 3.2);
+    ctx.fillText(`答题正确率：${scores.quiz.accuracy || 0}%`, cert.x + cert.w * 0.5, statsY + lineH * 4.2);
 
-    const date = new Date().toLocaleDateString();
-    ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
-    ctx.fillStyle = '#666666';
+    // --- F区: 颁发日期 ---
+    const now = new Date();
+    const date = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+    ctx.font = textFont;
+    ctx.fillStyle = '#7f8c8d';
     ctx.textAlign = 'center';
-    ctx.fillText(`颁发日期: ${date}`, this.width / 2, certCardY + certCardH * 0.82);
-    
+    ctx.fillText(`颁发日期：${date}`, cert.x + cert.w * 0.5, cert.y + cert.h * 0.94);
+
+    // --- 底部按钮 ---
     const certBtnRadius = this.scaleSize(25);
     const certTextOffset = this.scaleSize(6);
 
@@ -478,6 +549,14 @@ class AchievementPage extends BasePage {
     ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('返回', backBtn.centerX, backBtn.centerY + certTextOffset);
+
+    // 预导出证书图：wx.shareAppMessage 必须在点击事件的同步上下文中调用，不能等点击时再异步导出
+    this._certFramesRendered++;
+    const avatarSettled = !avatarKey || this._certAvatarReady || this._certAvatarFailed;
+    if (!this._certExportAttempted && this._certFramesRendered >= 2 && (avatarSettled || this._certFramesRendered > 120)) {
+      this._certExportAttempted = true;
+      this._exportCertificate((p) => { this._certShareImagePath = p; }, () => {}, true);
+    }
   }
 
   handleTouchStart(e) {
@@ -571,13 +650,16 @@ class AchievementPage extends BasePage {
 
   generateCertificate() {
     this.showCertificate = true;
+    this._certShareImagePath = null;
+    this._certExportAttempted = false;
+    this._certFramesRendered = 0;
   }
 
-  _exportCertificate(successCallback, failCallback) {
+  _exportCertificate(successCallback, failCallback, silent) {
     const cert = this.certCardRect;
     const cvs = this.app.canvas;
     if (!cvs || !cvs.toTempFilePath) {
-      wx.showToast({ title: '当前环境不支持导出', icon: 'none' });
+      if (!silent) wx.showToast({ title: '当前环境不支持导出', icon: 'none' });
       if (failCallback) failCallback(new Error('canvas.toTempFilePath not available'));
       return;
     }
@@ -592,24 +674,22 @@ class AchievementPage extends BasePage {
       },
       fail: (err) => {
         console.error('导出证书失败:', err);
-        wx.showToast({ title: '导出失败', icon: 'none' });
+        if (!silent) wx.showToast({ title: '导出失败', icon: 'none' });
         if (failCallback) failCallback(err);
       }
     });
   }
 
   shareCertificate() {
-    this._exportCertificate((tempFilePath) => {
-      wx.shareAppMessage({
-        imageUrl: tempFilePath,
-        success: () => {
-          wx.showToast({ title: '分享成功', icon: 'success' });
-        },
-        fail: () => {
-          wx.showToast({ title: '分享失败', icon: 'none' });
-        }
-      });
-    });
+    if (typeof wx === 'undefined' || !wx.shareAppMessage) return;
+    const options = {
+      title: '我在「三色融澄·数字赋能」获得了数字体验证书，快来挑战吧！',
+      fail: () => { wx.showToast({ title: '分享失败', icon: 'none' }); }
+    };
+    if (this._certShareImagePath) {
+      options.imageUrl = this._certShareImagePath;
+    }
+    wx.shareAppMessage(options);
   }
 
   saveCertificate() {

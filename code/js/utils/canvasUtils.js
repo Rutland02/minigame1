@@ -72,9 +72,10 @@ function getTouchCoords(touches, changedTouches) {
     touch = changedTouches[0];
   }
   if (!touch) return null;
+  const pick = (a, b, c) => (a != null ? a : (b != null ? b : (c != null ? c : 0)));
   return {
-    x: touch.clientX || touch.x || touch.pageX || 0,
-    y: touch.clientY || touch.y || touch.pageY || 0
+    x: pick(touch.clientX, touch.x, touch.pageX),
+    y: pick(touch.clientY, touch.y, touch.pageY)
   };
 }
 

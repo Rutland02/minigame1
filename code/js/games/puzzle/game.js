@@ -151,6 +151,10 @@ class PuzzleGame extends BasePage {
         moves--;
       }
     }
+
+    // 洗牌过程经 movePiece 累积了大量动画记录，直接丢弃避免开局闪动和首帧全表扫描
+    this.animations = [];
+    this.isAnimating = false;
   }
 
   canMove(piece, direction) {

@@ -154,7 +154,9 @@ class ScoreManager {
     quiz.gamesPlayed++;
     quiz.totalQuestions += totalQuestions;
     quiz.correctAnswers += correctCount;
-    quiz.accuracy = totalQuestions > 0 ? Math.round((quiz.correctAnswers / quiz.totalQuestions) * 100) : 0;
+    if (quiz.totalQuestions > 0) {
+      quiz.accuracy = Math.round((quiz.correctAnswers / quiz.totalQuestions) * 100);
+    }
     
     if (score > quiz.bestScore) {
       quiz.bestScore = score;
@@ -225,7 +227,7 @@ class ScoreManager {
       this.unlockAchievement('quiz_master');
     }
 
-    if (correctCount === totalQuestions) {
+    if (totalQuestions > 0 && correctCount === totalQuestions) {
       this.unlockAchievement('quiz_perfect');
     }
   }
@@ -288,6 +290,7 @@ class ScoreManager {
   getUnlockedAchievements() {
     return this.achievements.unlocked.map(id => {
       const achievement = this.getAchievementDefinition(id);
+      if (!achievement) return null;
       return {
         ...achievement,
         unlockDate: this.achievements.unlockDates[id]

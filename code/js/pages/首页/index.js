@@ -78,13 +78,33 @@ class HomePage extends BasePage {
       img.src = iconMap[key];
     });
 
-    // 加载用户头像
+    // 加载用户头像：优先本地路径，失败则用 HTTP URL 下载
     const userInfo = this.databus.getUserInfo();
-    if (userInfo && userInfo.avatarUrl) {
-      const avatarImg = (typeof wx !== 'undefined' && wx.createImage) ? wx.createImage() : new Image();
-      avatarImg.onload = () => { this.assets.avatar = avatarImg; };
-      avatarImg.onerror = () => { this.assets.avatar = null; };
-      avatarImg.src = userInfo.avatarUrl;
+    if (userInfo) {
+      const loadAvatarFromUrl = (url) => {
+        if (typeof wx === 'undefined' || !wx.downloadFile || !wx.createImage) return;
+        wx.downloadFile({
+          url,
+          success: (res) => {
+            if (res.statusCode === 200 && res.tempFilePath) {
+              const img = wx.createImage();
+              img.onload = () => { this.assets.avatar = img; };
+              img.src = res.tempFilePath;
+            }
+          }
+          // fail 时不设置 assets.avatar，绘制层自动回退到字母头像
+        });
+      };
+      if (userInfo.avatarLocalPath) {
+        const avatarImg = (typeof wx !== 'undefined' && wx.createImage) ? wx.createImage() : new Image();
+        avatarImg.onload = () => { this.assets.avatar = avatarImg; };
+        avatarImg.onerror = () => {
+          if (userInfo.avatarUrl) loadAvatarFromUrl(userInfo.avatarUrl);
+        };
+        avatarImg.src = userInfo.avatarLocalPath;
+      } else if (userInfo.avatarUrl) {
+        loadAvatarFromUrl(userInfo.avatarUrl);
+      }
     }
   }
 

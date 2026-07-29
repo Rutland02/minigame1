@@ -195,6 +195,7 @@ class LoginPage extends BasePage {
   handleTouchStart(e) {
     // 降级方案：如果 createUserInfoButton 未创建成功，点击登录按钮走 Canvas 触摸
     if (this._userInfoButton) return;
+    if (this.authState !== STATES.IDLE) return;
     const coords = getTouchCoords(e.touches, e.changedTouches);
     if (!coords) return;
     const { x, y } = coords;
@@ -292,28 +293,21 @@ class LoginPage extends BasePage {
 
   _downloadAvatarAndFinish(openid) {
     if (this._authResult.avatarUrl) {
+      const originalUrl = this._authResult.avatarUrl;
       wx.downloadFile({
-        url: this._authResult.avatarUrl,
+        url: originalUrl,
         success: (res) => {
           if (res.statusCode === 200 && res.tempFilePath) {
-            wx.saveFile({
-              tempFilePath: res.tempFilePath,
-              success: (saveRes) => {
-                this._authResult.avatarUrl = saveRes.savedFilePath;
-                this._saveAndNavigate(openid);
-              },
-              fail: () => {
-                this._authResult.avatarUrl = res.tempFilePath;
-                this._saveAndNavigate(openid);
-              }
-            });
+            this._authResult.avatarUrl = originalUrl;
+            this._authResult.avatarLocalPath = res.tempFilePath;
+            this._saveAndNavigate(openid);
           } else {
-            this._authResult.avatarUrl = '';
+            this._authResult.avatarUrl = originalUrl;
             this._saveAndNavigate(openid);
           }
         },
         fail: () => {
-          this._authResult.avatarUrl = '';
+          this._authResult.avatarUrl = originalUrl;
           this._saveAndNavigate(openid);
         }
       });
@@ -330,6 +324,7 @@ class LoginPage extends BasePage {
     const userInfo = {
       nickName: this._authResult.nickName || '微信用户',
       avatarUrl: this._authResult.avatarUrl || '',
+      avatarLocalPath: this._authResult.avatarLocalPath || '',
       gender: this._authResult.gender || 0,
       openid: openid,
     };

@@ -6,7 +6,9 @@ class QuizPage extends BasePage {
   constructor(difficulty) {
     super();
     this.vm = new QuizViewModel(difficulty);
+    this._questionsLoading = true;
     this.vm.loadQuestions().then(() => {
+      this._questionsLoading = false;
       this.vm._startTimer();
     });
 
@@ -40,9 +42,15 @@ class QuizPage extends BasePage {
 
     if (!vm.questions || vm.questions.length === 0) {
       ctx.font = `${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
-      ctx.fillStyle = '#FF0000';
       ctx.textAlign = 'center';
-      ctx.fillText('题库加载失败，请检查 content/ 目录', this.width / 2, this.height / 2);
+      if (this._questionsLoading) {
+        ctx.fillStyle = '#000000';
+        ctx.fillText('题目加载中...', this.width / 2, this.height / 2);
+      } else {
+        ctx.fillStyle = '#FF0000';
+        ctx.fillText('题库加载失败，请检查 content/ 目录', this.width / 2, this.height / 2);
+      }
+      this._drawBackButton(ctx);
       return;
     }
 
@@ -311,12 +319,10 @@ class QuizPage extends BasePage {
     }
   }
 
-  _drawBottomButtons(ctx) {
-    const { vm } = this;
-    const btns = this.getButtonRects();
-
-    drawRoundedRect(ctx, btns.back.x, btns.back.y, btns.back.w, btns.back.h, 20);
-    const backGradient = ctx.createLinearGradient(btns.back.x, btns.back.y, btns.back.x + btns.back.w, btns.back.y + btns.back.h);
+  _drawBackButton(ctx) {
+    const back = this.getButtonRects().back;
+    drawRoundedRect(ctx, back.x, back.y, back.w, back.h, 20);
+    const backGradient = ctx.createLinearGradient(back.x, back.y, back.x + back.w, back.y + back.h);
     backGradient.addColorStop(0, '#6B7280');
     backGradient.addColorStop(1, '#4B5563');
     ctx.fillStyle = backGradient;
@@ -328,7 +334,14 @@ class QuizPage extends BasePage {
     ctx.fillStyle = '#ffffff';
     ctx.font = `${this.scaleSize(14)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText('返回', btns.back.centerX, btns.back.centerY + 6);
+    ctx.fillText('返回', back.centerX, back.centerY + 6);
+  }
+
+  _drawBottomButtons(ctx) {
+    const { vm } = this;
+    const btns = this.getButtonRects();
+
+    this._drawBackButton(ctx);
 
     drawRoundedRect(ctx, btns.hint.x, btns.hint.y, btns.hint.w, btns.hint.h, 20);
     const orangeGradient = ctx.createLinearGradient(btns.hint.x, btns.hint.y, btns.hint.x + btns.hint.w, btns.hint.y + btns.hint.h);
@@ -470,15 +483,29 @@ class QuizPage extends BasePage {
   handleTouchStart(e) {
     const coords = getTouchCoords(e.touches, e.changedTouches);
     if (!coords) return;
-    if (!this.vm.questions || this.vm.questions.length === 0) return;
     const { x, y } = coords;
     const { vm } = this;
+
+    // 题库为空（加载中/加载失败）时仅响应返回按钮，避免用户被困
+    if (!vm.questions || vm.questions.length === 0) {
+      const backBtn = this.getButtonRects().back;
+      if (backBtn.contains(x, y)) {
+        this.pressedId = 'back';
+        vm._stopTimer();
+        this.navigateTo('home');
+      }
+      return;
+    }
 
     if (vm.gameOver) {
       if (this.gameOverButtons.replay && this.gameOverButtons.replay.contains(x, y)) {
         this.pressedId = 'go_replay';
+        this._questionsLoading = true;
         vm.reset();
-        vm.loadQuestions().then(() => vm._startTimer());
+        vm.loadQuestions().then(() => {
+          this._questionsLoading = false;
+          vm._startTimer();
+        });
       }
       if (this.gameOverButtons.home && this.gameOverButtons.home.contains(x, y)) {
         this.pressedId = 'go_home';
@@ -531,11 +558,13 @@ class QuizPage extends BasePage {
     }
     if (!vm.isAnswered && btns.hint.contains(x, y)) {
       this.pressedId = 'hint';
-      vm.useHint();
-      if (vm.selectedOption !== null) {
+      const hinted = vm.useHint();
+      if (hinted) {
         this.hintAnimating = true;
         this.hintFrame = 0;
         try { wx.showToast({ title: '已使用提示', icon: 'none', duration: 1000 }); } catch(e) {}
+      } else if (vm.hintCount <= 0) {
+        try { wx.showToast({ title: '提示次数已用完', icon: 'none', duration: 1000 }); } catch(e) {}
       }
     }
   }

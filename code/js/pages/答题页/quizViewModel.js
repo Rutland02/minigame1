@@ -136,9 +136,10 @@ class QuizViewModel {
   }
 
   useHint() {
-    if (this.hintCount <= 0 || this.isAnswered) return;
+    if (this.hintCount <= 0 || this.isAnswered) return false;
     this.hintCount--;
     this.selectedOption = this.questions[this.currentIndex].correctAnswer;
+    return true;
   }
 
   nextQuestion() {
@@ -158,6 +159,7 @@ class QuizViewModel {
       this.isAnswered = true;
       this.isCorrect = false;
       this.showResult = true;
+      this.consecutiveCorrect = 0;
       this._stopTimer();
     }
   }
@@ -184,8 +186,7 @@ class QuizViewModel {
     this.consecutiveCorrect = 0;
     this.maxConsecutiveCorrect = 0;
     this.correctAnswerCount = 0;
-    this.hintCount = 1;
-    this.timeLeft = this.timePerQuestion;
+    this._setupDifficulty(this.difficulty);
     this.resultAnimation = 0;
     this.gameOver = false;
     this.questions = [];
