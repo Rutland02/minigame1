@@ -77,6 +77,15 @@ class HomePage extends BasePage {
       img.onerror = (e) => { console.error(`Failed to load: ${key}`, e); };
       img.src = iconMap[key];
     });
+
+    // 加载用户头像
+    const userInfo = this.databus.getUserInfo();
+    if (userInfo && userInfo.avatarUrl) {
+      const avatarImg = (typeof wx !== 'undefined' && wx.createImage) ? wx.createImage() : new Image();
+      avatarImg.onload = () => { this.assets.avatar = avatarImg; };
+      avatarImg.onerror = () => { this.assets.avatar = null; };
+      avatarImg.src = userInfo.avatarUrl;
+    }
   }
 
   render(ctx) {
@@ -280,29 +289,7 @@ class HomePage extends BasePage {
       // A-5: 弹出排行榜浮层
       this.showLeaderboard = true;
     } else if (id === 'scan') {
-      wx.scanCode({
-        onlyFromCamera: true,
-        scanType: ['qrCode'],
-        success: (res) => {
-          console.log('扫码结果:', res);
-          wx.showToast({
-            title: '打卡成功！',
-            icon: 'success',
-            duration: 1500
-          });
-          this.databus.unlockAchievement('check_in_master');
-        },
-        fail: (err) => {
-          console.error('扫码失败:', err);
-          if (!err.errMsg.includes('cancel')) {
-            wx.showToast({
-              title: '扫码失败，请重试',
-              icon: 'none',
-              duration: 2000
-            });
-          }
-        }
-      });
+      this._startScanCode();
     } else if (id === 'tour') {
       // A-11: 复制 URL 到剪贴板（隐私授权由全局 onNeedPrivacyAuthorization 处理）
       const url = 'https://www.kuleiman.com/tv/183553/index.html';
@@ -311,12 +298,49 @@ class HomePage extends BasePage {
         success: () => {
           wx.showToast({ title: '链接已复制，请在浏览器中打开', icon: 'none', duration: 3000 });
         },
-        fail: (err) => {
-          console.error('复制链接失败:', err);
+        fail: () => {
           wx.showToast({ title: '复制失败，请手动访问', icon: 'none', duration: 3000 });
         }
       });
     }
+  }
+
+  _startScanCode() {
+    const doScan = () => {
+      wx.scanCode({
+        onlyFromCamera: true,
+        scanType: ['qrCode'],
+        success: () => {
+          wx.showToast({ title: '打卡成功！', icon: 'success', duration: 1500 });
+          this.databus.unlockAchievement('check_in_master');
+        },
+        fail: (err) => {
+          if (!err.errMsg.includes('cancel')) {
+            wx.showToast({ title: '扫码失败，请重试', icon: 'none', duration: 2000 });
+          }
+        }
+      });
+    };
+
+    // 登录时已预授权 scope.camera，直接扫码
+    // 若用户拒绝过，引导去设置页
+    wx.authorize({
+      scope: 'scope.camera',
+      success: doScan,
+      fail: () => {
+        wx.showModal({
+          title: '需要相机权限',
+          content: '扫码打卡需要相机权限，请在设置中开启',
+          confirmText: '去设置',
+          cancelText: '取消',
+          success: (res) => {
+            if (res.confirm) {
+              wx.openSetting();
+            }
+          }
+        });
+      }
+    });
   }
 
   // A-2: 难度选择触摸处理
@@ -353,19 +377,30 @@ class HomePage extends BasePage {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // 头像占位圆
+    // 头像
     const avatarR = this.scaleSize(20);
     const avatarX = region.x + this.scaleSize(30);
     const avatarY = region.y + region.h / 2;
-    ctx.beginPath();
-    ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
-    ctx.fillStyle = '#3B82F6';
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(userInfo ? (userInfo.nickName ? userInfo.nickName[0] : '用') : '用', avatarX, avatarY);
+    if (this.assets.avatar) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+      ctx.clip();
+      const img = this.assets.avatar;
+      const size = avatarR * 2;
+      ctx.drawImage(img, avatarX - avatarR, avatarY - avatarR, size, size);
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+      ctx.fillStyle = '#3B82F6';
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${this.scaleSize(16)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(userInfo ? (userInfo.nickName ? userInfo.nickName[0] : '用') : '用', avatarX, avatarY);
+    }
 
     // 昵称
     ctx.textAlign = 'left';
